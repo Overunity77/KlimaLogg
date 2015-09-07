@@ -1,0 +1,424 @@
+/home/student/kernel/linux/Documentation/usb/usbmon.txt
+
+
+./Projektarbeit_danir1_chrib1/danir1_chrib1_ventcontroller/home/weewx/bin/weewx/drivers/kl.py
+
+
+Weather Direct Light Wireless Device
+
+WDC WD20EARX-00PASB0
+
+https://osxentwicklerforum.de/index.php/Thread/25083-Klimalogg-Pro-TFA-30-3039-via-USB-am-Mac-auslesen/
+
+generic-usb 0003:6666:5555.0003: hiddev96: USB HID v1.11 Device [LA CROSSE TECHNOLOGY Weather Direct Light Wireless Device] on usb-ehci_marvell.70059-1.2/input0
+
+http://www.dd-wrt.com/phpBB2/viewtopic.php?p=869962&sid=484b4de0448808c0ff2bf0fbb5942e33
+
+# The driver logic is adapted from the ws28xx driver for LaCrosse 2800 and
+# TFA Primus and Opus weather stations.
+
+
+https://github.com/dpeddi/ws-28xx
+http://www.dpeddi.com/lct_ws-28xx:lct_ws-28xx_protocol_hacking
+
+
+http://www.axsem.com/www/rfics/axgen2-radiolab-for-ax5051
+
+AXSEM AX5051
+
+USB to UART Bridge Virtual COM Port (VCP) drivers Linux
+/home/student/kernel/linux/drivers/usb/serial/cp210x.c
+
+root@BBB-BFH-Cape:~# uname -a
+Linux BBB-BFH-Cape 3.18.5+ #1 Wed Apr 29 20:48:57 CEST 2015 armv7l GNU/Linux
+
+root@BBB-BFH-Cape:~# cat /proc/cpuinfo
+processor	: 0
+model name	: ARMv7 Processor rev 2 (v7l)
+BogoMIPS	: 298.84
+Features	: half thumb fastmult vfp edsp thumbee neon vfpv3 tls vfpd32 
+CPU implementer	: 0x41
+CPU architecture: 7
+CPU variant	: 0x3
+CPU part	: 0xc08
+CPU revision	: 2
+
+Hardware	: Generic AM33XX (Flattened Device Tree)
+Revision	: 0000
+Serial		: 0000000000000000
+
+
+root@BBB-BFH-Cape:~# lsusb
+Bus 001 Device 002: ID 20f4:648b TRENDnet TEW-648UBM 802.11n 150Mbps Micro Wireless N Adapter [Realtek RTL8188CUS]
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+
+
+root@BBB-BFH-Cape:~# lsmod | grep usb
+rtl_usb                 8497  1 rtl8192cu
+rtlwifi                51935  3 rtl_usb,rtl8192c_common,rtl8192cu
+mac80211              412361  3 rtl_usb,rtlwifi,rtl8192cu
+
+
+root@BBB-BFH-Cape:~# modinfo rtl_usb
+filename:       /lib/modules/3.18.5+/kernel/drivers/net/wireless/rtlwifi/rtl_usb.ko
+description:    USB basic driver for rtlwifi
+license:        GPL
+author:         Larry Finger	<Larry.FInger@lwfinger.net>
+author:         Realtek WlanFAE	<wlanfae@realtek.com>
+author:         lizhaoming	<chaoming_li@realsil.com.cn>
+depends:        rtlwifi,mac80211
+intree:         Y
+vermagic:       3.18.5+ mod_unload modversions ARMv7 thumb2 p2v8 
+root@BBB-BFH-Cape:~# modinfo rtlwifi
+filename:       /lib/modules/3.18.5+/kernel/drivers/net/wireless/rtlwifi/rtlwifi.ko
+description:    Realtek 802.11n PCI wireless core
+license:        GPL
+author:         Larry Finger	<Larry.FInger@lwfinger.net>
+author:         Realtek WlanFAE	<wlanfae@realtek.com>
+author:         lizhaoming	<chaoming_li@realsil.com.cn>
+depends:        mac80211,cfg80211
+intree:         Y
+vermagic:       3.18.5+ mod_unload modversions ARMv7 thumb2 p2v8 
+root@BBB-BFH-Cape:~# modinfo mac80211
+filename:       /lib/modules/3.18.5+/kernel/net/mac80211/mac80211.ko
+license:        GPL
+description:    IEEE 802.11 subsystem
+depends:        cfg80211
+intree:         Y
+vermagic:       3.18.5+ mod_unload modversions ARMv7 thumb2 p2v8 
+parm:           max_nullfunc_tries:Maximum nullfunc tx tries before disconnecting (reason 4). (int)
+parm:           max_probe_tries:Maximum probe tries before disconnecting (reason 4). (int)
+parm:           beacon_loss_count:Number of beacon intervals before we decide beacon was lost. (int)
+parm:           probe_wait_ms:Maximum time(ms) to wait for probe response before disconnecting (reason 4). (int)
+parm:           ieee80211_default_rc_algo:Default rate control algorithm for mac80211 to use (charp)
+
+
+student@granit:/usr/src/linux-headers-3.16.0-46-generic$ cat .config | grep -i HID | grep -i GENERIC
+CONFIG_HID_GENERIC=m
+
+student@granit:/opt/embedded/bbb/kernel/linux-dev-am33x-v3.18$ cat .config | grep -i HID | grep -i GENERIC
+CONFIG_HID_GENERIC=y
+
+
+student@granit:/dev$ pwd
+/dev
+student@granit:/dev$ sudo cat hidraw2 | hexdump
+0000000 0001 e700 0000 512a 0000 0000 28ff 0100
+0000010 0000 00e7 2a00 0051 0000 ff00 0028 0001
+
+libusb Library im User Space verwenden
+
+driver detach aus USer Space aufrufen und usb_test driver laden
+
+
+lrwxrwxrwx 1 root root    0 Aug 31 15:58 0003:6666:5555.000A -> ../../../../devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3:1.0/0003:6666:5555.000A/
+--w------- 1 root root 4096 Aug 31 15:50 bind
+lrwxrwxrwx 1 root root    0 Aug 31 15:50 module -> ../../../../module/hid_generic/
+--w------- 1 root root 4096 Aug 31 15:50 new_id
+--w------- 1 root root 4096 Aug 31 15:50 uevent
+--w------- 1 root root 4096 Aug 31 15:51 unbind
+root@granit:/sys/bus/hid/drivers/hid-generic# echo -n "0003:6666:5555.000A" > /sys/bus/hid/drivers/hid-generic/unbind
+root@granit:/sys/bus/hid/drivers/hid-generic# ll
+
+
+
+ udevadm monitor
+
+student@granit:~$ udevadm monitor --environment
+monitor will print the received events for:
+UDEV - the event which udev sends out after rule processing
+KERNEL - the kernel uevent
+
+KERNEL[231.738833] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1 (usb)
+ACTION=add
+BUSNUM=003
+DEVNAME=/dev/bus/usb/003/006
+DEVNUM=006
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1
+DEVTYPE=usb_device
+MAJOR=189
+MINOR=261
+PRODUCT=6666/5555/100
+SEQNUM=2782
+SUBSYSTEM=usb
+TYPE=3/0/255
+
+KERNEL[231.739355] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0 (usb)
+ACTION=add
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0
+DEVTYPE=usb_interface
+INTERFACE=3/0/0
+MODALIAS=usb:v6666p5555d0100dc03dsc00dpFFic03isc00ip00in00
+PRODUCT=6666/5555/100
+SEQNUM=2783
+SUBSYSTEM=usb
+TYPE=3/0/255
+
+KERNEL[231.741639] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003 (hid)
+ACTION=add
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003
+HID_ID=0003:00006666:00005555
+HID_NAME=LA CROSSE TECHNOLOGY Weather Direct Light Wireless Device
+HID_PHYS=usb-0000:00:14.0-1/input0
+HID_UNIQ=0123456
+MODALIAS=hid:b0003g0001v00006666p00005555
+SEQNUM=2784
+SUBSYSTEM=hid
+
+KERNEL[231.745585] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/usbmisc/hiddev1 (usbmisc)
+ACTION=add
+DEVNAME=/dev/usb/hiddev1
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/usbmisc/hiddev1
+MAJOR=180
+MINOR=1
+SEQNUM=2785
+SUBSYSTEM=usbmisc
+
+KERNEL[231.745641] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003/hidraw/hidraw2 (hidraw)
+ACTION=add
+DEVNAME=/dev/hidraw2
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003/hidraw/hidraw2
+MAJOR=251
+MINOR=2
+SEQNUM=2786
+SUBSYSTEM=hidraw
+
+UDEV  [231.747167] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1 (usb)
+ACTION=add
+BUSNUM=003
+DEVNAME=/dev/bus/usb/003/006
+DEVNUM=006
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1
+DEVTYPE=usb_device
+ID_BUS=usb
+ID_MODEL=Weather_Direct_Light_Wireless_Device
+ID_MODEL_ENC=Weather\x20Direct\x20Light\x20Wireless\x20Device
+ID_MODEL_ID=5555
+ID_REVISION=0100
+ID_SERIAL=LA_CROSSE_TECHNOLOGY_Weather_Direct_Light_Wireless_Device_0123456
+ID_SERIAL_SHORT=0123456
+ID_USB_INTERFACES=:030000:
+ID_VENDOR=LA_CROSSE_TECHNOLOGY
+ID_VENDOR_ENC=LA\x20CROSSE\x20TECHNOLOGY
+ID_VENDOR_FROM_DATABASE=Prototype product Vendor ID
+ID_VENDOR_ID=6666
+MAJOR=189
+MINOR=261
+PRODUCT=6666/5555/100
+SEQNUM=2782
+SUBSYSTEM=usb
+TYPE=3/0/255
+USEC_INITIALIZED=1738853
+
+UDEV  [231.748939] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0 (usb)
+ACTION=add
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0
+DEVTYPE=usb_interface
+ID_USB_CLASS_FROM_DATABASE=Human Interface Device
+ID_VENDOR_FROM_DATABASE=Prototype product Vendor ID
+INTERFACE=3/0/0
+MODALIAS=usb:v6666p5555d0100dc03dsc00dpFFic03isc00ip00in00
+PRODUCT=6666/5555/100
+SEQNUM=2783
+SUBSYSTEM=usb
+TYPE=3/0/255
+USEC_INITIALIZED=39388
+
+UDEV  [231.751052] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003 (hid)
+ACTION=add
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003
+DRIVER=hid-generic
+HID_ID=0003:00006666:00005555
+HID_NAME=LA CROSSE TECHNOLOGY Weather Direct Light Wireless Device
+HID_PHYS=usb-0000:00:14.0-1/input0
+HID_UNIQ=0123456
+ID_BUS=usb
+ID_MODEL=Weather_Direct_Light_Wireless_Device
+ID_MODEL_ENC=Weather\x20Direct\x20Light\x20Wireless\x20Device
+ID_MODEL_ID=5555
+ID_REVISION=0100
+ID_SERIAL=LA_CROSSE_TECHNOLOGY_Weather_Direct_Light_Wireless_Device_0123456
+ID_SERIAL_SHORT=0123456
+ID_TYPE=hid
+ID_USB_DRIVER=usbhid
+ID_USB_INTERFACES=:030000:
+ID_USB_INTERFACE_NUM=00
+ID_VENDOR=LA_CROSSE_TECHNOLOGY
+ID_VENDOR_ENC=LA\x20CROSSE\x20TECHNOLOGY
+ID_VENDOR_ID=6666
+MODALIAS=hid:b0003g0001v00006666p00005555
+SEQNUM=2784
+SUBSYSTEM=hid
+USEC_INITIALIZED=41642
+
+UDEV  [231.751883] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/usbmisc/hiddev1 (usbmisc)
+ACTION=add
+DEVNAME=/dev/usb/hiddev1
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/usbmisc/hiddev1
+ID_BUS=usb
+ID_MODEL=Weather_Direct_Light_Wireless_Device
+ID_MODEL_ENC=Weather\x20Direct\x20Light\x20Wireless\x20Device
+ID_MODEL_ID=5555
+ID_REVISION=0100
+ID_SERIAL=LA_CROSSE_TECHNOLOGY_Weather_Direct_Light_Wireless_Device_0123456
+ID_SERIAL_SHORT=0123456
+ID_TYPE=hid
+ID_USB_DRIVER=usbhid
+ID_USB_INTERFACES=:030000:
+ID_USB_INTERFACE_NUM=00
+ID_VENDOR=LA_CROSSE_TECHNOLOGY
+ID_VENDOR_ENC=LA\x20CROSSE\x20TECHNOLOGY
+ID_VENDOR_ID=6666
+MAJOR=180
+MINOR=1
+SEQNUM=2785
+SUBSYSTEM=usbmisc
+USEC_INITIALIZED=1745599
+
+UDEV  [231.752856] add      /devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003/hidraw/hidraw2 (hidraw)
+ACTION=add
+DEVNAME=/dev/hidraw2
+DEVPATH=/devices/pci0000:00/0000:00:14.0/usb3/3-1/3-1:1.0/0003:6666:5555.0003/hidraw/hidraw2
+ID_BUS=usb
+ID_MODEL=Weather_Direct_Light_Wireless_Device
+ID_MODEL_ENC=Weather\x20Direct\x20Light\x20Wireless\x20Device
+ID_MODEL_ID=5555
+ID_REVISION=0100
+ID_SERIAL=LA_CROSSE_TECHNOLOGY_Weather_Direct_Light_Wireless_Device_0123456
+ID_SERIAL_SHORT=0123456
+ID_TYPE=hid
+ID_USB_DRIVER=usbhid
+ID_USB_INTERFACES=:030000:
+ID_USB_INTERFACE_NUM=00
+ID_VENDOR=LA_CROSSE_TECHNOLOGY
+ID_VENDOR_ENC=LA\x20CROSSE\x20TECHNOLOGY
+ID_VENDOR_ID=6666
+MAJOR=251
+MINOR=2
+SEQNUM=2786
+SUBSYSTEM=hidraw
+USEC_INITIALIZED=45653
+
+
+
+student@granit:/lib/modules/3.16.0-48-generic$ cat modules.alias | grep usb | grep hid
+alias usb:v*p*d*dc*dsc*dp*ic03isc*ip*in* usbhid
+
+
+
+https://docs.google.com/document/d/1GvKgR_zH3WpAlwDgZGr0q8yxDk4iY35kpADhScbdktg/edit?usp=sharing
+
+http://www.usbmadesimple.co.uk/ums_4.htm
+
+
+Beispiel von (frame.len == 301) && (usb.endpoint_number.direction == 1)
+
+USB Header 28 Bytes
+===================
+1c 00 80 7b d6 09 80 fa ff ff 00 00 00 00 08 00
+01 01 00 03 00 80 02 11 01 00 00 01 
+
+Packet Data 273 Bytes 
+=====================
+00 00 b5 00
+42 01 40 64 1a 7b 10 bb e0 10 a5 00 aa aa aa aa
+aa 48 38 aa 40 0a aa aa aa aa aa aa aa 63 46 14
+aa a6 30 15 09 05 09 54 aa aa aa aa aa 48 38 aa
+40 0a aa aa aa aa aa aa aa 63 46 14 aa a6 30 15
+09 05 09 53 aa aa aa aa aa 49 38 aa 40 0a aa aa
+aa aa aa aa aa 63 46 14 aa a6 30 15 09 05 09 52
+aa aa aa aa aa 49 38 aa 40 0a aa aa aa aa aa aa
+aa 63 46 14 aa a6 29 15 09 05 09 51 aa aa aa aa
+aa 49 38 aa 40 0a aa aa aa aa aa aa aa 63 46 14
+aa a6 29 15 09 05 09 50 aa aa aa aa aa 49 38 aa
+40 0a aa aa aa aa aa aa aa 63 46 14 aa a6 28 15
+09 05 09 49 0f 61 aa aa aa 0a a4 aa 4a aa a4 aa
+4a aa aa aa aa aa aa 4a a4 aa aa 4a a4 aa aa aa
+aa 0a a4 aa 4a aa a4 aa 4a aa aa aa aa aa 00 00
+00 00 00 00 33 22 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00         
+
+
+Beispiel mit REQ_CLEAR_FEATURE
+für die Umsetzung von getState in 
+student@granit:~/kernel/linux$ grep -r -u5 REQ_CLEAR_FEATURE *
+
+
+tudent@granit:~$ cd kernel/linux
+student@granit:~/kernel/linux$ kate ./drivers/hid/hid-ntrig.c
+
+static void ntrig_report_version(struct hid_device *hdev)
+{
+	int ret;
+	char buf[20];
+	struct usb_device *usb_dev = hid_to_usb_dev(hdev);
+	unsigned char *data = kmalloc(8, GFP_KERNEL);
+
+	if (!data)
+		goto err_free;
+
+	ret = usb_control_msg(usb_dev, usb_rcvctrlpipe(usb_dev, 0),
+			      USB_REQ_CLEAR_FEATURE,
+			      USB_TYPE_CLASS | USB_RECIP_INTERFACE |
+			      USB_DIR_IN,
+			      0x30c, 1, data, 8,
+			      USB_CTRL_SET_TIMEOUT);
+
+	if (ret == 8) {
+		ret = ntrig_version_string(&data[2], buf);
+
+		hid_info(hdev, "Firmware version: %s (%02x%02x %02x%02x)\n",
+			 buf, data[2], data[3], data[4], data[5]);
+	}
+
+err_free:
+	kfree(data);
+}
+
+
+wo usb_control_msg verwendet wird
+
+(wie es aussieht ist das ganze Interface aus usb_control_msg aufgebaut)
+
+student@granit:~/cas-ebx/integrationsprojekt$ cat ./Projektarbeit_danir1_chrib1/danir1_chrib1_ventcontroller/home/weewx/bin/weewx/drivers/kl.py | grep -n 'self.devh.'
+2934:        self.devh = None
+2944:        self.devh = self._open_device(device)
+2947:        Transceiver._close_device(self.devh)
+2948:        self.devh = None
+3046:        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+3058:        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+3066:        buf = self.devh.controlMsg(
+3087:            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+3093:            buf = self.devh.controlMsg(
+3120:        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+3138:        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+3146:        buf = self.devh.controlMsg(
+3172:        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+3185:        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+3198:        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+
+
+sudo lsusb -v -d 6666:
+
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ git status
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ git add README.md
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ git commit -m"First commit from Urs"
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ git config --global push.default simple
+
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ git push
+
+student@granit:/opt/eclipse_mars/eclipse$ ./eclipse
+
+
+
+drivers/usb/serial/cp210x.c:	{ USB_DEVICE(0x1FB9, 0x0301) }, /* Lake Shore Model 336 Temperature Controller */
+drivers/usb/serial/cp210x.c:	{ USB_DEVICE(0x1FB9, 0x0302) }, /* Lake Shore Model 350 Temperature Controller */
+drivers/usb/misc/ldusb.c:#define USB_DEVICE_ID_LD_MICROCASSYTEMPERATURE	0x1035	/* USB Product ID of Micro-CASSY Temperature */
+drivers/usb/misc/ldusb.c:	{ USB_DEVICE(USB_VENDOR_ID_LD, USB_DEVICE_ID_LD_MICROCASSYTEMPERATURE) },
+
+Das ist noch interessant, macht ein Device Attribute, wo drauf zugegriffen werden kann
+
+drivers/usb/misc/cytherm.c:#define TEMP 0x33 /* RAM location for temperature */
+drivers/usb/misc/cytherm.c:#define SIGN 0x34 /* RAM location for temperature sign */
+drivers/usb/misc/cytherm.c:	/* read temperature */

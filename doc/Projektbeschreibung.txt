@@ -1,0 +1,108 @@
+Vorschlag für das Integrationsprojekt
+
+Gruppe: Daniel Reimann, Urs Suhner, Christian Binder
+
+
+Thema: Entwicklung eines Linux-Treibers für den "KlimaLogg Pro" Datenlogger: http://tfa-dostmann.de/index.php?id=81
+
+Aufbauend auf unserer Projektarbeit im Kurs "Embedded Linux" (siehe Anhang) möchten wir den Phyton Treiber mit einem Linux Treiber ersetzen.
+
+Die Userspace Applikation soll folgende Funktionalität auf dem BeagleBoneBlack zur Verfügung stellen:
+    - Speichern der Sensordaten in eine SQLite Datenbank
+    - Visualisieren der Sensordaten als Line-Graph in einer QML-Applikation
+
+Aufgaben Kernel-Treiber:
+    - Erkennen des USB-Transceivers
+    - Pairing des USB-Transceivers mit dem "KlimaLogg Pro" Datenlogger
+    - Datentransfer initieren und Daten dem Userspace zur Verfügung stellen (Python Protokoll nachbilden)
+    - Die Userspace Applikation soll die Daten zyklisch vom Treiber lesen können
+
+
+Mit freundlichen Grüssen
+D. Reimann
+
+
+
+Gesendet: 	Freitag, 4. September 2015 14:07
+An: 	
+Aebi Lorenz; Binder Christian; Grundmann Michel; Junker Thomas; Martig Ralph; Müller Roland; Nocelli Umberto; Ocaña Cedric; Pattier Damien; Pfäffli Andreas Simon; Piller Nadia; Reimann Daniel; Roder Simon; Scherrer Stefan; Suhner Urs; Urfer Manuel
+Cc: 	
+Lanz Rolf
+Liebe Klasse
+
+Da ich seid gestern Donnerstag im Spital bin und mindestens bis Montag
+bleiben "darf", muss ich die geplanten Projektreviews leider ausfallen
+lassen. Bitte entschuldigen Sie.
+
+Damit wir den Kontext aber trotzdem irgendwie durchkriegen, moechte ich
+Sie um folgendes bitten:
+- Lesen Sie nochmal das allgemeine bez. Projekt unter
+
+https://sharepoint.bfh.ch/ti/weiterbildung/2015%20FS%20CAS%20EBX/Kursunterlagen/Integrationsprojekt/integrationsprojekt.xhtml.pdf
+
+
+- Darf ich die jeweiligen Gruppen bitten, mir eine Stichwortartige Liste
+des von Ihnen vorgesehenen Punkte im Projekt zuzustellen, aufgeteilt in
+folgende Kategorien: Hardware, Funktionalitaet Treiber, Funktionalitaet
+Userspace, Eingesetzte Technologien, Moegliche
+Ausbaustufen/Erweiterungen. (Ich weiss, das passt nicht ganz auf alle
+Projekte. Adaptieren Sie!)
+
+- Fassen Sie mir doch bitte kurz zusammen wo sie im Moment "stehen"
+
+
+Ich werde daraus versuchen eine Uebersicht uber das Projekt zu
+"destillieren" und den Prozess sofern notwendig via E-Mail weiterfuehren.
+
+
+Falls Sie Fragen haben nur zu, ich werde gerne versuchen diese sofern
+mir aktuell moeglich zu beantworten.
+
+
+Vielen Dank und bitte entschuldigen Sie
+Philippe Seewer
+
+
+Sehr geehrter Herr Seewer,
+
+für den Projektreview 1 unserer Gruppe: Daniel Reimann, Urs Suhner, Christian Binder
+möchte ich Ihnen folgende Informationen zukommen lassen
+
+Hardware:
+- Verwenden des Beagle Bone Black inklusive ChipSee Cape
+  wie es im Unterricht abgegeben wurde
+- "TFA KlimaLogg Pro" Datenlogger, der von uns privat beschafft wurde
+
+Funktionaltät Treiber:
+- USB Treiber für das "TFA KlimaLogg Pro" USB-HID Funk-Stick erstellen
+- Registrieren des Devices im USB Subsystem
+- Kommunikation vom USB Host aus mit dem USB Device via USB Control Messages 
+
+Funktionalität Userspace:
+- Speichern der Sensordaten in einer SQLite Datenbank
+- Visualisieren der Sensordaten als Line-Graph in einer Qt/QML-Applikation
+
+Eingesetzte Technologien:
+- Beagle Bone Black mit ChipSee
+- TFA KlimaLogg Pro mit USB Funk-Stick
+- Linux: 3.18 kompiliert für ARM
+- Qt 5.4.1 / Qt Creator 3.3.1
+- SQLite 3.8.11.1
+
+Möglicher Ausbaustufen:
+- Der Treiber ist bis primär für das Auslesen der Temperatur/Luftfeuchtigkeitsdaten
+  vorgesehen. Hier wäre allenfalls eine Erweiterung in Richtung Write auf das Device
+  möglich, um z.B. die Namen Station (im Hardware UI des Loggers) zu setzen.
+- Qt GUI: Prinzipiell stehen Möglichkeiten offen zur Präsentation der Daten. 
+  Vergleiche von Woche zu Woche, zu den Vortagen, Verknüpfung der Daten mit Sonnen
+  Auf- und Untergangszeit des jeweiligen Tages.
+  
+Aktueller Stand:
+- SQLite 3.8.11.1 fürs Target Beagle Bone Black kompiliert
+- Linux des Targets rekompiliert mit modularisiertem HID Treiber, als Voraussetzung für eigenen Treiber
+- Einbinden des eigenen (rudimentären) USB Treibers im Linux des Targets
+- Registrieren des USB TFA KlimaLogg Pro Devices am eigenen Treiber
+- Open / Read des Treibers möglich
+
+Nächste Schritte:
+- Auslesen der Temperatur/Luftfeuchtigkeitsdaten und zur Verfügung stellen für den User Space
