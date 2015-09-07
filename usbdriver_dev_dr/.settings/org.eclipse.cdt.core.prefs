@@ -15,6 +15,9 @@ environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.17117738
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/ARCH/delimiter=\:
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/ARCH/operation=append
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/ARCH/value=arm
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/BUILD_BBB/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/BUILD_BBB/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/BUILD_BBB/value=1
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/CROSS_COMPILE/delimiter=\:
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/CROSS_COMPILE/operation=append
 environment/project/cdt.managedbuild.toolchain.gnu.cross.base.360576333.1711773848/CROSS_COMPILE/value=arm-linux-
