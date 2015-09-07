@@ -1,0 +1,931 @@
+Randbedingungen:
+
+weewx.conf
+
+        # debug flags:
+        # 0=no logging; 1=minimum logging; 2=normal logging; 3=detailed logging
+        debug_comm = 3
+        debug_config_data = 3
+        debug_weather_data = 3
+        debug_history_data = 3
+        debug_dump_format = auto
+
+
+Anzeige auf KlimaLogg pro Display:
+	MEM 5%
+
+--> internes Memory des Datenloggers ist zu 5% gefüllt (Max. 50'000 Datensätze)
+
+
+
+
+### ==> USB Stick eingesteckt (/etc/modprobe.d/usbhid.conf aktiv)
+
+
+Sep  7 14:09:30 izu-N550JK kernel: [   76.677875] usb 3-1: new full-speed USB device number 8 using xhci_hcd
+Sep  7 14:09:30 izu-N550JK kernel: [   76.808065] usb 3-1: New USB device found, idVendor=6666, idProduct=5555
+Sep  7 14:09:30 izu-N550JK kernel: [   76.808073] usb 3-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Sep  7 14:09:30 izu-N550JK kernel: [   76.808078] usb 3-1: Product: Weather Direct Light Wireless Device
+Sep  7 14:09:30 izu-N550JK kernel: [   76.808081] usb 3-1: Manufacturer: LA CROSSE TECHNOLOGY
+Sep  7 14:09:30 izu-N550JK kernel: [   76.808084] usb 3-1: SerialNumber: 0123456
+
+### ==> Started weewxd software: '/home/weewx$./bin/weewxd weewxd.conf
+
+Sep  7 14:09:55 izu-N550JK weewx[2795]: engine: Initializing weewx version 3.1.0
+Sep  7 14:09:55 izu-N550JK weewx[2795]: engine: Using Python 2.7.6 (default, Jun 22 2015, 17:58:13) #012[GCC 4.8.2]
+Sep  7 14:09:55 izu-N550JK weewx[2795]: engine: Using configuration file /home/weewx/weewx.conf
+Sep  7 14:09:55 izu-N550JK weewx[2795]: engine: Initializing engine
+Sep  7 14:09:55 izu-N550JK weewx[2795]: engine: Loading station type KlimaLogg (weewx.drivers.kl)
+Sep  7 14:09:55 izu-N550JK weewx[2795]: KlimaLogg: MainThread: database schema is kl-schema
+Sep  7 14:09:55 izu-N550JK weewx[2795]: KlimaLogg: MainThread: driver version is 1.00
+Sep  7 14:09:55 izu-N550JK weewx[2795]: KlimaLogg: MainThread: frequency is EU
+Sep  7 14:09:55 izu-N550JK weewx[2795]: KlimaLogg: MainThread: timing is 300 ms (0.300 s)
+Sep  7 14:09:55 izu-N550JK weewx[2795]: KlimaLogg: MainThread: CommunicationService.init
+Sep  7 14:09:55 izu-N550JK weewx[2795]: KlimaLogg: MainThread: comm_interval is 8
+Sep  7 14:09:56 izu-N550JK weewx[2795]: KlimaLogg: MainThread: found transceiver at bus=003 device=008
+Sep  7 14:09:56 izu-N550JK weewx[2795]: engine: Unable to load driver: error sending control message: Operation not permitted
+Sep  7 14:09:56 izu-N550JK weewx[2795]:     ****  Exiting...
+
+### ==> Started weewxd software: '/home/weewx$ sudo ./bin/weewxd weewxd.conf
+### Muss also mit root Rechten gestartet werden!!!
+
+
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Initializing weewx version 3.1.0
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Using Python 2.7.6 (default, Jun 22 2015, 17:58:13) #012[GCC 4.8.2]
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Using configuration file /home/weewx/weewx.conf
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Initializing engine
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading station type KlimaLogg (weewx.drivers.kl)
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: database schema is kl-schema
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: driver version is 1.00
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: frequency is EU
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: timing is 300 ms (0.300 s)
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: CommunicationService.init
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: comm_interval is 8
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: found transceiver at bus=003 device=008
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: manufacturer: LA CROSSE TECHNOLOGY
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: product: Weather Direct Light Wireless 
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: interface: 0
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: claiming USB interface 0
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: frequency standard: EU
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: base frequency: 868300000
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: frequency correction: 79648 (0x13720)
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: adjusted frequency: 910558189 (0x364603ed)
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: frequency registers: 36 46 3 ed
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: transceiver identifier: 281 (0x0119)
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: transceiver serial: 01010404060125
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: startRFThread: spawning RF thread
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setting up rf communication
+
+### ==> Wo wird in der weewxd software die Frequency correction angewendet?
+### ==> Wie wird in der weewxd software die transceiver serial number ausgelesen?
+
+
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.engine.StdTimeSynch
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.engine.StdTimeSynch
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.engine.StdConvert
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: StdConvert target unit is 0x10
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.engine.StdConvert
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.engine.StdCalibrate
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.engine.StdCalibrate
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.engine.StdQC
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.engine.StdQC
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.wxservices.StdWXCalculate
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.wxservices.StdWXCalculate
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.engine.StdArchive
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Archive will use data binding wx_binding
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Record generation will be attempted in 'hardware'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Using archive interval of 300 seconds
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Use LOOP data in hi/low calculations: 1
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Using binding 'wx_binding' to database 'archive/weewxkl.sdb'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Starting backfill of daily summaries
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Daily summaries up to date.
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.engine.StdArchive
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.restx.StdStationRegistry
+Sep  7 14:10:14 izu-N550JK weewx[2798]: restx: StationRegistry: Data will not be posted. Missing option 'station_url'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.restx.StdStationRegistry
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.restx.StdWunderground
+Sep  7 14:10:14 izu-N550JK weewx[2798]: restx: Wunderground: Data will not be posted: Missing option 'station'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.restx.StdWunderground
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.restx.StdPWSweather
+Sep  7 14:10:14 izu-N550JK weewx[2798]: restx: PWSWeather: Data will not be posted: Missing option 'station'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.restx.StdPWSweather
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.restx.StdCWOP
+Sep  7 14:10:14 izu-N550JK weewx[2798]: restx: CWOP: Data will not be posted. Missing option: 'station'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.restx.StdCWOP
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.restx.StdWOW
+Sep  7 14:10:14 izu-N550JK weewx[2798]: restx: WOW: Data will not be posted: Missing option 'station'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.restx.StdWOW
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.restx.StdAWEKAS
+Sep  7 14:10:14 izu-N550JK weewx[2798]: restx: AWEKAS: Data will not be posted: Missing option 'username'
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.restx.StdAWEKAS
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.engine.StdPrint
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.engine.StdPrint
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Loading service weewx.engine.StdReport
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Finished loading service weewx.engine.StdReport
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Starting up weewx version 3.1.0
+Sep  7 14:10:14 izu-N550JK weewx[2798]: engine: Station does not support reading the time
+Sep  7 14:10:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: Scanning historical records
+Sep  7 14:10:16 izu-N550JK weewx[2798]: KlimaLogg: RFComm: starting rf communication; press USB button shortly if communication won't start
+
+### ==> USB Button auf KlimaLogg pro gedrückt
+
+
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: console is paired (synchronized) to device with ID 0119
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=29.425 first=0.075 next=0.005 count=5871
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: checksum changed: OutBufCS=038b InBufCS=0000 
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: inBufCS of station does not match
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 03 1b 3e 80 08 ff ff ff 00 00 
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 7d 01 19 00 20 64 5c 00 00 80 04 00 80 04 
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleConfig: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:48 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 ff ff ff 00 00 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 15 30 c0 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-08-03 02:38:00 this=29062 (0x1530c0) latest=28949 (0x1522a0) nrec=51087
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: request records since 2015-06-01 06:35:00 CEST (1433133300)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: too many records requested (141580), clipping to number stored (51087)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: Number of history records to catch up limited to: 3001
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: start_index=25948 num_outstanding_records=3001
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=0, records skipped=0, next=25948
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 ab 80 00 00 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 ac 40 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:10:00 this=25954 (0x13ac40) latest=28949 (0x1522a0) nrec=2995
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:10:00 CEST (1441447800)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:11:00 CEST (1441447860)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:12:00 CEST (1441447920)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:13:00 CEST (1441447980)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:14:00 CEST (1441448040)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:15:00 CEST (1441448100)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=6, records skipped=0, next=25954
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 ac 40 00 00 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 ad 00 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:16:00 this=25960 (0x13ad00) latest=28949 (0x1522a0) nrec=2989
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:16:00 CEST (1441448160)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:17:00 CEST (1441448220)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:18:00 CEST (1441448280)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:19:00 CEST (1441448340)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:20:00 CEST (1441448400)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:21:00 CEST (1441448460)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=12, records skipped=0, next=25960
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 ad 00 00 00 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 ad c0 
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.31 first=0.3 next=0.01 count=2
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:22:00 this=25966 (0x13adc0) latest=28949 (0x1522a0) nrec=2983
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:22:00 CEST (1441448520)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:23:00 CEST (1441448580)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:24:00 CEST (1441448640)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:25:00 CEST (1441448700)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:26:00 CEST (1441448760)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:27:00 CEST (1441448820)
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=18, records skipped=0, next=25966
+Sep  7 14:10:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 ad c0 00 00 
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 ae 80 
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.73 first=0.3 next=0.01 count=44
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:28:00 this=25972 (0x13ae80) latest=28949 (0x1522a0) nrec=2977
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:28:00 CEST (1441448880)
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:29:00 CEST (1441448940)
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:30:00 CEST (1441449000)
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:31:00 CEST (1441449060)
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:32:00 CEST (1441449120)
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:33:00 CEST (1441449180)
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=24, records skipped=0, next=25972
+Sep  7 14:10:50 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 ae 80 00 00 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 af 40 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.31 first=0.3 next=0.01 count=2
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:34:00 this=25978 (0x13af40) latest=28949 (0x1522a0) nrec=2971
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:34:00 CEST (1441449240)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:35:00 CEST (1441449300)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:36:00 CEST (1441449360)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:37:00 CEST (1441449420)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:38:00 CEST (1441449480)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:39:00 CEST (1441449540)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=30, records skipped=0, next=25978
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 af 40 00 00 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b0 00 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:40:00 this=25984 (0x13b000) latest=28949 (0x1522a0) nrec=2965
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:40:00 CEST (1441449600)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:41:00 CEST (1441449660)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:42:00 CEST (1441449720)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:43:00 CEST (1441449780)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:44:00 CEST (1441449840)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:45:00 CEST (1441449900)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=36, records skipped=0, next=25984
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b0 00 00 00 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b0 c0 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.31 first=0.3 next=0.01 count=2
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:46:00 this=25990 (0x13b0c0) latest=28949 (0x1522a0) nrec=2959
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:46:00 CEST (1441449960)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:47:00 CEST (1441450020)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:48:00 CEST (1441450080)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:49:00 CEST (1441450140)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:50:00 CEST (1441450200)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:51:00 CEST (1441450260)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=42, records skipped=0, next=25990
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b0 c0 00 00 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b1 80 
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:52:00 this=25996 (0x13b180) latest=28949 (0x1522a0) nrec=2953
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:52:00 CEST (1441450320)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:53:00 CEST (1441450380)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 12:54:00 CEST (1441450440)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 12:55:00 CEST (1441450500)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 12:56:00 CEST (1441450560)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 12:57:00 CEST (1441450620)
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=48, records skipped=0, next=25996
+Sep  7 14:10:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b1 80 00 00 
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b2 40 
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.36 first=0.3 next=0.01 count=7
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 12:58:00 this=26002 (0x13b240) latest=28949 (0x1522a0) nrec=2947
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 12:58:00 CEST (1441450680)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 12:59:00 CEST (1441450740)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:00:00 CEST (1441450800)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:01:00 CEST (1441450860)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:02:00 CEST (1441450920)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:03:00 CEST (1441450980)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=54, records skipped=0, next=26002
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b2 40 00 00 
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b3 00 
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:04:00 this=26008 (0x13b300) latest=28949 (0x1522a0) nrec=2941
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:04:00 CEST (1441451040)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:05:00 CEST (1441451100)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:06:00 CEST (1441451160)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:07:00 CEST (1441451220)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:08:00 CEST (1441451280)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:09:00 CEST (1441451340)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=60, records skipped=0, next=26008
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b3 00 00 00 
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b3 c0 
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:10:00 this=26014 (0x13b3c0) latest=28949 (0x1522a0) nrec=2935
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:10:00 CEST (1441451400)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:11:00 CEST (1441451460)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:12:00 CEST (1441451520)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:13:00 CEST (1441451580)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:14:00 CEST (1441451640)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:15:00 CEST (1441451700)
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=66, records skipped=0, next=26014
+Sep  7 14:10:52 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b3 c0 00 00 
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b4 80 
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:16:00 this=26020 (0x13b480) latest=28949 (0x1522a0) nrec=2929
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:16:00 CEST (1441451760)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:17:00 CEST (1441451820)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:18:00 CEST (1441451880)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:19:00 CEST (1441451940)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:20:00 CEST (1441452000)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:21:00 CEST (1441452060)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=72, records skipped=0, next=26020
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b4 80 00 00 
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b5 40 
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:22:00 this=26026 (0x13b540) latest=28949 (0x1522a0) nrec=2923
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:22:00 CEST (1441452120)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:23:00 CEST (1441452180)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:24:00 CEST (1441452240)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:25:00 CEST (1441452300)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:26:00 CEST (1441452360)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:27:00 CEST (1441452420)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=78, records skipped=0, next=26026
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b5 40 00 00 
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b6 00 
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:28:00 this=26032 (0x13b600) latest=28949 (0x1522a0) nrec=2917
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:28:00 CEST (1441452480)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:29:00 CEST (1441452540)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:30:00 CEST (1441452600)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:31:00 CEST (1441452660)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:32:00 CEST (1441452720)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:33:00 CEST (1441452780)
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=84, records skipped=0, next=26032
+Sep  7 14:10:53 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b6 00 00 00 
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b6 c0 
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:34:00 this=26038 (0x13b6c0) latest=28949 (0x1522a0) nrec=2911
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:34:00 CEST (1441452840)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:35:00 CEST (1441452900)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:36:00 CEST (1441452960)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:37:00 CEST (1441453020)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:38:00 CEST (1441453080)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:39:00 CEST (1441453140)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=90, records skipped=0, next=26038
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b6 c0 00 00 
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b7 80 
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:40:00 this=26044 (0x13b780) latest=28949 (0x1522a0) nrec=2905
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:40:00 CEST (1441453200)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:41:00 CEST (1441453260)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:42:00 CEST (1441453320)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:43:00 CEST (1441453380)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:44:00 CEST (1441453440)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:45:00 CEST (1441453500)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=96, records skipped=0, next=26044
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 b7 80 00 00 
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 a0 13 b8 40 
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.33 first=0.3 next=0.01 count=4
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 13:46:00 this=26050 (0x13b840) latest=28949 (0x1522a0) nrec=2899
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 13:46:00 CEST (1441453560)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 13:47:00 CEST (1441453620)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 13:48:00 CEST (1441453680)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 13:49:00 CEST (1441453740)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 13:50:00 CEST (1441453800)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 13:51:00 CEST (1441453860)
+Sep  7 14:10:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=102, records skipped=0, next=26050
+
+### ==> ...[clipped]
+
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 e3 00 00 00 
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 c0 13 e3 c0 
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 19:34:00 this=26398 (0x13e3c0) latest=28950 (0x1522c0) nrec=2552
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 19:34:00 CEST (1441474440)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 19:35:00 CEST (1441474500)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 19:36:00 CEST (1441474560)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 19:37:00 CEST (1441474620)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 19:38:00 CEST (1441474680)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 19:39:00 CEST (1441474740)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=450, records skipped=0, next=26398
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 e3 c0 00 00 
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 c0 13 e4 80 
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 19:40:00 this=26404 (0x13e480) latest=28950 (0x1522c0) nrec=2546
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 19:40:00 CEST (1441474800)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 19:41:00 CEST (1441474860)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 19:42:00 CEST (1441474920)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 19:43:00 CEST (1441474980)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 19:44:00 CEST (1441475040)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 19:45:00 CEST (1441475100)
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=456, records skipped=0, next=26404
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 e4 80 00 00 
+Sep  7 14:11:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: Scanned 79 records: current=26404 latest=28950 remaining=2546
+
+### ==> scanned 79 records
+
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 c0 13 e5 40 
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 19:46:00 this=26410 (0x13e540) latest=28950 (0x1522c0) nrec=2540
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 19:46:00 CEST (1441475160)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 19:47:00 CEST (1441475220)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 19:48:00 CEST (1441475280)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 19:49:00 CEST (1441475340)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 19:50:00 CEST (1441475400)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 19:51:00 CEST (1441475460)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=462, records skipped=0, next=26410
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 13 e5 40 00 00 
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 c0 13 e6 00 
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-05 19:52:00 this=26416 (0x13e600) latest=28950 (0x1522c0) nrec=2534
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-05 19:52:00 CEST (1441475520)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-05 19:53:00 CEST (1441475580)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-05 19:54:00 CEST (1441475640)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-05 19:55:00 CEST (1441475700)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-05 19:56:00 CEST (1441475760)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-05 19:57:00 CEST (1441475820)
+Sep  7 14:11:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=468, records skipped=0, next=26416
+
+### ==> ...[clipped]
+
+Sep  7 14:12:13 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 6d 00 00 00 
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 e0 14 6d c0 
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-06 13:58:00 this=27502 (0x146dc0) latest=28951 (0x1522e0) nrec=1449
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-06 13:58:00 CEST (1441540680)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-06 13:59:00 CEST (1441540740)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-06 14:00:00 CEST (1441540800)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-06 14:01:00 CEST (1441540860)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-06 14:02:00 CEST (1441540920)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-06 14:03:00 CEST (1441540980)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=1554, records skipped=0, next=27502
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 6d c0 00 00 
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 e0 14 6e 80 
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-06 14:04:00 this=27508 (0x146e80) latest=28951 (0x1522e0) nrec=1443
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-06 14:04:00 CEST (1441541040)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-06 14:05:00 CEST (1441541100)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-06 14:06:00 CEST (1441541160)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-06 14:07:00 CEST (1441541220)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-06 14:08:00 CEST (1441541280)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-06 14:09:00 CEST (1441541340)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=1560, records skipped=0, next=27508
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 6e 80 00 00 
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 e0 14 6f 40 
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.33 first=0.3 next=0.01 count=4
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-06 14:10:00 this=27514 (0x146f40) latest=28951 (0x1522e0) nrec=1437
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-06 14:10:00 CEST (1441541400)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-06 14:11:00 CEST (1441541460)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-06 14:12:00 CEST (1441541520)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-06 14:13:00 CEST (1441541580)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-06 14:14:00 CEST (1441541640)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-06 14:15:00 CEST (1441541700)
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=1566, records skipped=0, next=27514
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 6f 40 00 00 
+Sep  7 14:12:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: Scanned 265 records: current=27514 latest=28951 remaining=1437
+
+### ==> scanned 256 records
+
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 e0 14 70 00 
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-06 14:16:00 this=27520 (0x147000) latest=28951 (0x1522e0) nrec=1431
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-06 14:16:00 CEST (1441541760)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-06 14:17:00 CEST (1441541820)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-06 14:18:00 CEST (1441541880)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-06 14:19:00 CEST (1441541940)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-06 14:20:00 CEST (1441542000)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-06 14:21:00 CEST (1441542060)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=1572, records skipped=0, next=27520
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 70 00 00 00 
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 22 e0 14 70 c0 
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-06 14:22:00 this=27526 (0x1470c0) latest=28951 (0x1522e0) nrec=1425
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-06 14:22:00 CEST (1441542120)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-06 14:23:00 CEST (1441542180)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-06 14:24:00 CEST (1441542240)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-06 14:25:00 CEST (1441542300)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-06 14:26:00 CEST (1441542360)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-06 14:27:00 CEST (1441542420)
+Sep  7 14:12:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=1578, records skipped=0, next=27526
+
+### ==> ...[clipped]
+
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 f7 00 00 00 
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 14 f7 c0 
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 08:22:00 this=28606 (0x14f7c0) latest=28952 (0x152300) nrec=346
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 08:22:00 CEST (1441606920)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 08:23:00 CEST (1441606980)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 08:24:00 CEST (1441607040)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 08:25:00 CEST (1441607100)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-07 08:26:00 CEST (1441607160)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-07 08:27:00 CEST (1441607220)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=2658, records skipped=0, next=28606
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 f7 c0 00 00 
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 14 f8 80 
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 08:28:00 this=28612 (0x14f880) latest=28952 (0x152300) nrec=340
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 08:28:00 CEST (1441607280)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 08:29:00 CEST (1441607340)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 08:30:00 CEST (1441607400)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 08:31:00 CEST (1441607460)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-07 08:32:00 CEST (1441607520)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-07 08:33:00 CEST (1441607580)
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=2664, records skipped=0, next=28612
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 f8 80 00 00 
+Sep  7 14:13:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: Scanned 450 records: current=28612 latest=28952 remaining=340
+
+### ==> scanned 450 records
+
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 14 f9 40 
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 08:34:00 this=28618 (0x14f940) latest=28952 (0x152300) nrec=334
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 08:34:00 CEST (1441607640)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 08:35:00 CEST (1441607700)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 08:36:00 CEST (1441607760)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 08:37:00 CEST (1441607820)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-07 08:38:00 CEST (1441607880)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-07 08:39:00 CEST (1441607940)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=2670, records skipped=0, next=28618
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 f9 40 00 00 
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 14 fa 00 
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 08:40:00 this=28624 (0x14fa00) latest=28952 (0x152300) nrec=328
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 08:40:00 CEST (1441608000)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 08:41:00 CEST (1441608060)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 08:42:00 CEST (1441608120)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 08:43:00 CEST (1441608180)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-07 08:44:00 CEST (1441608240)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-07 08:45:00 CEST (1441608300)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=2676, records skipped=0, next=28624
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 14 fa 00 00 00 
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 14 fa c0 
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 08:46:00 this=28630 (0x14fac0) latest=28952 (0x152300) nrec=322
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 08:46:00 CEST (1441608360)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 08:47:00 CEST (1441608420)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 08:48:00 CEST (1441608480)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 08:49:00 CEST (1441608540)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-07 08:50:00 CEST (1441608600)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-07 08:51:00 CEST (1441608660)
+Sep  7 14:13:15 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=2682, records skipped=0, next=28630
+
+### ==> ...[clipped]
+
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 21 00 00 00 
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 15 21 c0 
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 13:58:00 this=28942 (0x1521c0) latest=28952 (0x152300) nrec=10
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 13:58:00 CEST (1441627080)
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 13:59:00 CEST (1441627140)
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 14:00:00 CEST (1441627200)
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 14:01:00 CEST (1441627260)
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-07 14:02:00 CEST (1441627320)
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-07 14:03:00 CEST (1441627380)
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=2994, records skipped=0, next=28942
+Sep  7 14:13:32 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 21 c0 00 00 
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 15 22 80 
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 14:04:00 this=28948 (0x152280) latest=28952 (0x152300) nrec=4
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 14:04:00 CEST (1441627440)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 14:05:00 CEST (1441627500)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 14:06:00 CEST (1441627560)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 14:07:00 CEST (1441627620)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos5 tsCurrentRec=2015-09-07 14:08:00 CEST (1441627680)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos6 tsCurrentRec=2015-09-07 14:09:00 CEST (1441627740)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=3000, records skipped=0, next=28948
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 22 80 00 00 
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 00 15 23 00 
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 14:10:00 this=28952 (0x152300) latest=28952 (0x152300) nrec=0
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 14:10:00 CEST (1441627800)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos2 tsCurrentRec=2015-09-07 14:11:00 CEST (1441627860)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos3 tsCurrentRec=2015-09-07 14:12:00 CEST (1441627920)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos4 tsCurrentRec=2015-09-07 14:13:00 CEST (1441627980)
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: skipped record at Pos5 tsCurrentRec=2015-09-07 14:13:00 CEST (1441627980) DT is the same
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: skipped record at Pos6 tsCurrentRec=2015-09-07 14:13:00 CEST (1441627980) DT is the same
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=3004, records skipped=2, next=28952
+Sep  7 14:13:33 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 00 00 00 
+Sep  7 14:13:42 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:13:42 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.67 first=0.3 next=0.01 count=838
+Sep  7 14:13:42 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 00 00 00 
+Sep  7 14:13:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:13:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.66 first=0.3 next=0.01 count=837
+Sep  7 14:13:51 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 00 00 00 
+Sep  7 14:14:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:14:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=9.04 first=0.3 next=0.01 count=875
+Sep  7 14:14:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 00 00 00 
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 20 15 23 20 
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 14:14:00 this=28953 (0x152320) latest=28953 (0x152320) nrec=0
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData:  append record at Pos1 tsCurrentRec=2015-09-07 14:14:00 CEST (1441628040)
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: skipped record at Pos2 tsCurrentRec=2015-09-07 14:14:00 CEST (1441628040) DT is the same
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: skipped record at Pos3 tsCurrentRec=2015-09-07 14:14:00 CEST (1441628040) DT is the same
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: skipped record at Pos4 tsCurrentRec=2015-09-07 14:14:00 CEST (1441628040) DT is the same
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: skipped record at Pos5 tsCurrentRec=2015-09-07 14:14:00 CEST (1441628040) DT is the same
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: skipped record at Pos6 tsCurrentRec=2015-09-07 14:14:00 CEST (1441628040) DT is the same
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: records appended=3005, records skipped=7, next=28953
+Sep  7 14:14:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:14:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:14:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.0 first=0.3 next=0.01 count=771
+Sep  7 14:14:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:14:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: Scanned 508 records: current=28953 latest=28953 remaining=0
+
+### ==> scanned 508 records
+
+Sep  7 14:14:14 izu-N550JK weewx[2798]: KlimaLogg: MainThread: Found 3005 historical records
+Sep  7 14:14:14 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:11:00 CEST (1441447860) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:14 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:11:00 CEST (1441447860) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:12:00 CEST (1441447920) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:12:00 CEST (1441447920) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:13:00 CEST (1441447980) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:13:00 CEST (1441447980) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:14:00 CEST (1441448040) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:14:00 CEST (1441448040) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:15:00 CEST (1441448100) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:15 izu-N550JK weewx[2798]: manager: added record 2015-09-05 12:15:00 CEST (1441448100) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:44:00 CEST (1441453440) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:44:00 CEST (1441453440) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:45:00 CEST (1441453500) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:45:00 CEST (1441453500) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:46:00 CEST (1441453560) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:46:00 CEST (1441453560) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:47:00 CEST (1441453620) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:47:00 CEST (1441453620) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:14:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.69 first=0.3 next=0.01 count=840
+Sep  7 14:14:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:48:00 CEST (1441453680) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:48:00 CEST (1441453680) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:49:00 CEST (1441453740) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:49:00 CEST (1441453740) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:50:00 CEST (1441453800) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:18 izu-N550JK weewx[2798]: manager: added record 2015-09-05 13:50:00 CEST (1441453800) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:00:00 CEST (1441468800) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:00:00 CEST (1441468800) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:01:00 CEST (1441468860) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:01:00 CEST (1441468860) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:02:00 CEST (1441468920) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:02:00 CEST (1441468920) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:14:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.77 first=0.3 next=0.01 count=848
+Sep  7 14:14:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:03:00 CEST (1441468980) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:03:00 CEST (1441468980) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:04:00 CEST (1441469040) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:04:00 CEST (1441469040) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:05:00 CEST (1441469100) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:27 izu-N550JK weewx[2798]: manager: added record 2015-09-05 18:05:00 CEST (1441469100) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:13:00 CEST (1441483980) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:13:00 CEST (1441483980) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:14:00 CEST (1441484040) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:14:00 CEST (1441484040) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:15:00 CEST (1441484100) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:15:00 CEST (1441484100) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:14:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.76 first=0.3 next=0.01 count=847
+Sep  7 14:14:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:16:00 CEST (1441484160) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:16:00 CEST (1441484160) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:17:00 CEST (1441484220) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:17:00 CEST (1441484220) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:18:00 CEST (1441484280) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:36 izu-N550JK weewx[2798]: manager: added record 2015-09-05 22:18:00 CEST (1441484280) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:26:00 CEST (1441499160) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:26:00 CEST (1441499160) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:27:00 CEST (1441499220) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:27:00 CEST (1441499220) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:28:00 CEST (1441499280) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:28:00 CEST (1441499280) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:14:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.77 first=0.3 next=0.01 count=848
+Sep  7 14:14:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:29:00 CEST (1441499340) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:29:00 CEST (1441499340) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:30:00 CEST (1441499400) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:45 izu-N550JK weewx[2798]: manager: added record 2015-09-06 02:30:00 CEST (1441499400) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:39:00 CEST (1441514340) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:39:00 CEST (1441514340) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:40:00 CEST (1441514400) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:40:00 CEST (1441514400) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:14:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.76 first=0.3 next=0.01 count=847
+Sep  7 14:14:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:41:00 CEST (1441514460) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:41:00 CEST (1441514460) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:42:00 CEST (1441514520) to database 'archive/weewxkl.sdb'
+Sep  7 14:14:54 izu-N550JK weewx[2798]: manager: added record 2015-09-06 06:42:00 CEST (1441514520) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:39:00 CEST (1441525140) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:39:00 CEST (1441525140) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:40:00 CEST (1441525200) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:40:00 CEST (1441525200) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:41:00 CEST (1441525260) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:15:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=6.23 first=0.3 next=0.01 count=594
+Sep  7 14:15:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 20 00 00 
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:41:00 CEST (1441525260) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:42:00 CEST (1441525320) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:42:00 CEST (1441525320) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:43:00 CEST (1441525380) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:43:00 CEST (1441525380) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:44:00 CEST (1441525440) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:44:00 CEST (1441525440) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:45:00 CEST (1441525500) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:00 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:45:00 CEST (1441525500) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:46:00 CEST (1441525560) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:46:00 CEST (1441525560) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:47:00 CEST (1441525620) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:47:00 CEST (1441525620) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:48:00 CEST (1441525680) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:48:00 CEST (1441525680) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:49:00 CEST (1441525740) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:49:00 CEST (1441525740) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 40 15 23 40 
+Sep  7 14:15:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:15:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 14:15:00 this=28954 (0x152340) latest=28954 (0x152340) nrec=0
+Sep  7 14:15:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:50:00 CEST (1441525800) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:50:00 CEST (1441525800) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:51:00 CEST (1441525860) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:51:00 CEST (1441525860) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:52:00 CEST (1441525920) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:01 izu-N550JK weewx[2798]: manager: added record 2015-09-06 09:52:00 CEST (1441525920) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:40:00 CEST (1441539600) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:40:00 CEST (1441539600) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:41:00 CEST (1441539660) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:41:00 CEST (1441539660) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:42:00 CEST (1441539720) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:42:00 CEST (1441539720) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:15:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.08 first=0.3 next=0.01 count=779
+Sep  7 14:15:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:43:00 CEST (1441539780) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:43:00 CEST (1441539780) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:44:00 CEST (1441539840) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:09 izu-N550JK weewx[2798]: manager: added record 2015-09-06 13:44:00 CEST (1441539840) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:54:00 CEST (1441554840) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:54:00 CEST (1441554840) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:55:00 CEST (1441554900) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:55:00 CEST (1441554900) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:15:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.77 first=0.3 next=0.01 count=848
+Sep  7 14:15:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:56:00 CEST (1441554960) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:56:00 CEST (1441554960) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:57:00 CEST (1441555020) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:18 izu-N550JK weewx[2798]: manager: added record 2015-09-06 17:57:00 CEST (1441555020) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:07:00 CEST (1441570020) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:07:00 CEST (1441570020) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:08:00 CEST (1441570080) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:08:00 CEST (1441570080) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:09:00 CEST (1441570140) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:15:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.77 first=0.3 next=0.01 count=848
+Sep  7 14:15:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:09:00 CEST (1441570140) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:10:00 CEST (1441570200) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:10:00 CEST (1441570200) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:11:00 CEST (1441570260) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:27 izu-N550JK weewx[2798]: manager: added record 2015-09-06 22:11:00 CEST (1441570260) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:19:00 CEST (1441585140) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:19:00 CEST (1441585140) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:20:00 CEST (1441585200) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:20:00 CEST (1441585200) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:15:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.76 first=0.3 next=0.01 count=847
+Sep  7 14:15:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:21:00 CEST (1441585260) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:21:00 CEST (1441585260) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:22:00 CEST (1441585320) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:36 izu-N550JK weewx[2798]: manager: added record 2015-09-07 02:22:00 CEST (1441585320) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:32:00 CEST (1441600320) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:32:00 CEST (1441600320) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:33:00 CEST (1441600380) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:33:00 CEST (1441600380) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:15:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.76 first=0.3 next=0.01 count=847
+Sep  7 14:15:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:34:00 CEST (1441600440) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:34:00 CEST (1441600440) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:35:00 CEST (1441600500) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:45 izu-N550JK weewx[2798]: manager: added record 2015-09-07 06:35:00 CEST (1441600500) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:43:00 CEST (1441615380) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:43:00 CEST (1441615380) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:44:00 CEST (1441615440) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:44:00 CEST (1441615440) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:15:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.76 first=0.3 next=0.01 count=847
+Sep  7 14:15:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:45:00 CEST (1441615500) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:45:00 CEST (1441615500) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:46:00 CEST (1441615560) to database 'archive/weewxkl.sdb'
+Sep  7 14:15:54 izu-N550JK weewx[2798]: manager: added record 2015-09-07 10:46:00 CEST (1441615560) to daily summary in 'archive/weewxkl.sdb'
+
+### ==> ...[clipped]
+
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:42:00 CEST (1441626120) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:42:00 CEST (1441626120) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:43:00 CEST (1441626180) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:43:00 CEST (1441626180) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:44:00 CEST (1441626240) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:44:00 CEST (1441626240) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:16:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=6.22 first=0.3 next=0.01 count=593
+Sep  7 14:16:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 40 00 00 
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:45:00 CEST (1441626300) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:45:00 CEST (1441626300) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:46:00 CEST (1441626360) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:46:00 CEST (1441626360) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:47:00 CEST (1441626420) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:47:00 CEST (1441626420) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:48:00 CEST (1441626480) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:00 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:48:00 CEST (1441626480) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:49:00 CEST (1441626540) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:49:00 CEST (1441626540) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:50:00 CEST (1441626600) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:50:00 CEST (1441626600) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:51:00 CEST (1441626660) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:51:00 CEST (1441626660) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:52:00 CEST (1441626720) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:52:00 CEST (1441626720) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:53:00 CEST (1441626780) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:53:00 CEST (1441626780) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 60 15 23 60 
+Sep  7 14:16:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:16:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 14:16:00 this=28955 (0x152360) latest=28955 (0x152360) nrec=0
+Sep  7 14:16:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:54:00 CEST (1441626840) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:54:00 CEST (1441626840) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:55:00 CEST (1441626900) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:55:00 CEST (1441626900) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:56:00 CEST (1441626960) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:56:00 CEST (1441626960) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:57:00 CEST (1441627020) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:57:00 CEST (1441627020) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:58:00 CEST (1441627080) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:58:00 CEST (1441627080) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:59:00 CEST (1441627140) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 13:59:00 CEST (1441627140) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:00:00 CEST (1441627200) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:00:00 CEST (1441627200) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:01:00 CEST (1441627260) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:01:00 CEST (1441627260) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:02:00 CEST (1441627320) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:02:00 CEST (1441627320) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:03:00 CEST (1441627380) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:03:00 CEST (1441627380) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:04:00 CEST (1441627440) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:04:00 CEST (1441627440) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:05:00 CEST (1441627500) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:05:00 CEST (1441627500) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:06:00 CEST (1441627560) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:06:00 CEST (1441627560) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:07:00 CEST (1441627620) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:07:00 CEST (1441627620) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:08:00 CEST (1441627680) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:08:00 CEST (1441627680) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:09:00 CEST (1441627740) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:09:00 CEST (1441627740) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:10:00 CEST (1441627800) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:10:00 CEST (1441627800) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:11:00 CEST (1441627860) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:11:00 CEST (1441627860) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:12:00 CEST (1441627920) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:12:00 CEST (1441627920) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:13:00 CEST (1441627980) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:13:00 CEST (1441627980) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:14:00 CEST (1441628040) to database 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: manager: added record 2015-09-07 14:14:00 CEST (1441628040) to daily summary in 'archive/weewxkl.sdb'
+Sep  7 14:16:01 izu-N550JK weewx[2798]: engine: Starting main packet loop.
+Sep  7 14:16:01 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=1: ts=1441628154 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628154, 'heatindex8': None}
+Sep  7 14:16:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:16:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.01 first=0.3 next=0.01 count=772
+Sep  7 14:16:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:16:11 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=2: ts=1441628169 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628169, 'heatindex8': None}
+Sep  7 14:16:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:16:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.66 first=0.3 next=0.01 count=837
+Sep  7 14:16:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:16:21 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=3: ts=1441628178 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628178, 'heatindex8': None}
+Sep  7 14:16:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:16:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.68 first=0.3 next=0.01 count=839
+Sep  7 14:16:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:16:31 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=4: ts=1441628187 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628187, 'heatindex8': None}
+Sep  7 14:16:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:16:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.72 first=0.3 next=0.01 count=843
+Sep  7 14:16:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:16:41 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=5: ts=1441628196 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628196, 'heatindex8': None}
+Sep  7 14:16:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:16:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.71 first=0.3 next=0.01 count=842
+Sep  7 14:16:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:16:52 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=6: ts=1441628205 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.099999999999994, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.233429885144611, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.099999999999998, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628205, 'heatindex8': None}
+Sep  7 14:16:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:16:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.67 first=0.3 next=0.01 count=838
+Sep  7 14:16:54 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:17:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:17:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=6.19 first=0.3 next=0.01 count=590
+Sep  7 14:17:00 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 60 00 00 
+Sep  7 14:17:01 izu-N550JK CRON[2853]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)
+Sep  7 14:17:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 b5 01 19 00 40 64 1b 3e 15 23 80 15 23 80 
+Sep  7 14:17:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: sleep=0.3 first=0.3 next=0.01 count=1
+Sep  7 14:17:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleHistoryData: time=2015-09-07 14:17:00 this=28956 (0x152380) latest=28956 (0x152380) nrec=0
+Sep  7 14:17:01 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 80 00 00 
+Sep  7 14:17:02 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=7: ts=1441628214 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.099999999999994, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.233429885144611, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.099999999999998, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628214, 'heatindex8': None}
+Sep  7 14:17:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:17:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.02 first=0.3 next=0.01 count=773
+Sep  7 14:17:09 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 80 00 00 
+Sep  7 14:17:12 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=8: ts=1441628229 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628229, 'heatindex8': None}
+Sep  7 14:17:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:17:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.68 first=0.3 next=0.01 count=839
+Sep  7 14:17:18 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 80 00 00 
+Sep  7 14:17:22 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=9: ts=1441628238 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628238, 'heatindex8': None}
+Sep  7 14:17:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:17:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.67 first=0.3 next=0.01 count=838
+Sep  7 14:17:27 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 80 00 00 
+Sep  7 14:17:32 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=10: ts=1441628247 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628247, 'heatindex8': None}
+Sep  7 14:17:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:17:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.68 first=0.3 next=0.01 count=839
+Sep  7 14:17:36 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 80 00 00 
+Sep  7 14:17:42 izu-N550JK weewx[2798]: KlimaLogg: MainThread: genLoopPackets: packet_count=11: ts=1441628256 packet={'dewpoint4': None, 'temp3': None, 'temp2': None, 'temp1': None, 'temp0': 25.0, 'temp7': None, 'temp6': None, 'temp5': None, 'temp4': None, 'temp8': None, 'dewpoint8': None, 'batteryStatus8': 0, 'heatindex2': None, 'batteryStatus1': 0, 'batteryStatus0': 0, 'batteryStatus3': 0, 'batteryStatus2': 0, 'batteryStatus5': 0, 'batteryStatus4': 0, 'batteryStatus7': 0, 'batteryStatus6': 0, 'humidity8': None, 'humidity4': None, 'humidity5': None, 'humidity6': None, 'humidity7': None, 'humidity0': 32, 'humidity1': None, 'humidity2': None, 'humidity3': None, 'dewpoint3': None, 'dewpoint2': None, 'dewpoint1': None, 'dewpoint0': 7.14656252141687, 'dewpoint7': None, 'dewpoint6': None, 'dewpoint5': None, 'rxCheckPercent': 100, 'heatindex4': None, 'heatindex5': None, 'heatindex6': None, 'heatindex7': None, 'heatindex0': 25.0, 'heatindex1': None, 'usUnits': 16, 'heatindex3': None, 'dateTime': 1441628256, 'heatindex8': None}
+Sep  7 14:17:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: getFrame:        00 00 e5 01 19 00 30 64 1b 3e 10 10 10 00 15 90 
+Sep  7 14:17:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: handleCurrentData: sleep=8.66 first=0.3 next=0.01 count=837
+Sep  7 14:17:45 izu-N550JK weewx[2798]: KlimaLogg: RFComm: setFrame:        d5 00 0b 01 19 00 00 1b 3e 80 08 15 23 80 00 00 
+Sep  7 14:17:49 izu-N550JK weewx[2798]: KlimaLogg: MainThread: stopRFThread: waiting for RF thread to terminate
+Sep  7 14:17:49 izu-N550JK weewx[2798]: KlimaLogg: RFComm: stopping rf communication
+Sep  7 14:17:49 izu-N550JK weewx[2798]: KlimaLogg: MainThread: releasing USB interface
+Sep  7 14:17:49 izu-N550JK weewx[2798]: engine: Keyboard interrupt.
