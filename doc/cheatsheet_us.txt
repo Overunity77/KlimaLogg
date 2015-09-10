@@ -422,3 +422,7 @@ Das ist noch interessant, macht ein Device Attribute, wo drauf zugegriffen werde
 drivers/usb/misc/cytherm.c:#define TEMP 0x33 /* RAM location for temperature */
 drivers/usb/misc/cytherm.c:#define SIGN 0x34 /* RAM location for temperature sign */
 drivers/usb/misc/cytherm.c:	/* read temperature */
+
+Siehe auch 
+http://lwn.net/Articles/375945/
+student@granit:~/kernel/linux/drivers/hid/usbhid$ ll
