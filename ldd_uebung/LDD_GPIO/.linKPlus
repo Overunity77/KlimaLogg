@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<General-info>
+    <Driver-name>LDD_GPIO</Driver-name>
+    <Toolchain>Linux GCC</Toolchain>
+    <Architecture>x86_64</Architecture>
+    <hostMachineKernel>false</hostMachineKernel>
+    <Kernel-Version>/opt/embedded/bbb/kernel/linux-dev-am33x-v3.18</Kernel-Version>
+    <Licence>GPL</Licence>
+    <Author-name>Christian Binder</Author-name>
+    <location>/home/christian/link_workspace</location>
+    <wizardType>false</wizardType>
+    <wizardTypeInfo>false</wizardTypeInfo>
+</General-info>
