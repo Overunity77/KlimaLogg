@@ -460,6 +460,16 @@
 			<location>/opt/embedded/bbb/kernel/linux-dev-am33x-v3.18/drivers/input/misc/.yealink.o.cmd</location>
 		</link>
 		<link>
+			<name>register_defines.h</name>
+			<type>1</type>
+			<location>/home/developer/Projects/Abschluss_Projekt/KlimaLogg/usbdriver_dev_us/register_defines.h</location>
+		</link>
+		<link>
+			<name>usb_test.c</name>
+			<type>1</type>
+			<location>/home/developer/Projects/Abschluss_Projekt/KlimaLogg/usbdriver_dev_us/usb_test.c</location>
+		</link>
+		<link>
 			<name>misc/88pm80x_onkey.c</name>
 			<type>1</type>
 			<location>/opt/embedded/bbb/kernel/linux-dev-am33x-v3.18/drivers/input/misc/88pm80x_onkey.c</location>

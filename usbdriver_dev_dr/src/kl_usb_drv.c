@@ -159,41 +159,78 @@ static void ctrl_start_transfer(struct kl_usb *hw)
 	DBG_INFO("%s", __func__);
 
 	if (hw->ctrl_cnt) {
-		hw->ctrl_urb->pipe = hw->ctrl_out_pipe;
-		hw->ctrl_urb->setup_packet = (u_char *)&hw->ctrl_write;
-		hw->ctrl_urb->transfer_buffer = NULL;
-		hw->ctrl_urb->transfer_buffer_length = 0;
-		hw->ctrl_write.wIndex =
-			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].ax5051_reg);
-		hw->ctrl_write.wValue =
-			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].reg_val);
+		hw->ctrl_urb->pipe = hw->usb_ctrl_buff[hw->ctrl_out_idx].pipe;
+		hw->ctrl_urb->setup_packet = (u_char *)&hw->usb_ctrl_buff[hw->ctrl_out_idx].ctrlrequest;
+		hw->ctrl_urb->transfer_buffer = hw->usb_ctrl_buff[hw->ctrl_out_idx].buf;
+		hw->ctrl_urb->transfer_buffer_length = hw->usb_ctrl_buff[hw->ctrl_out_idx].buflen;
+
+//		hw->ctrl_write.wIndex =
+//			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].ax5051_reg);
+//		hw->ctrl_write.wValue =
+//			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].reg_val);
 
 		usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
 	}
 }
 
-/*
- * queue a control transfer request to write HFC-S USB
- * chip register using CTRL request queue
- */
-static int write_reg(struct kl_usb *hw, __u8 reg, __u8 val)
+/* queue a control transfer write request */
+static int write_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data)
 {
-	struct ctrl_buf *buf;
-
-	DBG_INFO("%s", __func__);
-//	if (debug & DBG_HFC_CALL_TRACE)
-//		printk(KERN_DEBUG "%s: %s reg(0x%02x) val(0x%02x)\n",
-//		       hw->name, __func__, reg, val);
+	struct usb_ctrl_buf *buf;
 
 	spin_lock(&hw->ctrl_lock);
-	if (hw->ctrl_cnt >= KL_CTRL_BUFSIZE) {
+	if (hw->ctrl_cnt >= KL_USB_CTRL_BUFSIZE) {
+		DBG_ERR("usb control buffer full!");
 		spin_unlock(&hw->ctrl_lock);
 		return 1;
 	}
-	buf = &hw->ctrl_buff[hw->ctrl_in_idx];
-	buf->ax5051_reg = reg;
-	buf->reg_val = val;
-	if (++hw->ctrl_in_idx >= KL_CTRL_BUFSIZE)
+	buf = &hw->usb_ctrl_buff[hw->ctrl_in_idx];
+
+	buf->ctrlrequest.bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT;
+	buf->ctrlrequest.bRequest = USB_REQ_SET_CONFIGURATION;
+	buf->ctrlrequest.wValue = cpu_to_le16((USB_HID_FEATURE_REPORT << 8) | reportId); /* convert to little-endian */
+	buf->ctrlrequest.wIndex = cpu_to_le16(0);
+	buf->ctrlrequest.wLength = cpu_to_le16(len);
+
+	buf->buf = data;
+	buf->buflen = len;
+
+	buf->pipe = hw->ctrl_out_pipe;
+
+	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
+		hw->ctrl_in_idx = 0;
+	if (++hw->ctrl_cnt == 1) //TODO why ctrl_cnt == 1 and not ctrl_cnt > 0 ??
+		ctrl_start_transfer(hw);
+	spin_unlock(&hw->ctrl_lock);
+
+	return 0;
+}
+
+/* queue a control transfer write request */
+static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data)
+{
+	struct usb_ctrl_buf *buf;
+
+	spin_lock(&hw->ctrl_lock);
+	if (hw->ctrl_cnt >= KL_USB_CTRL_BUFSIZE) {
+		DBG_ERR("usb control buffer full!");
+		spin_unlock(&hw->ctrl_lock);
+		return 1;
+	}
+	buf = &hw->usb_ctrl_buff[hw->ctrl_in_idx];
+
+	buf->ctrlrequest.bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN;
+	buf->ctrlrequest.bRequest = USB_REQ_CLEAR_FEATURE;
+	buf->ctrlrequest.wValue = cpu_to_le16((USB_HID_FEATURE_REPORT << 8) | reportId); /* convert to little-endian */
+	buf->ctrlrequest.wIndex = cpu_to_le16(0);
+	buf->ctrlrequest.wLength = cpu_to_le16(len);
+
+	buf->buf = data;
+	buf->buflen = len;
+
+	buf->pipe = hw->ctrl_out_pipe;
+
+	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
 		hw->ctrl_in_idx = 0;
 	if (++hw->ctrl_cnt == 1)
 		ctrl_start_transfer(hw);
@@ -202,14 +239,53 @@ static int write_reg(struct kl_usb *hw, __u8 reg, __u8 val)
 	return 0;
 }
 
+/*
+ * queue a control transfer request to write HFC-S USB
+ * chip register using CTRL request queue
+ */
+static int write_reg(struct kl_usb *hw, __u8 reg, __u8 val)
+{
+//	struct ctrl_buf *buf;
+//
+//	DBG_INFO("%s", __func__);
+////	if (debug & DBG_HFC_CALL_TRACE)
+////		printk(KERN_DEBUG "%s: %s reg(0x%02x) val(0x%02x)\n",
+////		       hw->name, __func__, reg, val);
+//
+//	spin_lock(&hw->ctrl_lock);
+//	if (hw->ctrl_cnt >= KL_CTRL_BUFSIZE) {
+//		spin_unlock(&hw->ctrl_lock);
+//		return 1;
+//	}
+//	buf = &hw->ctrl_buff[hw->ctrl_in_idx];
+//	buf->ax5051_reg = reg;
+//	buf->reg_val = val;
+//	if (++hw->ctrl_in_idx >= KL_CTRL_BUFSIZE)
+//		hw->ctrl_in_idx = 0;
+//	if (++hw->ctrl_cnt == 1)
+//		ctrl_start_transfer(hw);
+//	spin_unlock(&hw->ctrl_lock);
+//
+//	return 0;
+}
+
 /* control completion routine handling background control cmds */
 static void ctrl_complete(struct urb *urb)
 {
 	struct kl_usb *hw = (struct kl_usb *) urb->context;
+	int ret;
 
-	DBG_INFO("%s", __func__);
+//	/* The following flags are used internally by usbcore and HCDs */
+//	#define URB_DIR_IN		0x0200	/* Transfer from device to host */
+//	#define URB_DIR_OUT		0
+//	#define URB_DIR_MASK		URB_DIR_IN
 
+	DBG_INFO("transfer flags: 0x%x, actual length: %d", urb->transfer_flags, urb->actual_length);
+	DBG_INFO("write buffer:");
 	kl_debug_data(__FUNCTION__, KL_CTRL_READ_BUFFER_SIZE, hw->fifos[1].buffer);
+
+	DBG_INFO("read buffer:");
+	kl_debug_data(__FUNCTION__, 21, hw->fifos[2].buffer);
 
 	urb->dev = hw->dev;
 	if (hw->ctrl_cnt) {
@@ -217,8 +293,9 @@ static void ctrl_complete(struct urb *urb)
 		if (++hw->ctrl_out_idx >= KL_CTRL_BUFSIZE)
 			hw->ctrl_out_idx = 0;	/* pointer wrap */
 
-		//ctrl_start_transfer(hw); /* start next transfer */
+		ctrl_start_transfer(hw); /* start next transfer */
 	}
+
 }
 
 
@@ -592,7 +669,7 @@ static void rx_int_complete(struct urb *urb)
 
 resubmit:
 	status = 0;
-	status = usb_submit_urb(urb, GFP_ATOMIC);
+// TODO re-enable:	status = usb_submit_urb(urb, GFP_ATOMIC);
 	if (status) {
 		DBG_ERR("error resubmitting USB Int urb");
 	}
@@ -728,29 +805,11 @@ static int setup_klusb(struct kl_usb *hw)
 
 	start_int_fifo(hw->fifos + KLUSB_INT_RX);
 
-	hw->ctrl_read.bRequestType = KL_CTRL_READ_REQUEST_TYPE;
-	hw->ctrl_read.bRequest = KL_CTRL_SET_REPORT_REQUEST;
-	hw->ctrl_read.wValue = cpu_to_le16(0x03dd); /* convert to little-endian */
-	hw->ctrl_read.wIndex = cpu_to_le16(0);
-	hw->ctrl_read.wLength = cpu_to_le16(KL_CTRL_READ_BUFFER_SIZE);
+	/* init the background machinery for control requests */
+	hw->ctrl_urb->dev = hw->dev;
+	hw->ctrl_urb->complete = (usb_complete_t)ctrl_complete;
+	hw->ctrl_urb->context = hw;
 
-//	static inline void usb_fill_control_urb(struct urb *urb,
-//						struct usb_device *dev,
-//						unsigned int pipe,
-//						unsigned char *setup_packet,
-//						void *transfer_buffer,
-//						int buffer_length,
-//						usb_complete_t complete_fn,
-//						void *context)
-
-	usb_fill_control_urb(hw->ctrl_urb,
-			     hw->dev,
-			     hw->ctrl_out_pipe,
-			     (u_char *)&hw->ctrl_write,
-			     hw->fifos[1].buffer,
-			     KL_CTRL_READ_BUFFER_SIZE,
-			     (usb_complete_t)ctrl_complete,
-			     hw);
 
 
 	hw->fifos[1].buffer[0]  = 0xdd;
@@ -761,15 +820,47 @@ static int setup_klusb(struct kl_usb *hw)
 	hw->fifos[1].buffer[8]  = hw->fifos[1].buffer[9]  = hw->fifos[1].buffer[10] = hw->fifos[1].buffer[11] = 0xcc;
 	hw->fifos[1].buffer[12] = hw->fifos[1].buffer[13] = hw->fifos[1].buffer[14] = hw->fifos[1].buffer[15] = 0xcc;
 
-	kl_debug_data(__FUNCTION__, KL_CTRL_READ_BUFFER_SIZE, hw->fifos[1].buffer);
 
-	DBG_INFO("going to submit control urb");
+	write_usb_ctrl(hw,
+		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].msg_type,
+		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].length,
+		       hw->fifos[1].buffer);
 
-	ret = usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
-	if (ret)
-	{
-		DBG_ERR("submitting set_report control URB failed (%d)", ret);
-	}
+	read_usb_ctrl(hw,
+		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].msg_type,
+		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].length,
+		      hw->fifos[2].buffer);
+
+
+
+
+//	hw->ctrl_write.bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT;
+//	hw->ctrl_write.bRequest = USB_REQ_SET_CONFIGURATION;
+//	hw->ctrl_write.wValue = cpu_to_le16(0x03dd); /* convert to little-endian */
+//	hw->ctrl_write.wIndex = cpu_to_le16(0);
+//	hw->ctrl_write.wLength = cpu_to_le16(KL_CTRL_READ_BUFFER_SIZE);
+//
+//	usb_fill_control_urb(hw->ctrl_urb,
+//			     hw->dev,
+//			     hw->ctrl_out_pipe,
+//			     (u_char *)&hw->ctrl_write,
+//			     hw->fifos[1].buffer,
+//			     KL_CTRL_READ_BUFFER_SIZE,
+//			     (usb_complete_t)ctrl_complete,
+//			     hw);
+//
+//
+//
+//	kl_debug_data(__FUNCTION__, KL_CTRL_READ_BUFFER_SIZE, hw->fifos[1].buffer);
+//
+//	DBG_INFO("going to submit control write urb");
+//
+//	ret = usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
+//	if (ret)
+//	{
+//		DBG_ERR("submitting write control URB failed (%d)", ret);
+//	}
+
 
 
 //	/* init the background machinery for control requests */
@@ -963,7 +1054,7 @@ static struct usb_class_driver kl_class = { .name = "kl%d",
 					    .minor_base = ML_MINOR_BASE };
 
 
-static int setup_instance(struct kl_usb *hw, struct device *parent)
+static int setup_instance(struct kl_usb *hw, struct device *parent) // TODO remove parent
 {
 	u_long	flags;
 	int	err, i;
