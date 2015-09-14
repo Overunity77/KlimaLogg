@@ -14,11 +14,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     ui->setupUi(this);
+    m_kldatabase = new KLDatabase(this);
+
     MainWindow::makePlot();
 }
 
 MainWindow::~MainWindow()
 {
+    delete m_kldatabase;
     delete ui;
 }
 
@@ -26,12 +29,14 @@ MainWindow::~MainWindow()
 void MainWindow::makePlot()
 {
     // prepare data:
-    double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-    QVector<double> x1(20), y1(20);
+//    double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+    QVector<double> x1(14000), y1(14000);
+
+
+/*
     char data[100];
     int retValue = 0;
     int counter = 0;
-
 
     FILE *fd_klimalogg = NULL;
 
@@ -48,47 +53,15 @@ void MainWindow::makePlot()
  //   x1[0] = firstTimePoint;
 
     qDebug() << "firstTimePoint" << firstTimePoint;
-/*
-    y1[1] = 25.6;
-    x1[1] = QDateTime(  QDate(2015, 9,13),  QTime(17, 21)).toMSecsSinceEpoch()/1000.0;
 
-    y1[2] = 25.8;
-    x1[2] = QDateTime(  QDate(2015, 9,13),  QTime(17, 22)).toMSecsSinceEpoch()/1000.0;
-
-    y1[3] = 27.1;
-    x1[3] = QDateTime(  QDate(2015, 9,13),  QTime(17, 23)).toMSecsSinceEpoch()/1000.0;
-
-    y1[4] = 28.0;
-    x1[4] = QDateTime(  QDate(2015, 9,13),  QTime(17, 24)).toMSecsSinceEpoch()/1000.0;
-
-    y1[5] = 27.9;
-    x1[5] = QDateTime(  QDate(2015, 9,13),  QTime(17, 25)).toMSecsSinceEpoch()/1000.0;
-
-    y1[6] = 25.3;
-    x1[6] = QDateTime(  QDate(2015, 9,13),  QTime(17, 26)).toMSecsSinceEpoch()/1000.0;
-
-    y1[7] = 24.5;
-    x1[7] = QDateTime(  QDate(2015, 9,13),  QTime(17, 27)).toMSecsSinceEpoch()/1000.0;
-
-    y1[8] = 35;
-    x1[8] = actualTime;
-*/
 
     while (counter < 20) {
         retValue = (int)fread(data, 8, 1, fd_klimalogg);
         //printf("retValue= %d\n", retValue);
         if (retValue) {
             qDebug() << "Record Nr :" << counter;
-            //      qDebug() << "Days   : %02d" <<  data[0];
-            //      qDebug() << "Month  : %02d" <<  data[1];
-            //      qDebug() << "Year   : %04d" <<  (int)data[2] + 2000;
-            //      qDebug() << "Hours  : %02d" <<  data[3];
-            //      qDebug() << "Minutes: %02d" <<  data[4];
             x1[counter] = QDateTime(  QDate((int)data[2] + 2000, (int)data[1],(int)data[0]),  QTime((int)data[3], (int)data[4])).toMSecsSinceEpoch()/1000.0;
             qDebug() << x1[counter];
-            // qDebug() << "Humidity : %02d" << data[5];
-
-            //   qDebug() << "Temp : %02d.%1d" << (int)data[6]- TEMPERATURE_OFFSET << data[7];
             y1[counter] = (int)data[6] - (int)TEMPERATURE_OFFSET + ((double)data[7])/10;
             qDebug() << y1[counter];
             counter = counter +1;
@@ -96,6 +69,26 @@ void MainWindow::makePlot()
         }
     }
     fclose(fd_klimalogg);
+*/
+
+
+
+    //read DB
+    bool ok = m_kldatabase->getValues(x1, y1);
+
+    if (ok)
+    {
+        //update UI
+
+    }
+    else
+    {
+        //qDebug();
+    }
+
+
+
+
 
     // create and configure plottables:
     QCPGraph *graph1 = ui->customPlot->addGraph();
@@ -124,7 +117,7 @@ void MainWindow::makePlot()
     ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yyyy hh:mm");
     ui->customPlot->xAxis->setAutoTickStep(false);
-    ui->customPlot->xAxis->setTickStep(900);
+    ui->customPlot->xAxis->setTickStep(86400);
 
     ui->customPlot->yAxis->setAutoTickStep(false);
     ui->customPlot->yAxis->setTickStep(1);
@@ -152,10 +145,8 @@ void MainWindow::makePlot()
     axisRectGradient.setColorAt(1, QColor(30, 30, 30));
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
 
- //   ui->customPlot->rescaleAxes();
-//    ui->customPlot->xAxis->setRange(firstTimePoint , actualTime);
-   ui->customPlot->xAxis->setRange(x1[5] , x1[19]);
-    ui->customPlot->yAxis->setRange(20, 30);
-//    ui->customPlot->replot();
+    ui->customPlot->xAxis->setRange(x1[0], x1[13000]);
+    ui->customPlot->yAxis->setRange(20, 32);
+
 
 }

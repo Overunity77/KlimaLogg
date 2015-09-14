@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "kldatabase.h"
 
 namespace Ui {
 class MainWindow;
@@ -20,6 +21,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    KLDatabase* m_kldatabase;
 };
 
 #endif // MAINWINDOW_H

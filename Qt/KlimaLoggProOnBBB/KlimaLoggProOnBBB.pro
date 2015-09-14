@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui sql
 
 CONFIG += c++11
 
@@ -16,10 +16,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    kldatabase.cpp
 
 HEADERS  += mainwindow.h \
-    qcustomplot.h
+    qcustomplot.h \
+    kldatabase.h
 
 FORMS    += mainwindow.ui
 
