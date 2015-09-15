@@ -156,9 +156,11 @@ static inline void kl_debug_data(const char *function, int size,
 /* start next background transfer for control channel */
 static void ctrl_start_transfer(struct kl_usb *hw)
 {
-	DBG_INFO("%s", __func__);
+	DBG_INFO("start next transfer");
 
 	if (hw->ctrl_cnt) {
+		DBG_INFO("prepare new urb");
+
 		hw->ctrl_urb->pipe = hw->usb_ctrl_buff[hw->ctrl_out_idx].pipe;
 		hw->ctrl_urb->setup_packet = (u_char *)&hw->usb_ctrl_buff[hw->ctrl_out_idx].ctrlrequest;
 		hw->ctrl_urb->transfer_buffer = hw->usb_ctrl_buff[hw->ctrl_out_idx].buf;
@@ -170,6 +172,10 @@ static void ctrl_start_transfer(struct kl_usb *hw)
 //			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].reg_val);
 
 		usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
+	}
+	else
+	{
+		DBG_INFO("transfer queue empty");
 	}
 }
 
@@ -239,35 +245,87 @@ static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data
 	return 0;
 }
 
+
+
+
 /*
  * queue a control transfer request to write HFC-S USB
  * chip register using CTRL request queue
  */
-static int write_reg(struct kl_usb *hw, __u8 reg, __u8 val)
-{
-//	struct ctrl_buf *buf;
-//
-//	DBG_INFO("%s", __func__);
-////	if (debug & DBG_HFC_CALL_TRACE)
-////		printk(KERN_DEBUG "%s: %s reg(0x%02x) val(0x%02x)\n",
-////		       hw->name, __func__, reg, val);
+//static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
+//{
+//	struct usb_ctrl_buf *buf;
 //
 //	spin_lock(&hw->ctrl_lock);
-//	if (hw->ctrl_cnt >= KL_CTRL_BUFSIZE) {
+//	if (hw->ctrl_cnt >= KL_USB_CTRL_BUFSIZE) {
+//		DBG_ERR("usb control buffer full!");
 //		spin_unlock(&hw->ctrl_lock);
 //		return 1;
 //	}
-//	buf = &hw->ctrl_buff[hw->ctrl_in_idx];
-//	buf->ax5051_reg = reg;
-//	buf->reg_val = val;
-//	if (++hw->ctrl_in_idx >= KL_CTRL_BUFSIZE)
+//	buf = &hw->usb_ctrl_buff[hw->ctrl_in_idx];
+//
+//	buf->ctrlrequest.bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT;
+//	buf->ctrlrequest.bRequest = USB_REQ_SET_CONFIGURATION;
+//	buf->ctrlrequest.wValue = cpu_to_le16((USB_HID_FEATURE_REPORT << 8) |
+//			                       KL_MSG_WRITE_REG); /* convert to little-endian */
+//	buf->ctrlrequest.wIndex = cpu_to_le16(0);
+//	buf->ctrlrequest.wLength = cpu_to_le16(KL_LEN_WRITE_REG);
+//
+//	reg->buf[0] = 0xf0;
+//	reg->buf[1] = reg->addr & 0x7f;
+//	reg->buf[2] = 0x01;
+//	reg->buf[3] = reg->value;
+//	reg->buf[4] = 0x00;
+//
+//	buf->buf = reg->buf;
+//	buf->buflen = KL_LEN_WRITE_REG;
+//
+//	buf->pipe = hw->ctrl_out_pipe;
+//
+////	DBG_INFO(" reg: 0x%p", reg);
+////	DBG_INFO(" buf->buf: 0x%p", buf->buf);
+////	DBG_INFO("&buf->buf: 0x%p", &buf->buf);
+//
+//	kl_debug_data(__FUNCTION__, buf->buflen, buf->buf);
+//
+//
+//	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
 //		hw->ctrl_in_idx = 0;
-//	if (++hw->ctrl_cnt == 1)
+//	if (++hw->ctrl_cnt == 1) //TODO why ctrl_cnt == 1 and not ctrl_cnt > 0 ??
 //		ctrl_start_transfer(hw);
 //	spin_unlock(&hw->ctrl_lock);
 //
 //	return 0;
+//}
+
+static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
+{
+	int ret = 0;
+
+	reg->buf[0] = 0xf0;
+	reg->buf[1] = reg->addr & 0x7f;
+	reg->buf[2] = 0x01;
+	reg->buf[3] = reg->value;
+	reg->buf[4] = 0x00;
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3f0, 0, reg->buf, 5, 5 * HZ);
+	if (ret < 0) {
+		printk("Error in writeReg Nr: %d\n", ret);
+	}
+	printk
+	    ("writeReg nach= %02x %02x %02x %02x %02x\n",
+			    reg->buf[0], reg->buf[1], reg->buf[2], reg->buf[3], reg->buf[4]);
+
+	return 0;
 }
+
+
 
 /* control completion routine handling background control cmds */
 static void ctrl_complete(struct urb *urb)
@@ -280,22 +338,23 @@ static void ctrl_complete(struct urb *urb)
 //	#define URB_DIR_OUT		0
 //	#define URB_DIR_MASK		URB_DIR_IN
 
-	DBG_INFO("transfer flags: 0x%x, actual length: %d", urb->transfer_flags, urb->actual_length);
-	DBG_INFO("write buffer:");
-	kl_debug_data(__FUNCTION__, KL_CTRL_READ_BUFFER_SIZE, hw->fifos[1].buffer);
+//	DBG_INFO("transfer flags: 0x%x, actual length: %d", urb->transfer_flags, urb->actual_length);
+//	DBG_INFO("ctrl_complete buffer:");
 
-	DBG_INFO("read buffer:");
-	kl_debug_data(__FUNCTION__, 21, hw->fifos[2].buffer);
+	spin_lock(&hw->ctrl_lock);
+
+	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
 
 	urb->dev = hw->dev;
 	if (hw->ctrl_cnt) {
 		hw->ctrl_cnt--;	/* decrement actual count */
-		if (++hw->ctrl_out_idx >= KL_CTRL_BUFSIZE)
+		if (++hw->ctrl_out_idx >= KL_USB_CTRL_BUFSIZE)
 			hw->ctrl_out_idx = 0;	/* pointer wrap */
 
 		ctrl_start_transfer(hw); /* start next transfer */
 	}
 
+	spin_unlock(&hw->ctrl_lock);
 }
 
 
@@ -498,76 +557,7 @@ static void kl_int_in_callback(struct urb *urb)
 //	}
 }
 
-static int kl_open(struct inode *inode, struct file *file)
-{
-//	/* open syscall */
-//	struct kl_usb *hw = NULL;
-//	struct usb_interface *interface;
-//	int subminor;
-//	int retval = 0;
-//
-//	DBG_INFO("Open device");
-//	subminor = iminor(inode);
-//
-//	mutex_lock(&disconnect_mutex);
-//
-//	interface = usb_find_interface(&kl_driver, subminor);
-//	if (!interface)
-//	{
-//		DBG_ERR("can't find device for minor %d", subminor);
-//		retval = -ENODEV;
-//		goto exit;
-//	}
-//
-//	hw = usb_get_intfdata(interface);
-//	if (!hw)
-//	{
-//		retval = -ENODEV;
-//		goto exit;
-//	}
-//
-//	/* lock this device */
-//	if (down_interruptible(&hw->sem))
-//	{
-//		DBG_ERR("sem down failed");
-//		retval = -ERESTARTSYS;
-//		goto exit;
-//	}
-//
-//	/* Increment our usage count for the device. */
-//	++hw->open_count;
-//	if (hw->open_count > 1)
-//		DBG_DEBUG("open_count = %d", hw->open_count);
-//
-//	/* Initialize interrupt URB. */
-//	usb_fill_int_urb(hw->int_in_urb, hw->dev,
-//			usb_rcvintpipe(hw->dev,
-//					hw->int_in_endpoint->bEndpointAddress),
-//			hw->int_in_buffer,
-//			le16_to_cpu(hw->int_in_endpoint->wMaxPacketSize),
-//			kl_int_in_callback, hw,
-//			hw->int_in_endpoint->bInterval);
-//
-//	hw->int_in_running = 1;
-//	mb();
-//
-//	retval = usb_submit_urb(hw->int_in_urb, GFP_KERNEL);
-//	if (retval)
-//	{
-//		DBG_ERR("submitting int urb failed (%d)", retval);
-//		hw->int_in_running = 0;
-//		--hw->open_count;
-//		goto unlock_exit;
-//	}
-//
-//	/* Save our object in the file's private structure. */
-//	file->private_data = hw;
-//
-//	unlock_exit: up(&hw->sem);
-//
-//	exit: mutex_unlock(&disconnect_mutex);
-//	return retval;
-}
+
 
 static int kl_release(struct inode *inode, struct file *file)
 {
@@ -728,12 +718,331 @@ static void start_int_fifo(struct usb_fifo *fifo)
 	}
 }
 
-static void reset_klusb(struct kl_usb *hw)
-{
-	struct usb_fifo *fifo;
+static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *config) {
+	int ret = 0;
+	__u8 writebuf[KL_LEN_READ_CONFIG_FLASH_OUT];
 	int i;
 
+	for (i = 0; i < KL_LEN_READ_CONFIG_FLASH_OUT; i++)
+		writebuf[i] = 0xcc;
+
+	writebuf[0]  = 0xdd;
+	writebuf[1]  = 0x0a;
+	writebuf[2]  = (config->addr >> 8) & 0xff;
+	writebuf[3]  = (config->addr >> 0) & 0xff;
+
+	DBG_INFO("readConfigFlash write buffer:");
+	kl_debug_data(__FUNCTION__, KL_LEN_READ_CONFIG_FLASH_OUT, writebuf);
+
+
+	ret = usb_control_msg(hw->dev, hw->ctrl_out_pipe, USB_REQ_SET_CONFIGURATION,
+			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
+			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_READ_CONFIG_FLASH_OUT,
+			      0, writebuf, KL_LEN_READ_CONFIG_FLASH_OUT, 5 * HZ
+			     );
+	if (ret < 0) {
+		DBG_ERR("Could not prepare to read config flash");
+		return ret;
+	}
+
+	ret = usb_control_msg(hw->dev, hw->ctrl_out_pipe, USB_REQ_CLEAR_FEATURE,
+			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
+			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_READ_CONFIG_FLASH_IN,
+			      0, config->readBuf, config->buflen, 5 * HZ
+			     );
+
+	if (ret < 0) {
+		DBG_ERR("Could not read from config flash");
+		return ret;
+	}
+
+	return ret;
+}
+
+static void doRfSetup(struct kl_usb *hw)
+{
+	int ret;
+
+	/* execute(5) */
+	hw->rf_setup_buffers.buf_execute[0] = 0xd9;
+	hw->rf_setup_buffers.buf_execute[1] = 0x05;
+//	write_usb_ctrl(hw,
+//		       KL_MSG_EXECUTE,
+//		       KL_LEN_EXECUTE,
+//		       hw->rf_setup_buffers.buf_execute);
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3d9, 0, hw->rf_setup_buffers.buf_execute, 0x0f, 5 * HZ);
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		return;
+	}
+	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_execute[0], hw->rf_setup_buffers.buf_execute[1], hw->rf_setup_buffers.buf_execute[2], hw->rf_setup_buffers.buf_execute[3]);
+
+	/* setPreamblePattern(0xaa) */
+	hw->rf_setup_buffers.buf_preamble_first[0] = 0xd8;
+	hw->rf_setup_buffers.buf_preamble_first[1] = 0xaa;
+//	write_usb_ctrl(hw,
+//		       KL_MSG_SET_PREAMBLE_PATTERN,
+//		       KL_LEN_SET_PREAMBLE_PATTERN,
+//		       hw->rf_setup_buffers.buf_preamble_first);
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_first, 0x15, 5 * HZ);
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		return;
+	}
+	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_first[0], hw->rf_setup_buffers.buf_preamble_first[1], hw->rf_setup_buffers.buf_preamble_first[2], hw->rf_setup_buffers.buf_preamble_first[3]);
+
+	/* setState(0) */
+	hw->rf_setup_buffers.buf_setstate_first[0] = 0xd7;
+	hw->rf_setup_buffers.buf_setstate_first[1] = 0x00;
+//	write_usb_ctrl(hw,
+//		       KL_MSG_SET_STATE,
+//		       KL_LEN_SET_STATE,
+//		       hw->rf_setup_buffers.buf_setstate_first);
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_first, 0x15, 5 * HZ);
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		return;
+	}
+	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_first[0], hw->rf_setup_buffers.buf_setstate_first[1], hw->rf_setup_buffers.buf_setstate_first[2], hw->rf_setup_buffers.buf_setstate_first[3]);
+
+	// TODO sleep(1) ???
+	ssleep(1);
+
+	/* setRx() */
+	hw->rf_setup_buffers.buf_setRx_first[0] = 0xd0;
+//	write_usb_ctrl(hw,
+//		       KL_MSG_SET_RX,
+//		       KL_LEN_SET_RX,
+//		       hw->rf_setup_buffers.buf_setRx_first);
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_first, 0x15, 5 * HZ);
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		return;
+	}
+	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_first[0], hw->rf_setup_buffers.buf_setRx_first[1], hw->rf_setup_buffers.buf_setRx_first[2], hw->rf_setup_buffers.buf_setRx_first[3]);
+
+
+	/* setPreamblePattern(0xaa) */
+	hw->rf_setup_buffers.buf_preamble_second[0] = 0xd8;
+	hw->rf_setup_buffers.buf_preamble_second[1] = 0xaa;
+//	write_usb_ctrl(hw,
+//		       KL_MSG_SET_PREAMBLE_PATTERN,
+//		       KL_LEN_SET_PREAMBLE_PATTERN,
+//		       hw->rf_setup_buffers.buf_preamble_second);
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_second, 0x15, 5 * HZ);
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		return;
+	}
+	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_second[0], hw->rf_setup_buffers.buf_preamble_second[1], hw->rf_setup_buffers.buf_preamble_second[2], hw->rf_setup_buffers.buf_preamble_second[3]);
+
+	/* setState(0x1e) */
+	hw->rf_setup_buffers.buf_setstate_second[0] = 0xd7;
+	hw->rf_setup_buffers.buf_setstate_second[1] = 0x1e;
+//	write_usb_ctrl(hw,
+//		       KL_MSG_SET_STATE,
+//		       KL_LEN_SET_STATE,
+//		       hw->rf_setup_buffers.buf_setstate_second);
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_second, 0x15, 5 * HZ);
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		return;
+	}
+	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_second[0], hw->rf_setup_buffers.buf_setstate_second[1], hw->rf_setup_buffers.buf_setstate_second[2], hw->rf_setup_buffers.buf_setstate_second[3]);
+
+	// TODO sleep(1) ???
+	ssleep(1);
+
+	/* setRx() */
+	hw->rf_setup_buffers.buf_setRx_second[0] = 0xd0;
+//	write_usb_ctrl(hw,
+//		       KL_MSG_SET_RX,
+//		       KL_LEN_SET_RX,
+//		       hw->rf_setup_buffers.buf_setRx_second);
+
+
+	ret =
+	    usb_control_msg(hw->dev,
+			    usb_sndctrlpipe(hw->dev, 0),
+			    USB_REQ_SET_CONFIGURATION,
+			    USB_TYPE_CLASS |
+			    USB_RECIP_INTERFACE |
+			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_second, 0x15, 5 * HZ);
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		return;
+	}
+	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_second[0], hw->rf_setup_buffers.buf_setRx_second[1], hw->rf_setup_buffers.buf_setRx_second[2], hw->rf_setup_buffers.buf_setRx_second[3]);
+
+}
+
+static void setRegisterValue(__u8 addr, int value)
+{
+	int i, countReg;
+
+	countReg = sizeof(ax5051_reglist) / sizeof(ax5051_reglist[0]);
+
+	for (i = 0; i < countReg; i++) {
+		if (ax5051_reglist[i].addr == addr) {
+			ax5051_reglist[i].value = value;
+			break;
+		}
+	}
+}
+
+static void initTranseiver(struct kl_usb *hw)
+{
+	struct usb_fifo *fifo;
+	struct usb_read_config_flash freqCorrection;
+	struct usb_read_config_flash transceiverId;
+	unsigned int corVal = 0;
+	unsigned int freqVal = 0;
+	__u8 readbuf[KL_LEN_READ_CONFIG_FLASH_IN];
+	int ret;
+	int countReg, i;
+
 	DBG_INFO("%s", __func__);
+
+	/* read frequency correction */
+	freqCorrection.addr = 0x1f5;
+	freqCorrection.buflen = KL_LEN_READ_CONFIG_FLASH_IN;
+	freqCorrection.readBuf = readbuf;
+
+	ret = readConfigFlash(hw, &freqCorrection);
+
+	DBG_INFO("freqCorrection read buffer:");
+	kl_debug_data(__FUNCTION__, freqCorrection.buflen, freqCorrection.readBuf);
+
+	corVal = freqCorrection.readBuf[4] << 8;
+	corVal |= freqCorrection.readBuf[5];
+	corVal <<= 8;
+	corVal |= freqCorrection.readBuf[6];
+	corVal <<= 8;
+	corVal |= freqCorrection.readBuf[7];
+
+	DBG_INFO("frequency correction: %u (0x%x)", corVal, corVal);
+
+	freqVal = KL_FREQ_VAL + corVal;
+
+	if (!(freqVal % 2))
+		freqVal += 1;
+
+	DBG_INFO("adjusted frequency: %u (0x%x)", freqVal, freqVal);
+
+
+	/* save adjusted frequency in ax5051 register data */
+	setRegisterValue(AX5051REGISTER_FREQ3, (freqVal >> 24) & 0xff);
+	setRegisterValue(AX5051REGISTER_FREQ2, (freqVal >> 16) & 0xff);
+	setRegisterValue(AX5051REGISTER_FREQ1, (freqVal >> 8) & 0xff);
+	setRegisterValue(AX5051REGISTER_FREQ0, (freqVal >> 0) & 0xff);
+
+	/* read transceiver identifier */
+	transceiverId.addr = 0x1f9;
+	transceiverId.buflen = KL_LEN_READ_CONFIG_FLASH_IN;
+	transceiverId.readBuf = readbuf;
+
+	ret = readConfigFlash(hw, &transceiverId);
+
+	DBG_INFO("transceiverId read buffer:");
+	kl_debug_data(__FUNCTION__, transceiverId.buflen, transceiverId.readBuf);
+
+	hw->transceiver_id = (transceiverId.readBuf[9] << 8) + transceiverId.readBuf[10];
+
+	DBG_INFO("transceiver identifier: %u (0x%x)", hw->transceiver_id, hw->transceiver_id);
+
+	msleep(1000);
+
+	/* write ax5051 registers */
+	countReg = sizeof(ax5051_reglist) / sizeof(ax5051_reglist[0]);
+	DBG_INFO("number of registers: %d", countReg);
+	for (i = 0; i < countReg; i++) {
+		if (ax5051_reglist[i].value != -1) {
+			// DBG_INFO("&ax5051_reglist[%d]: 0x%p",i, &ax5051_reglist[i]);
+			// DBG_INFO(" ax5051_reglist[i]: 0x%x",  ax5051_reglist[i]);
+			// kl_debug_data(__FUNCTION__, 5, ax5051_reglist[i].buf);
+			write_reg(hw, &ax5051_reglist[i]);
+
+			// msleep(10);
+			// kl_debug_data(__FUNCTION__, 5, ax5051_reglist[i].buf);
+		}
+
+	}
+
+	/* do RF Setup */
+	doRfSetup(hw);
+
+
+
+//	    def doRFSetup(self):
+//	        self.hid.execute(5)
+//	        self.hid.setPreamblePattern(0xaa)
+//	        self.hid.setState(0)
+//	        time.sleep(1)
+//	        self.hid.setRX()
+//
+//	        self.hid.setPreamblePattern(0xaa)
+//	        self.hid.setState(0x1e)
+//	        time.sleep(1)
+//	        self.hid.setRX()
+//	        self.setSleep(0.075, 0.005)
+
+
+
+//	write_usb_ctrl(hw,
+//		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].msg_type,
+//		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].length,
+//		       hw->frequency_corr.writeData);
+//
+//
+//
+//
+//	read_usb_ctrl(hw,
+//		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].msg_type,
+//		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].length,
+//		      hw->frequency_corr.readBuf);
+
 
 //	/* do Chip reset */
 //	write_reg(hw, HFCUSB_CIRM, 8);
@@ -803,33 +1112,14 @@ static int setup_klusb(struct kl_usb *hw)
 //	/* first set the needed config, interface and alternate */
 //	(void) usb_set_interface(hw->dev, hw->if_used, hw->alt_used);
 
-	start_int_fifo(hw->fifos + KLUSB_INT_RX);
+	// TODO re-enable
+//	start_int_fifo(hw->fifos + KLUSB_INT_RX);
 
 	/* init the background machinery for control requests */
 	hw->ctrl_urb->dev = hw->dev;
 	hw->ctrl_urb->complete = (usb_complete_t)ctrl_complete;
 	hw->ctrl_urb->context = hw;
 
-
-
-	hw->fifos[1].buffer[0]  = 0xdd;
-	hw->fifos[1].buffer[1]  = 0x0a;
-	hw->fifos[1].buffer[2]  = 0x01;
-	hw->fifos[1].buffer[3]  = 0xF5;
-	hw->fifos[1].buffer[4]  = hw->fifos[1].buffer[5]  = hw->fifos[1].buffer[6]  = hw->fifos[1].buffer[7]  = 0xcc;
-	hw->fifos[1].buffer[8]  = hw->fifos[1].buffer[9]  = hw->fifos[1].buffer[10] = hw->fifos[1].buffer[11] = 0xcc;
-	hw->fifos[1].buffer[12] = hw->fifos[1].buffer[13] = hw->fifos[1].buffer[14] = hw->fifos[1].buffer[15] = 0xcc;
-
-
-	write_usb_ctrl(hw,
-		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].msg_type,
-		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].length,
-		       hw->fifos[1].buffer);
-
-	read_usb_ctrl(hw,
-		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].msg_type,
-		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].length,
-		      hw->fifos[2].buffer);
 
 
 
@@ -874,7 +1164,7 @@ static int setup_klusb(struct kl_usb *hw)
 //			     (u_char *)&hw->ctrl_write, NULL, 0,
 //			     (usb_complete_t)ctrl_complete, hw);
 
-	reset_klusb(hw);
+	initTranseiver(hw);
 	return 0;
 }
 
@@ -898,6 +1188,80 @@ static void release_hw(struct kl_usb *hw)
 	list_del(&hw->list);
 	kfree(hw);
 	hw = NULL;
+}
+
+static int kl_open(struct inode *inode, struct file *file)
+{
+	/* open syscall */
+	struct kl_usb *hw = NULL;
+	struct usb_interface *interface;
+	int subminor;
+	int retval = 0;
+	int err;
+
+	DBG_INFO("Open device");
+	subminor = iminor(inode);
+
+	mutex_lock(&disconnect_mutex);
+
+	interface = usb_find_interface(&kl_driver, subminor);
+	if (!interface)
+	{
+		DBG_ERR("can't find device for minor %d", subminor);
+		retval = -ENODEV;
+		goto exit;
+	}
+
+	hw = usb_get_intfdata(interface);
+	if (!hw)
+	{
+		retval = -ENODEV;
+		goto exit;
+	}
+
+	/* lock this device */
+	if (down_interruptible(&hw->sem))
+	{
+		DBG_ERR("sem down failed");
+		retval = -ERESTARTSYS;
+		goto exit;
+	}
+
+	/* Increment our usage count for the device. */
+	++hw->open_count;
+	if (hw->open_count > 1)
+		DBG_DEBUG("open_count = %d", hw->open_count);
+
+//	/* Initialize interrupt URB. */
+//	usb_fill_int_urb(hw->int_in_urb, hw->dev,
+//			usb_rcvintpipe(hw->dev,
+//					hw->int_in_endpoint->bEndpointAddress),
+//			hw->int_in_buffer,
+//			le16_to_cpu(hw->int_in_endpoint->wMaxPacketSize),
+//			kl_int_in_callback, hw,
+//			hw->int_in_endpoint->bInterval);
+//
+//	hw->int_in_running = 1;
+//	mb();
+//
+//	retval = usb_submit_urb(hw->int_in_urb, GFP_KERNEL);
+//	if (retval)
+//	{
+//		DBG_ERR("submitting int urb failed (%d)", retval);
+//		hw->int_in_running = 0;
+//		--hw->open_count;
+//		goto unlock_exit;
+//	}
+
+	err = setup_klusb(hw);
+
+	/* Save our object in the file's private structure. */
+	file->private_data = hw;
+
+	unlock_exit: up(&hw->sem);
+
+	exit: mutex_unlock(&disconnect_mutex);
+	return retval;
 }
 
 static ssize_t kl_write(struct file *file, const char __user *user_buf,
@@ -1012,10 +1376,10 @@ static ssize_t kl_write(struct file *file, const char __user *user_buf,
 
 }
 
-static ssize_t kl_read(struct file *file, char *buffer, size_t count,
-		loff_t *ppos)
-{
-
+//static ssize_t kl_read(struct file *file, char *buffer, size_t count,
+//		loff_t *ppos)
+//{
+//
 //	/* read syscall */
 //	struct kl_usb *hw = NULL;
 //	ssize_t retval = 0;
@@ -1040,7 +1404,364 @@ static ssize_t kl_read(struct file *file, char *buffer, size_t count,
 //	*ppos = retval;
 //	//readcount++;
 //	return retval;
+//
+//}
 
+
+
+#define RESPONSE_DATA_WRITTEN  0x10
+#define RESPONSE_GET_CONFIG  0x20
+#define RESPONSE_GET_CURRENT  0x30
+#define RESPONSE_GET_HISTORY  0x40
+#define RESPONSE_REQUEST  0x50
+#define RESPONSE_REQ_READ_HISTORY  0x50
+#define RESPONSE_REQ_FIRST_CONFIG  0x51
+#define RESPONSE_REQ_SET_CONFIG  0x52
+#define RESPONSE_REQ_SET_TIME  0x53
+
+#define ACTION_GET_HISTORY   0x00
+#define ACTION_REQ_SET_TIME   0x01
+#define ACTION_REQ_SET_CONFIG   0x02
+#define ACTION_GET_CONFIG   0x03
+#define ACTION_GET_CURRENT   0x04
+#define ACTION_SEND_CONFIG   0x20
+#define ACTION_SEND_TIME   0x60
+
+#define LOGGER_1   0
+#define LOGGER_2   1
+#define LOGGER_3   2
+#define LOGGER_4   3
+#define LOGGER_5   4
+#define LOGGER_6   5
+#define LOGGER_7   6
+#define LOGGER_8   7
+#define LOGGER_9   8
+#define LOGGER_10   9
+
+/* defined in dezi Grad Celsius */
+#define TEMPERATURE_OFFSET 400
+
+static DEFINE_MUTEX(ulock);
+
+static atomic_t bytes_available = ATOMIC_INIT(0);
+
+int klimaloggRecord = 30000;
+
+/* Entspricht getState aus kl.py */
+static ssize_t kl_read(struct file *instanz, char *buffer,
+			     size_t count, loff_t * ofs)
+{
+	/* read syscall */
+
+	size_t to_copy, not_copied;
+	printk("Count is: %lu\n", count);
+
+	int ret;
+	int nbytes;
+	int i;
+	int bufferID;
+	int respType;
+	int cs;
+	int haddr;
+	int latestIndex;
+	int thisIndex;
+	unsigned char *retBuf = kcalloc(0x131, 1, GFP_KERNEL);
+	unsigned char *data = kcalloc(10, 1, GFP_KERNEL);
+
+	unsigned char *rawdata = kcalloc(0x111, 1, GFP_KERNEL);
+	unsigned char *setFramebuf = kcalloc(0x111, 1, GFP_KERNEL);
+	unsigned char *setTXbuf = kcalloc(0x15, 1, GFP_KERNEL);
+
+	unsigned char *resultBuf = kcalloc(128, 1, GFP_KERNEL);
+
+	struct kl_usb *hw = NULL;
+	ssize_t retval = 0;
+
+	if (!data)
+		goto read_out;
+
+
+
+
+	DBG_INFO("read command, read by \"%s\" (pid %i), size=%lu",
+			current->comm, current->pid, (unsigned long ) count);
+
+	hw = instanz->private_data;
+
+
+	printk("usb_test: read\n");
+	mutex_lock(&ulock);	/* Jetzt nicht disconnecten... */
+//      printk("read vor = %02x %02x %02x %02x\n", data[0], data[1], data[2],
+//             data[3]);
+	ret =
+	    usb_control_msg(hw->dev, hw->ctrl_in_pipe, USB_REQ_CLEAR_FEATURE,
+			    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
+			    0x3de, 0, data, 10, 5 * HZ);
+
+	if (ret < 0) {
+		printk("Error read Nr: %d\n", ret);
+		count = -EIO;
+		goto read_out;
+	}
+
+	printk("read nach= %02x %02x %02x %02x\n", data[0], data[1], data[2],
+	       data[3]);
+	/* getFrame in kl.py */
+	if (data[1] == 0x16) {
+		printk("Success!\n");
+		ret =
+		    usb_control_msg(hw->dev, hw->ctrl_in_pipe,
+				    USB_REQ_CLEAR_FEATURE,
+				    USB_TYPE_CLASS | USB_RECIP_INTERFACE |
+				    USB_DIR_IN, 0x3d6, 0, rawdata, 0x111,
+				    5 * HZ);
+		if (ret < 0) {
+			printk("Error in getFrame Nr: %d\n", ret);
+			count = -EIO;
+			goto read_out;
+		}
+		nbytes = (rawdata[1] << 8 | rawdata[2]) & 0x1ff;
+		printk("nbytes = %d\n", nbytes);
+
+		for (i = 0; i < nbytes; i++) {
+			retBuf[i] = rawdata[i + 3];
+		}
+		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       rawdata[0], rawdata[1], rawdata[2], rawdata[3],
+		       rawdata[4], rawdata[5], rawdata[6], rawdata[7]);
+
+		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       rawdata[8], rawdata[9], rawdata[10], rawdata[11],
+		       rawdata[12], rawdata[13], rawdata[14], rawdata[15]);
+
+		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       rawdata[16], rawdata[17], rawdata[18], rawdata[19],
+		       rawdata[20], rawdata[21], rawdata[22], rawdata[23]);
+
+		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       rawdata[24], rawdata[25], rawdata[26], rawdata[27],
+		       rawdata[28], rawdata[29], rawdata[30], rawdata[31]);
+
+		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       retBuf[0], retBuf[1], retBuf[2], retBuf[3],
+		       retBuf[4], retBuf[5], retBuf[6], retBuf[7]);
+
+		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       retBuf[8], retBuf[9], retBuf[10], retBuf[11],
+		       retBuf[12], retBuf[13], retBuf[14], retBuf[15]);
+
+		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       retBuf[16], retBuf[17], retBuf[18], retBuf[19],
+		       retBuf[20], retBuf[21], retBuf[22], retBuf[23]);
+
+		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		       retBuf[24], retBuf[25], retBuf[26], retBuf[27],
+		       retBuf[28], retBuf[29], retBuf[30], retBuf[31]);
+
+		// generateResponse in kl.py
+		bufferID = (retBuf[0] << 8) | retBuf[1];
+		respType = (retBuf[3] & 0xF0);
+		printk("bufferID = %02x\n", bufferID);
+		printk("respType = %02x\n", respType);
+
+		if (bufferID == 0xF0F0) {
+			printk
+			    ("generateResponse: console not paired (synchronized)");
+		} else {
+			if (respType == RESPONSE_DATA_WRITTEN) {
+				printk("RESPONSE_DATA_WRITTEN\n");
+			} else if (respType == RESPONSE_GET_CONFIG) {
+				printk("RESPONSE_GET_CONFIG\n");
+			} else if (respType == RESPONSE_GET_CURRENT) {
+				printk("RESPONSE_GET_CURRENT\n");
+
+				// handleCurrentData in kl.py
+				cs = retBuf[6] | (retBuf[5] << 8);
+				printk("handleCurrentData: cs = %02x\n", cs);
+
+				// wird wohl eine Art Index für die Daten sein
+				haddr = 0xffffff;
+
+				// setFrame in kl.py
+				setFramebuf[0] = 0xd5;
+				setFramebuf[1] = 11 >> 8;
+				setFramebuf[2] = 11;
+
+				setFramebuf[3] = retBuf[0];
+				setFramebuf[4] = retBuf[1];
+				setFramebuf[5] = LOGGER_1;
+				setFramebuf[6] = ACTION_GET_HISTORY & 0xF;
+				setFramebuf[7] = (cs >> 8) & 0xFF;
+				setFramebuf[8] = (cs >> 0) & 0xFF;
+				setFramebuf[9] = 0x80;	// TODO: not known what this means
+				setFramebuf[10] = 8 & 0xFF;	// Annahme 8
+				setFramebuf[11] = (haddr >> 16) & 0xFF;
+				setFramebuf[12] = (haddr >> 8) & 0xFF;
+				setFramebuf[13] = (haddr >> 0) & 0xFF;
+
+				ret =
+				    usb_control_msg(hw->dev,
+						    hw->ctrl_out_pipe,
+						    USB_REQ_SET_CONFIGURATION,
+						    USB_TYPE_CLASS |
+						    USB_RECIP_INTERFACE
+						    | USB_DIR_OUT,
+						    0x3d5, 0, setFramebuf,
+						    0x111, 5 * HZ);
+				if (ret < 0) {
+					printk("Error in setFrame Nr: %d\n",
+					       ret);
+				}
+				//  setTX in kl.py
+				ret =
+				    usb_control_msg(hw->dev,
+						    hw->ctrl_out_pipe,
+						    USB_REQ_SET_CONFIGURATION,
+						    USB_TYPE_CLASS |
+						    USB_RECIP_INTERFACE |
+						    USB_DIR_OUT, 0x3d1, 0,
+						    setTXbuf, 0x15, 5 * HZ);
+				if (ret < 0) {
+					printk("Error in setTX Nr: %d\n", ret);
+				}
+
+			} else if (respType == RESPONSE_GET_HISTORY) {
+				printk("RESPONSE_GET_HISTORY\n");
+
+				// handleHistoryData in kl.py
+				cs = retBuf[6] | (retBuf[5] << 8);
+				printk("handleHistoryData: cs = %02x\n", cs);
+
+				printk("Year   : %04d\n",
+				       (retBuf[176] >> 4) * 10 +
+				       (retBuf[176] & 0xF) * 1 + 2000);
+				resultBuf[2] = (retBuf[176] >> 4) * 10 +
+				    (retBuf[176] & 0xF) * 1;
+				printk("Month  : %02d\n",
+				       (retBuf[176 + 1] >> 4) * 10 +
+				       (retBuf[176 + 1] & 0xF) * 1);
+				resultBuf[1] = (retBuf[176 + 1] >> 4) * 10 +
+				    (retBuf[176 + 1] & 0xF) * 1;
+				printk("Days   : %02d\n",
+				       (retBuf[176 + 2] >> 4) * 10 +
+				       (retBuf[176 + 2] & 0xF) * 1);
+				resultBuf[0] = (retBuf[176 + 2] >> 4) * 10 +
+				    (retBuf[176 + 2] & 0xF) * 1;
+				printk("Hours  : %02d\n",
+				       (retBuf[176 + 3] >> 4) * 10 +
+				       (retBuf[176 + 3] & 0xF) * 1);
+				resultBuf[3] = (retBuf[176 + 3] >> 4) * 10 +
+				    (retBuf[176 + 3] & 0xF) * 1;
+				printk("Minutes: %02d\n",
+				       (retBuf[176 + 4] >> 4) * 10 +
+				       (retBuf[176 + 4] & 0xF) * 1);
+				resultBuf[4] = (retBuf[176 + 4] >> 4) * 10 +
+				    (retBuf[176 + 4] & 0xF) * 1;
+
+				//Humidity 161
+				printk("Humidity : %02d\n",
+				       (retBuf[161] >> 4) * 10 +
+				       (retBuf[161 + 0] & 0xF) * 1);
+				resultBuf[5] = (retBuf[161] >> 4) * 10 +
+				    (retBuf[161 + 0] & 0xF) * 1;
+				//Temp 174
+				printk("Temp (d Grad) : %03d\n",
+				       (retBuf[174] & 0xF) * 100 +
+				       (retBuf[174 + 1] >> 4) * 10 +
+				       (retBuf[174 + 1] & 0xF) * 1
+				       - TEMPERATURE_OFFSET);
+				resultBuf[6] = (retBuf[174] & 0xF) * 10 +
+				    (retBuf[174 + 1] >> 4) * 1;
+				resultBuf[7] = (retBuf[174 + 1] & 0xF) * 1;
+				atomic_set(&bytes_available, 8);
+
+				// bytes_to_addr
+				// index_to_addr
+				latestIndex =
+				    (((((retBuf[7] << 8) | retBuf[8]) << 8) |
+				      retBuf[9]) - 0x070000) / 32;
+				thisIndex =
+				    (((((retBuf[10] << 8) | retBuf[11]) << 8)
+				      | retBuf[12]) - 0x070000) / 32;
+				printk("latestIndex = %d\n", latestIndex);
+				printk("thisIndex = %d\n", thisIndex);
+
+				// buildACKFrame(buf, ACTION_GET_HISTORY, cs, nextIndex)
+				// setzt den neuen Index für die historischen Daten
+				//index_to_addr
+				//haddr =  32 * (latestIndex - 2*thisIndex)  + 0x070000;
+				klimaloggRecord = klimaloggRecord + 6;
+				haddr = 32 * (klimaloggRecord) + 0x070000;
+				printk("klimaloggRecord (postInc) = %d\n", klimaloggRecord);
+
+				// setFrame in kl.py
+				setFramebuf[0] = 0xd5;
+				setFramebuf[1] = 11 >> 8;
+				setFramebuf[2] = 11;
+				setFramebuf[3] = retBuf[0];
+				setFramebuf[4] = retBuf[1];
+				setFramebuf[5] = LOGGER_1;
+				setFramebuf[6] = ACTION_GET_HISTORY & 0xF;
+				setFramebuf[7] = (cs >> 8) & 0xFF;
+				setFramebuf[8] = (cs >> 0) & 0xFF;
+				setFramebuf[9] = 0x80;	// TODO: not known what this means
+				setFramebuf[10] = 8 & 0xFF;	// Annahme 8
+				setFramebuf[11] = (haddr >> 16) & 0xFF;
+				setFramebuf[12] = (haddr >> 8) & 0xFF;
+				setFramebuf[13] = (haddr >> 0) & 0xFF;
+				ret =
+				    usb_control_msg(hw->dev,
+						    hw->ctrl_out_pipe,
+						    USB_REQ_SET_CONFIGURATION,
+						    USB_TYPE_CLASS |
+						    USB_RECIP_INTERFACE
+						    | USB_DIR_OUT,
+						    0x3d5, 0, setFramebuf,
+						    0x111, 5 * HZ);
+				if (ret < 0) {
+					printk("Error in setFrame Nr: %d\n",
+					       ret);
+				}
+				//  setTX in kl.py
+				ret =
+				    usb_control_msg(hw->dev,
+						    hw->ctrl_out_pipe,
+						    USB_REQ_SET_CONFIGURATION,
+						    USB_TYPE_CLASS |
+						    USB_RECIP_INTERFACE |
+						    USB_DIR_OUT, 0x3d1, 0,
+						    setTXbuf, 0x15, 5 * HZ);
+				if (ret < 0) {
+					printk("Error in setTX Nr: %d\n", ret);
+				}
+
+			} else if (respType == RESPONSE_REQUEST) {
+				printk("RESPONSE_REQUEST\n");
+			}
+		}
+		printk("\n");
+	}
+
+	ssleep(1);
+
+	to_copy = min((size_t) atomic_read(&bytes_available), count);
+	not_copied = copy_to_user(buffer, resultBuf, to_copy);
+	atomic_sub(to_copy - not_copied, &bytes_available);
+	count = to_copy - not_copied;
+
+	printk("to_copy: %d\n", (int)to_copy);
+	printk("not_copied: %d\n", (int)not_copied);
+	printk("Return at the end is: %d\n", count);
+
+read_out:
+	mutex_unlock(&ulock);
+	kfree(resultBuf);
+	kfree(setTXbuf);
+	kfree(setFramebuf);
+	kfree(rawdata);
+	kfree(data);
+	kfree(retBuf);
+	return count;
 }
 
 static struct file_operations kl_fops = { .owner   = THIS_MODULE,
@@ -1061,10 +1782,12 @@ static int setup_instance(struct kl_usb *hw, struct device *parent) // TODO remo
 
 	DBG_INFO("%s", __func__);
 
+	sema_init(&hw->sem, 1);
+
 	spin_lock_init(&hw->ctrl_lock);
 	spin_lock_init(&hw->lock);
 
-	err = setup_klusb(hw);
+//	err = setup_klusb(hw);
 	if (err)
 		goto out;
 
@@ -1119,6 +1842,7 @@ static int kl_probe(struct usb_interface *intf,
 		DBG_ERR("cannot allocate memory for struct kl_usb");
 		return -ENOMEM;
 	}
+
 
 	ep = iface->endpoint;
 
