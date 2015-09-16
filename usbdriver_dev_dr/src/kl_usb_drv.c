@@ -156,10 +156,10 @@ static inline void kl_debug_data(const char *function, int size,
 /* start next background transfer for control channel */
 static void ctrl_start_transfer(struct kl_usb *hw)
 {
-	DBG_INFO("start next transfer");
+	int ret;
 
 	if (hw->ctrl_cnt) {
-		DBG_INFO("prepare new urb");
+		DBG_INFO("start next usb ctrl transfer");
 
 		hw->ctrl_urb->pipe = hw->usb_ctrl_buff[hw->ctrl_out_idx].pipe;
 		hw->ctrl_urb->setup_packet = (u_char *)&hw->usb_ctrl_buff[hw->ctrl_out_idx].ctrlrequest;
@@ -171,11 +171,13 @@ static void ctrl_start_transfer(struct kl_usb *hw)
 //		hw->ctrl_write.wValue =
 //			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].reg_val);
 
-		usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
+		ret = usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
+		if (ret)
+			DBG_ERR("failed to submit usb urb (%d)", ret);
 	}
 	else
 	{
-		DBG_INFO("transfer queue empty");
+		DBG_INFO("usb ctrl transfer queue is empty");
 	}
 }
 
@@ -320,11 +322,9 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 			    USB_RECIP_INTERFACE |
 			    USB_DIR_OUT, 0x3f0, 0, reg->buf, 5, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
-		printk("Error in writeReg Nr: %d\n", ret);
+		DBG_ERR("ret = %d", ret);
 	}
-	printk
-	    ("writeReg nach= %02x %02x %02x %02x %02x\n",
-			    reg->buf[0], reg->buf[1], reg->buf[2], reg->buf[3], reg->buf[4]);
+	kl_debug_data(__FUNCTION__, KL_LEN_WRITE_REG, reg->buf);
 
 	kfree(reg->buf);
 
@@ -737,7 +737,7 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 	writebuf[2]  = (config->addr >> 8) & 0xff;
 	writebuf[3]  = (config->addr >> 0) & 0xff;
 
-	DBG_INFO("readConfigFlash write buffer:");
+	DBG_INFO("write buffer:");
 	kl_debug_data(__FUNCTION__, KL_LEN_READ_CONFIG_FLASH_OUT, writebuf);
 
 
@@ -767,165 +767,103 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 
 static int doRfSetup(struct kl_usb *hw)
 {
-	int ret;
+	int ret = 0;
 
 
 	/* execute(5) */
 	hw->rf_setup_buffers.buf_execute[0] = 0xd9;
 	hw->rf_setup_buffers.buf_execute[1] = 0x05;
-//	write_usb_ctrl(hw,
-//		       KL_MSG_EXECUTE,
-//		       KL_LEN_EXECUTE,
-//		       hw->rf_setup_buffers.buf_execute);
-	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_execute[0], hw->rf_setup_buffers.buf_execute[1], hw->rf_setup_buffers.buf_execute[2], hw->rf_setup_buffers.buf_execute[3]);
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d9, 0, hw->rf_setup_buffers.buf_execute, 0x0f, KL_USB_CTRL_TIMEOUT);
+	ret = write_usb_ctrl(hw,
+		       KL_MSG_EXECUTE,
+		       KL_LEN_EXECUTE,
+		       hw->rf_setup_buffers.buf_execute);
+
 	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
+		printk("Error execute(5): %d\n", ret);
 		return ret;
 	}
-	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_execute[0], hw->rf_setup_buffers.buf_execute[1], hw->rf_setup_buffers.buf_execute[2], hw->rf_setup_buffers.buf_execute[3]);
 
 	/* setPreamblePattern(0xaa) */
 	hw->rf_setup_buffers.buf_preamble_first[0] = 0xd8;
 	hw->rf_setup_buffers.buf_preamble_first[1] = 0xaa;
-//	write_usb_ctrl(hw,
-//		       KL_MSG_SET_PREAMBLE_PATTERN,
-//		       KL_LEN_SET_PREAMBLE_PATTERN,
-//		       hw->rf_setup_buffers.buf_preamble_first);
+	ret = write_usb_ctrl(hw,
+		       KL_MSG_SET_PREAMBLE_PATTERN,
+		       KL_LEN_SET_PREAMBLE_PATTERN,
+		       hw->rf_setup_buffers.buf_preamble_first);
 
-	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_first[0], hw->rf_setup_buffers.buf_preamble_first[1], hw->rf_setup_buffers.buf_preamble_first[2], hw->rf_setup_buffers.buf_preamble_first[3]);
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_first, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
+		printk("Error setPreamblePattern(0xaa): %d\n", ret);
 		return ret;
 	}
-	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_first[0], hw->rf_setup_buffers.buf_preamble_first[1], hw->rf_setup_buffers.buf_preamble_first[2], hw->rf_setup_buffers.buf_preamble_first[3]);
 
 	/* setState(0) */
 	hw->rf_setup_buffers.buf_setstate_first[0] = 0xd7;
 	hw->rf_setup_buffers.buf_setstate_first[1] = 0x00;
-//	write_usb_ctrl(hw,
-//		       KL_MSG_SET_STATE,
-//		       KL_LEN_SET_STATE,
-//		       hw->rf_setup_buffers.buf_setstate_first);
+	ret = write_usb_ctrl(hw,
+		       KL_MSG_SET_STATE,
+		       KL_LEN_SET_STATE,
+		       hw->rf_setup_buffers.buf_setstate_first);
 
-	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_first[0], hw->rf_setup_buffers.buf_setstate_first[1], hw->rf_setup_buffers.buf_setstate_first[2], hw->rf_setup_buffers.buf_setstate_first[3]);
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_first, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
+		printk("Error setState(0): %d\n", ret);
 		return ret;
 	}
-	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_first[0], hw->rf_setup_buffers.buf_setstate_first[1], hw->rf_setup_buffers.buf_setstate_first[2], hw->rf_setup_buffers.buf_setstate_first[3]);
 
 	// TODO sleep(1) ???
 	msleep(1000);
+
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_first[0] = 0xd0;
-//	write_usb_ctrl(hw,
-//		       KL_MSG_SET_RX,
-//		       KL_LEN_SET_RX,
-//		       hw->rf_setup_buffers.buf_setRx_first);
+	ret = write_usb_ctrl(hw,
+		       KL_MSG_SET_RX,
+		       KL_LEN_SET_RX,
+		       hw->rf_setup_buffers.buf_setRx_first);
 
-	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_first[0], hw->rf_setup_buffers.buf_setRx_first[1], hw->rf_setup_buffers.buf_setRx_first[2], hw->rf_setup_buffers.buf_setRx_first[3]);
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_first, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
+		printk("Error setRx(): %d\n", ret);
 		return ret;
 	}
-	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_first[0], hw->rf_setup_buffers.buf_setRx_first[1], hw->rf_setup_buffers.buf_setRx_first[2], hw->rf_setup_buffers.buf_setRx_first[3]);
-
 
 	/* setPreamblePattern(0xaa) */
 	hw->rf_setup_buffers.buf_preamble_second[0] = 0xd8;
 	hw->rf_setup_buffers.buf_preamble_second[1] = 0xaa;
-//	write_usb_ctrl(hw,
-//		       KL_MSG_SET_PREAMBLE_PATTERN,
-//		       KL_LEN_SET_PREAMBLE_PATTERN,
-//		       hw->rf_setup_buffers.buf_preamble_second);
+	ret = write_usb_ctrl(hw,
+		       KL_MSG_SET_PREAMBLE_PATTERN,
+		       KL_LEN_SET_PREAMBLE_PATTERN,
+		       hw->rf_setup_buffers.buf_preamble_second);
 
-	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_second[0], hw->rf_setup_buffers.buf_preamble_second[1], hw->rf_setup_buffers.buf_preamble_second[2], hw->rf_setup_buffers.buf_preamble_second[3]);
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_second, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
+		printk("Error setPreamblePattern(0xaa): %d\n", ret);
 		return ret;
 	}
-	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_second[0], hw->rf_setup_buffers.buf_preamble_second[1], hw->rf_setup_buffers.buf_preamble_second[2], hw->rf_setup_buffers.buf_preamble_second[3]);
 
 	/* setState(0x1e) */
 	hw->rf_setup_buffers.buf_setstate_second[0] = 0xd7;
 	hw->rf_setup_buffers.buf_setstate_second[1] = 0x1e;
-//	write_usb_ctrl(hw,
-//		       KL_MSG_SET_STATE,
-//		       KL_LEN_SET_STATE,
-//		       hw->rf_setup_buffers.buf_setstate_second);
+	ret = write_usb_ctrl(hw,
+		       KL_MSG_SET_STATE,
+		       KL_LEN_SET_STATE,
+		       hw->rf_setup_buffers.buf_setstate_second);
 
-	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_second[0], hw->rf_setup_buffers.buf_setstate_second[1], hw->rf_setup_buffers.buf_setstate_second[2], hw->rf_setup_buffers.buf_setstate_second[3]);
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_second, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
+		printk("Error setState(0x1e): %d\n", ret);
 		return ret;
 	}
-	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_second[0], hw->rf_setup_buffers.buf_setstate_second[1], hw->rf_setup_buffers.buf_setstate_second[2], hw->rf_setup_buffers.buf_setstate_second[3]);
 
 	// TODO sleep(1) ???
 	msleep(1000);
+
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_second[0] = 0xd0;
-//	write_usb_ctrl(hw,
-//		       KL_MSG_SET_RX,
-//		       KL_LEN_SET_RX,
-//		       hw->rf_setup_buffers.buf_setRx_second);
+	ret = write_usb_ctrl(hw,
+		       KL_MSG_SET_RX,
+		       KL_LEN_SET_RX,
+		       hw->rf_setup_buffers.buf_setRx_second);
 
-
-	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_second[0], hw->rf_setup_buffers.buf_setRx_second[1], hw->rf_setup_buffers.buf_setRx_second[2], hw->rf_setup_buffers.buf_setRx_second[3]);
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_second, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
+		printk("Error setRx(): %d\n", ret);
 		return ret;
 	}
-	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_second[0], hw->rf_setup_buffers.buf_setRx_second[1], hw->rf_setup_buffers.buf_setRx_second[2], hw->rf_setup_buffers.buf_setRx_second[3]);
 
 	return 0;
 }

@@ -173,25 +173,25 @@ struct usb_read_config_flash {
 	__u8  *readBuf;
 };
 
-//struct usb_rf_setup_buffers {
-//	__u8 buf_execute[KL_LEN_EXECUTE];
-//	__u8 buf_preamble_first[KL_LEN_SET_PREAMBLE_PATTERN];
-//	__u8 buf_setstate_first[KL_LEN_SET_STATE];
-//	__u8 buf_setRx_first[KL_LEN_SET_RX];
-//	__u8 buf_preamble_second[KL_LEN_SET_PREAMBLE_PATTERN];
-//	__u8 buf_setstate_second[KL_LEN_SET_STATE];
-//	__u8 buf_setRx_second[KL_LEN_SET_RX];
-//};
-
 struct usb_rf_setup_buffers {
-	__u8 buf_execute[0x15];
-	__u8 buf_preamble_first[0x15];
-	__u8 buf_setstate_first[0x15];
-	__u8 buf_setRx_first[0x15];
-	__u8 buf_preamble_second[0x15];
-	__u8 buf_setstate_second[0x15];
-	__u8 buf_setRx_second[0x15];
+	__u8 buf_execute[KL_LEN_EXECUTE];
+	__u8 buf_preamble_first[KL_LEN_SET_PREAMBLE_PATTERN];
+	__u8 buf_setstate_first[KL_LEN_SET_STATE];
+	__u8 buf_setRx_first[KL_LEN_SET_RX];
+	__u8 buf_preamble_second[KL_LEN_SET_PREAMBLE_PATTERN];
+	__u8 buf_setstate_second[KL_LEN_SET_STATE];
+	__u8 buf_setRx_second[KL_LEN_SET_RX];
 };
+
+//struct usb_rf_setup_buffers {
+//	__u8 buf_execute[0x15];
+//	__u8 buf_preamble_first[0x15];
+//	__u8 buf_setstate_first[0x15];
+//	__u8 buf_setRx_first[0x15];
+//	__u8 buf_preamble_second[0x15];
+//	__u8 buf_setstate_second[0x15];
+//	__u8 buf_setRx_second[0x15];
+//};
 
 
 /*
