@@ -1237,12 +1237,6 @@ static int kl_open(struct inode *inode, struct file *file)
 //		goto unlock_exit;
 //	}
 
-	err = setup_klusb(hw);
-	if (err) {
-		DBG_ERR("setup_klusb failed!");
-		retval = err;
-		goto unlock_exit;
-	}
 
 	/* Save our object in the file's private structure. */
 	file->private_data = hw;
@@ -1778,10 +1772,11 @@ static struct usb_class_driver kl_class = { .name = "kl%d",
 					    .minor_base = ML_MINOR_BASE };
 
 
-static int setup_instance(struct kl_usb *hw, struct device *parent) // TODO remove parent
+static int setup_instance(struct kl_usb *hw)
 {
 	u_long	flags;
-	int	err, i;
+	int	err = 0;
+	int	i;
 
 	DBG_INFO("%s", __func__);
 
@@ -1790,7 +1785,7 @@ static int setup_instance(struct kl_usb *hw, struct device *parent) // TODO remo
 	spin_lock_init(&hw->ctrl_lock);
 	spin_lock_init(&hw->lock);
 
-//	err = setup_klusb(hw);
+	err = setup_klusb(hw);
 	if (err)
 		goto out;
 
@@ -1895,8 +1890,11 @@ static int kl_probe(struct usb_interface *intf,
 		goto error;
 	}
 
-	if (setup_instance(hw, dev->dev.parent))
+	if (setup_instance(hw))
+	{
+		DBG_ERR("setup_instance failed!");
 		return -EIO;
+	}
 
 	/* Retrieve a serial. */
 	if (!usb_string(dev, dev->descriptor.iSerialNumber,
