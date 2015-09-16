@@ -570,54 +570,6 @@ static void kl_int_in_callback(struct urb *urb)
 
 
 
-static int kl_release(struct inode *inode, struct file *file)
-{
-//	/* close syscall */
-//	struct kl_usb *hw = NULL;
-//	int retval = 0;
-//
-//	DBG_INFO("Release driver");
-//	hw = file->private_data;
-//
-//	if (!hw)
-//	{
-//		DBG_ERR("hw is NULL");
-//		retval = -ENODEV;
-//		goto exit;
-//	}
-//
-//	/* Lock our device */
-//	if (down_interruptible(&hw->sem))
-//	{
-//		retval = -ERESTARTSYS;
-//		goto exit;
-//	}
-//
-//	if (hw->open_count <= 0)
-//	{
-//		DBG_ERR("device not opened");
-//		retval = -ENODEV;
-//		goto unlock_exit;
-//	}
-//
-//	if (!hw->dev)
-//	{
-//		DBG_DEBUG("device unplugged before the file was released");
-//		up(&hw->sem); /* Unlock here as kl_delete frees hw. */
-//		kl_delete(hw);
-//		goto exit;
-//	}
-//
-//	if (hw->open_count > 1)
-//		DBG_DEBUG("open_count = %d", hw->open_count);
-//
-//	kl_abort_transfers(hw);
-//	--hw->open_count;
-//
-//	unlock_exit: up(&hw->sem);
-//
-//	exit: return retval;
-}
 
 
 /* receive completion routine for all interrupt rx fifos */
@@ -669,8 +621,7 @@ static void rx_int_complete(struct urb *urb)
 	fifo->last_urblen = urb->actual_length;
 
 resubmit:
-	status = 0;
-// TODO re-enable:	status = usb_submit_urb(urb, GFP_ATOMIC);
+	status = usb_submit_urb(urb, GFP_ATOMIC);
 	if (status) {
 		DBG_ERR("error resubmitting USB Int urb");
 	}
@@ -1096,8 +1047,8 @@ static int setup_klusb(struct kl_usb *hw)
 //	/* first set the needed config, interface and alternate */
 //	(void) usb_set_interface(hw->dev, hw->if_used, hw->alt_used);
 
-	// TODO re-enable
-//	start_int_fifo(hw->fifos + KLUSB_INT_RX);
+	// start usb rx interrupt endpoint
+	start_int_fifo(hw->fifos + KLUSB_INT_RX);
 
 	/* init the background machinery for control requests */
 	hw->ctrl_urb->dev = hw->dev;
@@ -1203,6 +1154,9 @@ static int kl_open(struct inode *inode, struct file *file)
 		goto exit;
 	}
 
+//	start_int_fifo(hw->fifos + KLUSB_INT_RX);
+
+
 	/* lock this device */
 //	if (down_interruptible(&hw->sem))
 //	{
@@ -1246,6 +1200,68 @@ unlock_exit:
 
 exit:
 	mutex_unlock(&disconnect_mutex);
+	return retval;
+}
+
+static int kl_release(struct inode *inode, struct file *file)
+{
+	/* close syscall */
+	struct kl_usb *hw = NULL;
+	int retval = 0;
+
+	DBG_INFO("Release driver");
+	hw = file->private_data;
+
+	if (!hw)
+	{
+		DBG_ERR("hw is NULL");
+		retval = -ENODEV;
+		goto exit;
+	}
+
+	/* Lock our device */
+	mutex_lock(&disconnect_mutex);
+
+//	if (down_interruptible(&hw->sem))
+//	{
+//		retval = -ERESTARTSYS;
+//		goto exit;
+//	}
+
+	if (hw->open_count <= 0)
+	{
+		DBG_ERR("device not opened");
+		retval = -ENODEV;
+		goto unlock_exit;
+	}
+
+//	/* rx endpoint using USB INT IN method */
+//	stop_int_gracefull(hw->fifos + KLUSB_INT_RX);
+
+	if (!hw->dev)
+	{
+		DBG_DEBUG("device unplugged before the file was released");
+
+//		up(&hw->sem); /* Unlock here as kl_delete frees hw. */
+		kl_delete(hw);
+//		goto exit;
+		goto unlock_exit;
+	}
+
+	if (hw->open_count > 1)
+		DBG_DEBUG("open_count = %d", hw->open_count);
+
+
+
+//	kl_abort_transfers(hw);
+
+	--hw->open_count;
+
+unlock_exit:
+	// up(&hw->sem);
+	mutex_unlock(&disconnect_mutex);
+
+exit:
 	return retval;
 }
 
@@ -1462,7 +1478,7 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	struct kl_usb *hw = NULL;
 	ssize_t retval = 0;
 
-	printk("Count is: %lu\n", count);
+//	printk("Count is: %lu\n", count);
 
 	if (!retBuf || !data || !rawdata || !setFramebuf || !setTXbuf || !resultBuf) {
 		printk("no memory");
@@ -1473,8 +1489,8 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 
 
 
-	DBG_INFO("read command, read by \"%s\" (pid %i), size=%lu",
-			current->comm, current->pid, (unsigned long ) count);
+//	DBG_INFO("read command, read by \"%s\" (pid %i), size=%lu",
+//			current->comm, current->pid, (unsigned long ) count);
 
 	hw = (struct kl_usb *)instanz->private_data;
 
@@ -1486,6 +1502,7 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 
 	printk("usb_test: read\n");
 	mutex_lock(&disconnect_mutex);	/* Jetzt nicht disconnecten... */
+
 //      printk("read vor = %02x %02x %02x %02x\n", data[0], data[1], data[2],
 //             data[3]);
 	ret =
@@ -1499,245 +1516,248 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 		goto read_out;
 	}
 
-	printk("read nach= %02x %02x %02x %02x\n", data[0], data[1], data[2],
-	       data[3]);
+	kl_debug_data(__FUNCTION__, 10, data);
+
+//	printk("read nach= %02x %02x %02x %02x\n", data[0], data[1], data[2],
+//	       data[3]);
+
 	/* getFrame in kl.py */
-	if (data[1] == 0x16) {
-		printk("Success!\n");
-		ret =
-		    usb_control_msg(hw->dev, usb_rcvctrlpipe(hw->dev, 0),
-				    USB_REQ_CLEAR_FEATURE,
-				    USB_TYPE_CLASS | USB_RECIP_INTERFACE |
-				    USB_DIR_IN, 0x3d6, 0, rawdata, 0x111,
-				    KL_USB_CTRL_TIMEOUT);
-		if (ret < 0) {
-			printk("Error in getFrame Nr: %d\n", ret);
-			count = -EIO;
-			goto read_out;
-		}
-		nbytes = (rawdata[1] << 8 | rawdata[2]) & 0x1ff;
-		printk("nbytes = %d\n", nbytes);
-
-		for (i = 0; i < nbytes; i++) {
-			retBuf[i] = rawdata[i + 3];
-		}
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       rawdata[0], rawdata[1], rawdata[2], rawdata[3],
-		       rawdata[4], rawdata[5], rawdata[6], rawdata[7]);
-
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       rawdata[8], rawdata[9], rawdata[10], rawdata[11],
-		       rawdata[12], rawdata[13], rawdata[14], rawdata[15]);
-
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       rawdata[16], rawdata[17], rawdata[18], rawdata[19],
-		       rawdata[20], rawdata[21], rawdata[22], rawdata[23]);
-
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       rawdata[24], rawdata[25], rawdata[26], rawdata[27],
-		       rawdata[28], rawdata[29], rawdata[30], rawdata[31]);
-
-		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       retBuf[0], retBuf[1], retBuf[2], retBuf[3],
-		       retBuf[4], retBuf[5], retBuf[6], retBuf[7]);
-
-		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       retBuf[8], retBuf[9], retBuf[10], retBuf[11],
-		       retBuf[12], retBuf[13], retBuf[14], retBuf[15]);
-
-		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       retBuf[16], retBuf[17], retBuf[18], retBuf[19],
-		       retBuf[20], retBuf[21], retBuf[22], retBuf[23]);
-
-		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
-		       retBuf[24], retBuf[25], retBuf[26], retBuf[27],
-		       retBuf[28], retBuf[29], retBuf[30], retBuf[31]);
-
-		// generateResponse in kl.py
-		bufferID = (retBuf[0] << 8) | retBuf[1];
-		respType = (retBuf[3] & 0xF0);
-		printk("bufferID = %02x\n", bufferID);
-		printk("respType = %02x\n", respType);
-
-		if (bufferID == 0xF0F0) {
-			printk
-			    ("generateResponse: console not paired (synchronized)");
-		} else {
-			if (respType == RESPONSE_DATA_WRITTEN) {
-				printk("RESPONSE_DATA_WRITTEN\n");
-			} else if (respType == RESPONSE_GET_CONFIG) {
-				printk("RESPONSE_GET_CONFIG\n");
-			} else if (respType == RESPONSE_GET_CURRENT) {
-				printk("RESPONSE_GET_CURRENT\n");
-
-				// handleCurrentData in kl.py
-				cs = retBuf[6] | (retBuf[5] << 8);
-				printk("handleCurrentData: cs = %02x\n", cs);
-
-				// wird wohl eine Art Index für die Daten sein
-				haddr = 0xffffff;
-
-				// setFrame in kl.py
-				setFramebuf[0] = 0xd5;
-				setFramebuf[1] = 11 >> 8;
-				setFramebuf[2] = 11;
-
-				setFramebuf[3] = retBuf[0];
-				setFramebuf[4] = retBuf[1];
-				setFramebuf[5] = LOGGER_1;
-				setFramebuf[6] = ACTION_GET_HISTORY & 0xF;
-				setFramebuf[7] = (cs >> 8) & 0xFF;
-				setFramebuf[8] = (cs >> 0) & 0xFF;
-				setFramebuf[9] = 0x80;	// TODO: not known what this means
-				setFramebuf[10] = 8 & 0xFF;	// Annahme 8
-				setFramebuf[11] = (haddr >> 16) & 0xFF;
-				setFramebuf[12] = (haddr >> 8) & 0xFF;
-				setFramebuf[13] = (haddr >> 0) & 0xFF;
-
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev,
-								    0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS |
-						    USB_RECIP_INTERFACE
-						    | USB_DIR_OUT,
-						    0x3d5, 0, setFramebuf,
-						    0x111, KL_USB_CTRL_TIMEOUT);
-				if (ret < 0) {
-					printk("Error in setFrame Nr: %d\n",
-					       ret);
-				}
-				//  setTX in kl.py
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS |
-						    USB_RECIP_INTERFACE |
-						    USB_DIR_OUT, 0x3d1, 0,
-						    setTXbuf, 0x15, KL_USB_CTRL_TIMEOUT);
-				if (ret < 0) {
-					printk("Error in setTX Nr: %d\n", ret);
-				}
-
-			} else if (respType == RESPONSE_GET_HISTORY) {
-				printk("RESPONSE_GET_HISTORY\n");
-
-				// handleHistoryData in kl.py
-				cs = retBuf[6] | (retBuf[5] << 8);
-				printk("handleHistoryData: cs = %02x\n", cs);
-
-				printk("Year   : %04d\n",
-				       (retBuf[176] >> 4) * 10 +
-				       (retBuf[176] & 0xF) * 1 + 2000);
-				resultBuf[2] = (retBuf[176] >> 4) * 10 +
-				    (retBuf[176] & 0xF) * 1;
-				printk("Month  : %02d\n",
-				       (retBuf[176 + 1] >> 4) * 10 +
-				       (retBuf[176 + 1] & 0xF) * 1);
-				resultBuf[1] = (retBuf[176 + 1] >> 4) * 10 +
-				    (retBuf[176 + 1] & 0xF) * 1;
-				printk("Days   : %02d\n",
-				       (retBuf[176 + 2] >> 4) * 10 +
-				       (retBuf[176 + 2] & 0xF) * 1);
-				resultBuf[0] = (retBuf[176 + 2] >> 4) * 10 +
-				    (retBuf[176 + 2] & 0xF) * 1;
-				printk("Hours  : %02d\n",
-				       (retBuf[176 + 3] >> 4) * 10 +
-				       (retBuf[176 + 3] & 0xF) * 1);
-				resultBuf[3] = (retBuf[176 + 3] >> 4) * 10 +
-				    (retBuf[176 + 3] & 0xF) * 1;
-				printk("Minutes: %02d\n",
-				       (retBuf[176 + 4] >> 4) * 10 +
-				       (retBuf[176 + 4] & 0xF) * 1);
-				resultBuf[4] = (retBuf[176 + 4] >> 4) * 10 +
-				    (retBuf[176 + 4] & 0xF) * 1;
-
-				//Humidity 161
-				printk("Humidity : %02d\n",
-				       (retBuf[161] >> 4) * 10 +
-				       (retBuf[161 + 0] & 0xF) * 1);
-				resultBuf[5] = (retBuf[161] >> 4) * 10 +
-				    (retBuf[161 + 0] & 0xF) * 1;
-				//Temp 174
-				printk("Temp (d Grad) : %03d\n",
-				       (retBuf[174] & 0xF) * 100 +
-				       (retBuf[174 + 1] >> 4) * 10 +
-				       (retBuf[174 + 1] & 0xF) * 1
-				       - TEMPERATURE_OFFSET);
-				resultBuf[6] = (retBuf[174] & 0xF) * 10 +
-				    (retBuf[174 + 1] >> 4) * 1;
-				resultBuf[7] = (retBuf[174 + 1] & 0xF) * 1;
-				atomic_set(&bytes_available, 8);
-
-				// bytes_to_addr
-				// index_to_addr
-				latestIndex =
-				    (((((retBuf[7] << 8) | retBuf[8]) << 8) |
-				      retBuf[9]) - 0x070000) / 32;
-				thisIndex =
-				    (((((retBuf[10] << 8) | retBuf[11]) << 8)
-				      | retBuf[12]) - 0x070000) / 32;
-				printk("latestIndex = %d\n", latestIndex);
-				printk("thisIndex = %d\n", thisIndex);
-
-				// buildACKFrame(buf, ACTION_GET_HISTORY, cs, nextIndex)
-				// setzt den neuen Index für die historischen Daten
-				//index_to_addr
-				//haddr =  32 * (latestIndex - 2*thisIndex)  + 0x070000;
-				klimaloggRecord = klimaloggRecord + 6;
-				haddr = 32 * (klimaloggRecord) + 0x070000;
-				printk("klimaloggRecord (postInc) = %d\n", klimaloggRecord);
-
-				// setFrame in kl.py
-				setFramebuf[0] = 0xd5;
-				setFramebuf[1] = 11 >> 8;
-				setFramebuf[2] = 11;
-				setFramebuf[3] = retBuf[0];
-				setFramebuf[4] = retBuf[1];
-				setFramebuf[5] = LOGGER_1;
-				setFramebuf[6] = ACTION_GET_HISTORY & 0xF;
-				setFramebuf[7] = (cs >> 8) & 0xFF;
-				setFramebuf[8] = (cs >> 0) & 0xFF;
-				setFramebuf[9] = 0x80;	// TODO: not known what this means
-				setFramebuf[10] = 8 & 0xFF;	// Annahme 8
-				setFramebuf[11] = (haddr >> 16) & 0xFF;
-				setFramebuf[12] = (haddr >> 8) & 0xFF;
-				setFramebuf[13] = (haddr >> 0) & 0xFF;
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev,
-						    		    0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS |
-						    USB_RECIP_INTERFACE
-						    | USB_DIR_OUT,
-						    0x3d5, 0, setFramebuf,
-						    0x111, KL_USB_CTRL_TIMEOUT);
-				if (ret < 0) {
-					printk("Error in setFrame Nr: %d\n",
-					       ret);
-				}
-				//  setTX in kl.py
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS |
-						    USB_RECIP_INTERFACE |
-						    USB_DIR_OUT, 0x3d1, 0,
-						    setTXbuf, 0x15, KL_USB_CTRL_TIMEOUT);
-				if (ret < 0) {
-					printk("Error in setTX Nr: %d\n", ret);
-				}
-
-			} else if (respType == RESPONSE_REQUEST) {
-				printk("RESPONSE_REQUEST\n");
-			}
-		}
-		printk("\n");
-	}
+//	if (data[1] == 0x16) {
+//		printk("Success!\n");
+//		ret =
+//		    usb_control_msg(hw->dev, usb_rcvctrlpipe(hw->dev, 0),
+//				    USB_REQ_CLEAR_FEATURE,
+//				    USB_TYPE_CLASS | USB_RECIP_INTERFACE |
+//				    USB_DIR_IN, 0x3d6, 0, rawdata, 0x111,
+//				    KL_USB_CTRL_TIMEOUT);
+//		if (ret < 0) {
+//			printk("Error in getFrame Nr: %d\n", ret);
+//			count = -EIO;
+//			goto read_out;
+//		}
+//		nbytes = (rawdata[1] << 8 | rawdata[2]) & 0x1ff;
+//		printk("nbytes = %d\n", nbytes);
+//
+//		for (i = 0; i < nbytes; i++) {
+//			retBuf[i] = rawdata[i + 3];
+//		}
+//		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       rawdata[0], rawdata[1], rawdata[2], rawdata[3],
+//		       rawdata[4], rawdata[5], rawdata[6], rawdata[7]);
+//
+//		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       rawdata[8], rawdata[9], rawdata[10], rawdata[11],
+//		       rawdata[12], rawdata[13], rawdata[14], rawdata[15]);
+//
+//		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       rawdata[16], rawdata[17], rawdata[18], rawdata[19],
+//		       rawdata[20], rawdata[21], rawdata[22], rawdata[23]);
+//
+//		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       rawdata[24], rawdata[25], rawdata[26], rawdata[27],
+//		       rawdata[28], rawdata[29], rawdata[30], rawdata[31]);
+//
+//		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       retBuf[0], retBuf[1], retBuf[2], retBuf[3],
+//		       retBuf[4], retBuf[5], retBuf[6], retBuf[7]);
+//
+//		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       retBuf[8], retBuf[9], retBuf[10], retBuf[11],
+//		       retBuf[12], retBuf[13], retBuf[14], retBuf[15]);
+//
+//		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       retBuf[16], retBuf[17], retBuf[18], retBuf[19],
+//		       retBuf[20], retBuf[21], retBuf[22], retBuf[23]);
+//
+//		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+//		       retBuf[24], retBuf[25], retBuf[26], retBuf[27],
+//		       retBuf[28], retBuf[29], retBuf[30], retBuf[31]);
+//
+//		// generateResponse in kl.py
+//		bufferID = (retBuf[0] << 8) | retBuf[1];
+//		respType = (retBuf[3] & 0xF0);
+//		printk("bufferID = %02x\n", bufferID);
+//		printk("respType = %02x\n", respType);
+//
+//		if (bufferID == 0xF0F0) {
+//			printk
+//			    ("generateResponse: console not paired (synchronized)");
+//		} else {
+//			if (respType == RESPONSE_DATA_WRITTEN) {
+//				printk("RESPONSE_DATA_WRITTEN\n");
+//			} else if (respType == RESPONSE_GET_CONFIG) {
+//				printk("RESPONSE_GET_CONFIG\n");
+//			} else if (respType == RESPONSE_GET_CURRENT) {
+//				printk("RESPONSE_GET_CURRENT\n");
+//
+//				// handleCurrentData in kl.py
+//				cs = retBuf[6] | (retBuf[5] << 8);
+//				printk("handleCurrentData: cs = %02x\n", cs);
+//
+//				// wird wohl eine Art Index für die Daten sein
+//				haddr = 0xffffff;
+//
+//				// setFrame in kl.py
+//				setFramebuf[0] = 0xd5;
+//				setFramebuf[1] = 11 >> 8;
+//				setFramebuf[2] = 11;
+//
+//				setFramebuf[3] = retBuf[0];
+//				setFramebuf[4] = retBuf[1];
+//				setFramebuf[5] = LOGGER_1;
+//				setFramebuf[6] = ACTION_GET_HISTORY & 0xF;
+//				setFramebuf[7] = (cs >> 8) & 0xFF;
+//				setFramebuf[8] = (cs >> 0) & 0xFF;
+//				setFramebuf[9] = 0x80;	// TODO: not known what this means
+//				setFramebuf[10] = 8 & 0xFF;	// Annahme 8
+//				setFramebuf[11] = (haddr >> 16) & 0xFF;
+//				setFramebuf[12] = (haddr >> 8) & 0xFF;
+//				setFramebuf[13] = (haddr >> 0) & 0xFF;
+//
+//				ret =
+//				    usb_control_msg(hw->dev,
+//						    usb_sndctrlpipe(hw->dev,
+//								    0),
+//						    USB_REQ_SET_CONFIGURATION,
+//						    USB_TYPE_CLASS |
+//						    USB_RECIP_INTERFACE
+//						    | USB_DIR_OUT,
+//						    0x3d5, 0, setFramebuf,
+//						    0x111, KL_USB_CTRL_TIMEOUT);
+//				if (ret < 0) {
+//					printk("Error in setFrame Nr: %d\n",
+//					       ret);
+//				}
+//				//  setTX in kl.py
+//				ret =
+//				    usb_control_msg(hw->dev,
+//						    usb_sndctrlpipe(hw->dev, 0),
+//						    USB_REQ_SET_CONFIGURATION,
+//						    USB_TYPE_CLASS |
+//						    USB_RECIP_INTERFACE |
+//						    USB_DIR_OUT, 0x3d1, 0,
+//						    setTXbuf, 0x15, KL_USB_CTRL_TIMEOUT);
+//				if (ret < 0) {
+//					printk("Error in setTX Nr: %d\n", ret);
+//				}
+//
+//			} else if (respType == RESPONSE_GET_HISTORY) {
+//				printk("RESPONSE_GET_HISTORY\n");
+//
+//				// handleHistoryData in kl.py
+//				cs = retBuf[6] | (retBuf[5] << 8);
+//				printk("handleHistoryData: cs = %02x\n", cs);
+//
+//				printk("Year   : %04d\n",
+//				       (retBuf[176] >> 4) * 10 +
+//				       (retBuf[176] & 0xF) * 1 + 2000);
+//				resultBuf[2] = (retBuf[176] >> 4) * 10 +
+//				    (retBuf[176] & 0xF) * 1;
+//				printk("Month  : %02d\n",
+//				       (retBuf[176 + 1] >> 4) * 10 +
+//				       (retBuf[176 + 1] & 0xF) * 1);
+//				resultBuf[1] = (retBuf[176 + 1] >> 4) * 10 +
+//				    (retBuf[176 + 1] & 0xF) * 1;
+//				printk("Days   : %02d\n",
+//				       (retBuf[176 + 2] >> 4) * 10 +
+//				       (retBuf[176 + 2] & 0xF) * 1);
+//				resultBuf[0] = (retBuf[176 + 2] >> 4) * 10 +
+//				    (retBuf[176 + 2] & 0xF) * 1;
+//				printk("Hours  : %02d\n",
+//				       (retBuf[176 + 3] >> 4) * 10 +
+//				       (retBuf[176 + 3] & 0xF) * 1);
+//				resultBuf[3] = (retBuf[176 + 3] >> 4) * 10 +
+//				    (retBuf[176 + 3] & 0xF) * 1;
+//				printk("Minutes: %02d\n",
+//				       (retBuf[176 + 4] >> 4) * 10 +
+//				       (retBuf[176 + 4] & 0xF) * 1);
+//				resultBuf[4] = (retBuf[176 + 4] >> 4) * 10 +
+//				    (retBuf[176 + 4] & 0xF) * 1;
+//
+//				//Humidity 161
+//				printk("Humidity : %02d\n",
+//				       (retBuf[161] >> 4) * 10 +
+//				       (retBuf[161 + 0] & 0xF) * 1);
+//				resultBuf[5] = (retBuf[161] >> 4) * 10 +
+//				    (retBuf[161 + 0] & 0xF) * 1;
+//				//Temp 174
+//				printk("Temp (d Grad) : %03d\n",
+//				       (retBuf[174] & 0xF) * 100 +
+//				       (retBuf[174 + 1] >> 4) * 10 +
+//				       (retBuf[174 + 1] & 0xF) * 1
+//				       - TEMPERATURE_OFFSET);
+//				resultBuf[6] = (retBuf[174] & 0xF) * 10 +
+//				    (retBuf[174 + 1] >> 4) * 1;
+//				resultBuf[7] = (retBuf[174 + 1] & 0xF) * 1;
+//				atomic_set(&bytes_available, 8);
+//
+//				// bytes_to_addr
+//				// index_to_addr
+//				latestIndex =
+//				    (((((retBuf[7] << 8) | retBuf[8]) << 8) |
+//				      retBuf[9]) - 0x070000) / 32;
+//				thisIndex =
+//				    (((((retBuf[10] << 8) | retBuf[11]) << 8)
+//				      | retBuf[12]) - 0x070000) / 32;
+//				printk("latestIndex = %d\n", latestIndex);
+//				printk("thisIndex = %d\n", thisIndex);
+//
+//				// buildACKFrame(buf, ACTION_GET_HISTORY, cs, nextIndex)
+//				// setzt den neuen Index für die historischen Daten
+//				//index_to_addr
+//				//haddr =  32 * (latestIndex - 2*thisIndex)  + 0x070000;
+//				klimaloggRecord = klimaloggRecord + 6;
+//				haddr = 32 * (klimaloggRecord) + 0x070000;
+//				printk("klimaloggRecord (postInc) = %d\n", klimaloggRecord);
+//
+//				// setFrame in kl.py
+//				setFramebuf[0] = 0xd5;
+//				setFramebuf[1] = 11 >> 8;
+//				setFramebuf[2] = 11;
+//				setFramebuf[3] = retBuf[0];
+//				setFramebuf[4] = retBuf[1];
+//				setFramebuf[5] = LOGGER_1;
+//				setFramebuf[6] = ACTION_GET_HISTORY & 0xF;
+//				setFramebuf[7] = (cs >> 8) & 0xFF;
+//				setFramebuf[8] = (cs >> 0) & 0xFF;
+//				setFramebuf[9] = 0x80;	// TODO: not known what this means
+//				setFramebuf[10] = 8 & 0xFF;	// Annahme 8
+//				setFramebuf[11] = (haddr >> 16) & 0xFF;
+//				setFramebuf[12] = (haddr >> 8) & 0xFF;
+//				setFramebuf[13] = (haddr >> 0) & 0xFF;
+//				ret =
+//				    usb_control_msg(hw->dev,
+//						    usb_sndctrlpipe(hw->dev,
+//						    		    0),
+//						    USB_REQ_SET_CONFIGURATION,
+//						    USB_TYPE_CLASS |
+//						    USB_RECIP_INTERFACE
+//						    | USB_DIR_OUT,
+//						    0x3d5, 0, setFramebuf,
+//						    0x111, KL_USB_CTRL_TIMEOUT);
+//				if (ret < 0) {
+//					printk("Error in setFrame Nr: %d\n",
+//					       ret);
+//				}
+//				//  setTX in kl.py
+//				ret =
+//				    usb_control_msg(hw->dev,
+//						    usb_sndctrlpipe(hw->dev, 0),
+//						    USB_REQ_SET_CONFIGURATION,
+//						    USB_TYPE_CLASS |
+//						    USB_RECIP_INTERFACE |
+//						    USB_DIR_OUT, 0x3d1, 0,
+//						    setTXbuf, 0x15, KL_USB_CTRL_TIMEOUT);
+//				if (ret < 0) {
+//					printk("Error in setTX Nr: %d\n", ret);
+//				}
+//
+//			} else if (respType == RESPONSE_REQUEST) {
+//				printk("RESPONSE_REQUEST\n");
+//			}
+//		}
+//		printk("\n");
+//	}
 
 	ssleep(1);
 
@@ -1746,12 +1766,12 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	atomic_sub(to_copy - not_copied, &bytes_available);
 	count = to_copy - not_copied;
 
-	printk("to_copy: %d\n", (int)to_copy);
-	printk("not_copied: %d\n", (int)not_copied);
-	printk("Return at the end is: %lu\n", count);
+//	printk("to_copy: %d\n", (int)to_copy);
+//	printk("not_copied: %d\n", (int)not_copied);
+//	printk("Return at the end is: %lu\n", count);
 
 read_out:
-	mutex_unlock(&disconnect_mutex);
+	mutex_unlock(&disconnect_mutex);	//TODO mutex destroy?
 	kfree(resultBuf);
 	kfree(setTXbuf);
 	kfree(setFramebuf);
@@ -1765,7 +1785,7 @@ static struct file_operations kl_fops = { .owner   = THIS_MODULE,
 					  .write   = kl_write,
 					  .read    = kl_read,
 					  .open    = kl_open,
-					  .release = kl_release, };
+					  .release = kl_release };
 
 static struct usb_class_driver kl_class = { .name = "kl%d",
 		                            .fops = &kl_fops,
