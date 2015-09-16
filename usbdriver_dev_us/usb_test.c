@@ -716,13 +716,13 @@ static int usb_test_open(struct inode
 	writeReg(register_buf, AX5051REGISTER_FRAMING,
 		 AX5051REGISTER_FRAMING_DATA);
 	writeReg(register_buf, AX5051REGISTER_FREQ0, freq0);	// AX5051REGISTER_FREQ0_DATA);
-	printk("writeReg freq0 written\n");
+//	printk("writeReg freq0 written\n");
 	writeReg(register_buf, AX5051REGISTER_FREQ1, freq1);	// AX5051REGISTER_FREQ1_DATA);
-	printk("writeReg freq1 written\n");
+//	printk("writeReg freq1 written\n");
 	writeReg(register_buf, AX5051REGISTER_FREQ2, freq2);	// AX5051REGISTER_FREQ2_DATA);
-	printk("writeReg freq2 written\n");
+//	printk("writeReg freq2 written\n");
 	writeReg(register_buf, AX5051REGISTER_FREQ3, freq3);	//AX5051REGISTER_FREQ3_DATA);
-	printk("writeReg freq3 written\n");
+//	printk("writeReg freq3 written\n");
 	writeReg(register_buf,
 		 AX5051REGISTER_FREQGAIN, AX5051REGISTER_FREQGAIN_DATA);
 	writeReg(register_buf,
@@ -745,7 +745,7 @@ static int usb_test_open(struct inode
 		 AX5051REGISTER_MODULATION, AX5051REGISTER_MODULATION_DATA);
 	writeReg(register_buf,
 		 AX5051REGISTER_PHASEGAIN, AX5051REGISTER_PHASEGAIN_DATA);
-	writeReg(register_buf, AX5051REGISTER_PINCFG1, AX5051REGISTER_PINCFG2);
+//	writeReg(register_buf, AX5051REGISTER_PINCFG1, AX5051REGISTER_PINCFG2);
 	writeReg(register_buf,
 		 AX5051REGISTER_PLLCPEN, AX5051REGISTER_PLLCPEN_DATA);
 	writeReg(register_buf,

@@ -81,8 +81,8 @@ MODULE_VERSION("0.1");
 #define ML_MINOR_BASE	96
 #endif
 
-static LIST_HEAD(KLlist);
-static DEFINE_RWLOCK(KLlock);
+//static LIST_HEAD(KLlist);
+//static DEFINE_RWLOCK(KLlock);
 
 static int klusb_cnt;
 
@@ -314,7 +314,7 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3f0, 0, reg->buf, 5, 5 * HZ);
+			    USB_DIR_OUT, 0x3f0, 0, reg->buf, 5, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error in writeReg Nr: %d\n", ret);
 	}
@@ -738,7 +738,7 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 	ret = usb_control_msg(hw->dev, hw->ctrl_out_pipe, USB_REQ_SET_CONFIGURATION,
 			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
 			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_READ_CONFIG_FLASH_OUT,
-			      0, writebuf, KL_LEN_READ_CONFIG_FLASH_OUT, 5 * HZ
+			      0, writebuf, KL_LEN_READ_CONFIG_FLASH_OUT, KL_USB_CTRL_TIMEOUT
 			     );
 	if (ret < 0) {
 		DBG_ERR("Could not prepare to read config flash");
@@ -748,7 +748,7 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 	ret = usb_control_msg(hw->dev, hw->ctrl_out_pipe, USB_REQ_CLEAR_FEATURE,
 			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
 			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_READ_CONFIG_FLASH_IN,
-			      0, config->readBuf, config->buflen, 5 * HZ
+			      0, config->readBuf, config->buflen, KL_USB_CTRL_TIMEOUT
 			     );
 
 	if (ret < 0) {
@@ -759,9 +759,10 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 	return ret;
 }
 
-static void doRfSetup(struct kl_usb *hw)
+static int doRfSetup(struct kl_usb *hw)
 {
 	int ret;
+
 
 	/* execute(5) */
 	hw->rf_setup_buffers.buf_execute[0] = 0xd9;
@@ -770,17 +771,17 @@ static void doRfSetup(struct kl_usb *hw)
 //		       KL_MSG_EXECUTE,
 //		       KL_LEN_EXECUTE,
 //		       hw->rf_setup_buffers.buf_execute);
-
+	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_execute[0], hw->rf_setup_buffers.buf_execute[1], hw->rf_setup_buffers.buf_execute[2], hw->rf_setup_buffers.buf_execute[3]);
 	ret =
 	    usb_control_msg(hw->dev,
 			    usb_sndctrlpipe(hw->dev, 0),
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d9, 0, hw->rf_setup_buffers.buf_execute, 0x0f, 5 * HZ);
+			    USB_DIR_OUT, 0x3d9, 0, hw->rf_setup_buffers.buf_execute, 0x0f, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
-		return;
+		return ret;
 	}
 	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_execute[0], hw->rf_setup_buffers.buf_execute[1], hw->rf_setup_buffers.buf_execute[2], hw->rf_setup_buffers.buf_execute[3]);
 
@@ -792,16 +793,17 @@ static void doRfSetup(struct kl_usb *hw)
 //		       KL_LEN_SET_PREAMBLE_PATTERN,
 //		       hw->rf_setup_buffers.buf_preamble_first);
 
+	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_first[0], hw->rf_setup_buffers.buf_preamble_first[1], hw->rf_setup_buffers.buf_preamble_first[2], hw->rf_setup_buffers.buf_preamble_first[3]);
 	ret =
 	    usb_control_msg(hw->dev,
 			    usb_sndctrlpipe(hw->dev, 0),
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_first, 0x15, 5 * HZ);
+			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_first, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
-		return;
+		return ret;
 	}
 	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_first[0], hw->rf_setup_buffers.buf_preamble_first[1], hw->rf_setup_buffers.buf_preamble_first[2], hw->rf_setup_buffers.buf_preamble_first[3]);
 
@@ -813,22 +815,22 @@ static void doRfSetup(struct kl_usb *hw)
 //		       KL_LEN_SET_STATE,
 //		       hw->rf_setup_buffers.buf_setstate_first);
 
+	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_first[0], hw->rf_setup_buffers.buf_setstate_first[1], hw->rf_setup_buffers.buf_setstate_first[2], hw->rf_setup_buffers.buf_setstate_first[3]);
 	ret =
 	    usb_control_msg(hw->dev,
 			    usb_sndctrlpipe(hw->dev, 0),
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_first, 0x15, 5 * HZ);
+			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_first, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
-		return;
+		return ret;
 	}
 	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_first[0], hw->rf_setup_buffers.buf_setstate_first[1], hw->rf_setup_buffers.buf_setstate_first[2], hw->rf_setup_buffers.buf_setstate_first[3]);
 
 	// TODO sleep(1) ???
-	ssleep(1);
-
+	msleep(1000);
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_first[0] = 0xd0;
 //	write_usb_ctrl(hw,
@@ -836,16 +838,17 @@ static void doRfSetup(struct kl_usb *hw)
 //		       KL_LEN_SET_RX,
 //		       hw->rf_setup_buffers.buf_setRx_first);
 
+	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_first[0], hw->rf_setup_buffers.buf_setRx_first[1], hw->rf_setup_buffers.buf_setRx_first[2], hw->rf_setup_buffers.buf_setRx_first[3]);
 	ret =
 	    usb_control_msg(hw->dev,
 			    usb_sndctrlpipe(hw->dev, 0),
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_first, 0x15, 5 * HZ);
+			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_first, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
-		return;
+		return ret;
 	}
 	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_first[0], hw->rf_setup_buffers.buf_setRx_first[1], hw->rf_setup_buffers.buf_setRx_first[2], hw->rf_setup_buffers.buf_setRx_first[3]);
 
@@ -858,16 +861,17 @@ static void doRfSetup(struct kl_usb *hw)
 //		       KL_LEN_SET_PREAMBLE_PATTERN,
 //		       hw->rf_setup_buffers.buf_preamble_second);
 
+	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_second[0], hw->rf_setup_buffers.buf_preamble_second[1], hw->rf_setup_buffers.buf_preamble_second[2], hw->rf_setup_buffers.buf_preamble_second[3]);
 	ret =
 	    usb_control_msg(hw->dev,
 			    usb_sndctrlpipe(hw->dev, 0),
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_second, 0x15, 5 * HZ);
+			    USB_DIR_OUT, 0x3d8, 0, hw->rf_setup_buffers.buf_preamble_second, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
-		return;
+		return ret;
 	}
 	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_preamble_second[0], hw->rf_setup_buffers.buf_preamble_second[1], hw->rf_setup_buffers.buf_preamble_second[2], hw->rf_setup_buffers.buf_preamble_second[3]);
 
@@ -879,22 +883,22 @@ static void doRfSetup(struct kl_usb *hw)
 //		       KL_LEN_SET_STATE,
 //		       hw->rf_setup_buffers.buf_setstate_second);
 
+	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_second[0], hw->rf_setup_buffers.buf_setstate_second[1], hw->rf_setup_buffers.buf_setstate_second[2], hw->rf_setup_buffers.buf_setstate_second[3]);
 	ret =
 	    usb_control_msg(hw->dev,
 			    usb_sndctrlpipe(hw->dev, 0),
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_second, 0x15, 5 * HZ);
+			    USB_DIR_OUT, 0x3d7, 0, hw->rf_setup_buffers.buf_setstate_second, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
-		return;
+		return ret;
 	}
 	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setstate_second[0], hw->rf_setup_buffers.buf_setstate_second[1], hw->rf_setup_buffers.buf_setstate_second[2], hw->rf_setup_buffers.buf_setstate_second[3]);
 
 	// TODO sleep(1) ???
-	ssleep(1);
-
+	msleep(1000);
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_second[0] = 0xd0;
 //	write_usb_ctrl(hw,
@@ -903,19 +907,21 @@ static void doRfSetup(struct kl_usb *hw)
 //		       hw->rf_setup_buffers.buf_setRx_second);
 
 
+	printk("doRfSetup vor= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_second[0], hw->rf_setup_buffers.buf_setRx_second[1], hw->rf_setup_buffers.buf_setRx_second[2], hw->rf_setup_buffers.buf_setRx_second[3]);
 	ret =
 	    usb_control_msg(hw->dev,
 			    usb_sndctrlpipe(hw->dev, 0),
 			    USB_REQ_SET_CONFIGURATION,
 			    USB_TYPE_CLASS |
 			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_second, 0x15, 5 * HZ);
+			    USB_DIR_OUT, 0x3d0, 0, hw->rf_setup_buffers.buf_setRx_second, 0x15, KL_USB_CTRL_TIMEOUT);
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
-		return;
+		return ret;
 	}
 	printk("doRfSetup nach= %x %x %x %x\n", hw->rf_setup_buffers.buf_setRx_second[0], hw->rf_setup_buffers.buf_setRx_second[1], hw->rf_setup_buffers.buf_setRx_second[2], hw->rf_setup_buffers.buf_setRx_second[3]);
 
+	return 0;
 }
 
 static void setRegisterValue(__u8 addr, int value)
@@ -932,7 +938,7 @@ static void setRegisterValue(__u8 addr, int value)
 	}
 }
 
-static void initTranseiver(struct kl_usb *hw)
+static int initTranseiver(struct kl_usb *hw)
 {
 	struct usb_fifo *fifo;
 	struct usb_read_config_flash freqCorrection;
@@ -992,8 +998,6 @@ static void initTranseiver(struct kl_usb *hw)
 
 	DBG_INFO("transceiver identifier: %u (0x%x)", hw->transceiver_id, hw->transceiver_id);
 
-	msleep(1000);
-
 	/* write ax5051 registers */
 	countReg = sizeof(ax5051_reglist) / sizeof(ax5051_reglist[0]);
 	DBG_INFO("number of registers: %d", countReg);
@@ -1002,7 +1006,11 @@ static void initTranseiver(struct kl_usb *hw)
 			// DBG_INFO("&ax5051_reglist[%d]: 0x%p",i, &ax5051_reglist[i]);
 			// DBG_INFO(" ax5051_reglist[i]: 0x%x",  ax5051_reglist[i]);
 			// kl_debug_data(__FUNCTION__, 5, ax5051_reglist[i].buf);
-			write_reg(hw, &ax5051_reglist[i]);
+			ret = write_reg(hw, &ax5051_reglist[i]);
+			if (ret) {
+				DBG_ERR("write_reg failed!");
+				return ret;
+			}
 
 			// msleep(10);
 			// kl_debug_data(__FUNCTION__, 5, ax5051_reglist[i].buf);
@@ -1011,9 +1019,9 @@ static void initTranseiver(struct kl_usb *hw)
 	}
 
 	/* do RF Setup */
-	doRfSetup(hw);
+	ret = doRfSetup(hw);
 
-
+	return ret;
 
 //	    def doRFSetup(self):
 //	        self.hid.execute(5)
@@ -1164,8 +1172,8 @@ static int setup_klusb(struct kl_usb *hw)
 //			     (u_char *)&hw->ctrl_write, NULL, 0,
 //			     (usb_complete_t)ctrl_complete, hw);
 
-	initTranseiver(hw);
-	return 0;
+	ret = initTranseiver(hw);
+	return ret;
 }
 
 static void release_hw(struct kl_usb *hw)
@@ -1185,7 +1193,7 @@ static void release_hw(struct kl_usb *hw)
 
 	if (hw->intf)
 		usb_set_intfdata(hw->intf, NULL);
-	list_del(&hw->list);
+//	list_del(&hw->list);
 	kfree(hw);
 	hw = NULL;
 }
@@ -1220,12 +1228,12 @@ static int kl_open(struct inode *inode, struct file *file)
 	}
 
 	/* lock this device */
-	if (down_interruptible(&hw->sem))
-	{
-		DBG_ERR("sem down failed");
-		retval = -ERESTARTSYS;
-		goto exit;
-	}
+//	if (down_interruptible(&hw->sem))
+//	{
+//		DBG_ERR("sem down failed");
+//		retval = -ERESTARTSYS;
+//		goto exit;
+//	}
 
 	/* Increment our usage count for the device. */
 	++hw->open_count;
@@ -1254,13 +1262,20 @@ static int kl_open(struct inode *inode, struct file *file)
 //	}
 
 	err = setup_klusb(hw);
+	if (err) {
+		DBG_ERR("setup_klusb failed!");
+		retval = err;
+		goto unlock_exit;
+	}
 
 	/* Save our object in the file's private structure. */
 	file->private_data = hw;
 
-	unlock_exit: up(&hw->sem);
+unlock_exit:
+//	up(&hw->sem);
 
-	exit: mutex_unlock(&disconnect_mutex);
+exit:
+	mutex_unlock(&disconnect_mutex);
 	return retval;
 }
 
@@ -1441,7 +1456,7 @@ static ssize_t kl_write(struct file *file, const char __user *user_buf,
 /* defined in dezi Grad Celsius */
 #define TEMPERATURE_OFFSET 400
 
-static DEFINE_MUTEX(ulock);
+//static DEFINE_MUTEX(ulock);
 
 static atomic_t bytes_available = ATOMIC_INIT(0);
 
@@ -1454,7 +1469,7 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	/* read syscall */
 
 	size_t to_copy, not_copied;
-	printk("Count is: %lu\n", count);
+
 
 	int ret;
 	int nbytes;
@@ -1477,8 +1492,13 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	struct kl_usb *hw = NULL;
 	ssize_t retval = 0;
 
-	if (!data)
+	printk("Count is: %lu\n", count);
+
+	if (!retBuf || !data || !rawdata || !setFramebuf || !setTXbuf || !resultBuf) {
+		printk("no memory");
+		count = -ENOMEM;
 		goto read_out;
+	}
 
 
 
@@ -1486,17 +1506,22 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	DBG_INFO("read command, read by \"%s\" (pid %i), size=%lu",
 			current->comm, current->pid, (unsigned long ) count);
 
-	hw = instanz->private_data;
+	hw = (struct kl_usb *)instanz->private_data;
 
+	if (!hw) {
+		printk("hw is NULL!");
+		count = -ENODEV;
+		goto read_out;
+	}
 
 	printk("usb_test: read\n");
-	mutex_lock(&ulock);	/* Jetzt nicht disconnecten... */
+	mutex_lock(&disconnect_mutex);	/* Jetzt nicht disconnecten... */
 //      printk("read vor = %02x %02x %02x %02x\n", data[0], data[1], data[2],
 //             data[3]);
 	ret =
-	    usb_control_msg(hw->dev, hw->ctrl_in_pipe, USB_REQ_CLEAR_FEATURE,
+	    usb_control_msg(hw->dev, usb_rcvctrlpipe(hw->dev, 0), USB_REQ_CLEAR_FEATURE,
 			    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
-			    0x3de, 0, data, 10, 5 * HZ);
+			    0x3de, 0, data, 10, KL_USB_CTRL_TIMEOUT);
 
 	if (ret < 0) {
 		printk("Error read Nr: %d\n", ret);
@@ -1510,11 +1535,11 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	if (data[1] == 0x16) {
 		printk("Success!\n");
 		ret =
-		    usb_control_msg(hw->dev, hw->ctrl_in_pipe,
+		    usb_control_msg(hw->dev, usb_rcvctrlpipe(hw->dev, 0),
 				    USB_REQ_CLEAR_FEATURE,
 				    USB_TYPE_CLASS | USB_RECIP_INTERFACE |
 				    USB_DIR_IN, 0x3d6, 0, rawdata, 0x111,
-				    5 * HZ);
+				    KL_USB_CTRL_TIMEOUT);
 		if (ret < 0) {
 			printk("Error in getFrame Nr: %d\n", ret);
 			count = -EIO;
@@ -1601,13 +1626,14 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 
 				ret =
 				    usb_control_msg(hw->dev,
-						    hw->ctrl_out_pipe,
+						    usb_sndctrlpipe(hw->dev,
+								    0),
 						    USB_REQ_SET_CONFIGURATION,
 						    USB_TYPE_CLASS |
 						    USB_RECIP_INTERFACE
 						    | USB_DIR_OUT,
 						    0x3d5, 0, setFramebuf,
-						    0x111, 5 * HZ);
+						    0x111, KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
 					printk("Error in setFrame Nr: %d\n",
 					       ret);
@@ -1615,12 +1641,12 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 				//  setTX in kl.py
 				ret =
 				    usb_control_msg(hw->dev,
-						    hw->ctrl_out_pipe,
+						    usb_sndctrlpipe(hw->dev, 0),
 						    USB_REQ_SET_CONFIGURATION,
 						    USB_TYPE_CLASS |
 						    USB_RECIP_INTERFACE |
 						    USB_DIR_OUT, 0x3d1, 0,
-						    setTXbuf, 0x15, 5 * HZ);
+						    setTXbuf, 0x15, KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
 					printk("Error in setTX Nr: %d\n", ret);
 				}
@@ -1711,13 +1737,14 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 				setFramebuf[13] = (haddr >> 0) & 0xFF;
 				ret =
 				    usb_control_msg(hw->dev,
-						    hw->ctrl_out_pipe,
+						    usb_sndctrlpipe(hw->dev,
+						    		    0),
 						    USB_REQ_SET_CONFIGURATION,
 						    USB_TYPE_CLASS |
 						    USB_RECIP_INTERFACE
 						    | USB_DIR_OUT,
 						    0x3d5, 0, setFramebuf,
-						    0x111, 5 * HZ);
+						    0x111, KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
 					printk("Error in setFrame Nr: %d\n",
 					       ret);
@@ -1725,12 +1752,12 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 				//  setTX in kl.py
 				ret =
 				    usb_control_msg(hw->dev,
-						    hw->ctrl_out_pipe,
+						    usb_sndctrlpipe(hw->dev, 0),
 						    USB_REQ_SET_CONFIGURATION,
 						    USB_TYPE_CLASS |
 						    USB_RECIP_INTERFACE |
 						    USB_DIR_OUT, 0x3d1, 0,
-						    setTXbuf, 0x15, 5 * HZ);
+						    setTXbuf, 0x15, KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
 					printk("Error in setTX Nr: %d\n", ret);
 				}
@@ -1751,10 +1778,10 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 
 	printk("to_copy: %d\n", (int)to_copy);
 	printk("not_copied: %d\n", (int)not_copied);
-	printk("Return at the end is: %d\n", count);
+	printk("Return at the end is: %lu\n", count);
 
 read_out:
-	mutex_unlock(&ulock);
+	mutex_unlock(&disconnect_mutex);
 	kfree(resultBuf);
 	kfree(setTXbuf);
 	kfree(setFramebuf);
@@ -1782,7 +1809,7 @@ static int setup_instance(struct kl_usb *hw, struct device *parent) // TODO remo
 
 	DBG_INFO("%s", __func__);
 
-	sema_init(&hw->sem, 1);
+//	sema_init(&hw->sem, 1);
 
 	spin_lock_init(&hw->ctrl_lock);
 	spin_lock_init(&hw->lock);
@@ -1801,9 +1828,9 @@ static int setup_instance(struct kl_usb *hw, struct device *parent) // TODO remo
 //		goto out;
 
 	klusb_cnt++;
-	write_lock_irqsave(&KLlock, flags);
-	list_add_tail(&hw->list, &KLlist);
-	write_unlock_irqrestore(&KLlock, flags);
+//	write_lock_irqsave(&KLlock, flags);
+//	list_add_tail(&hw->list, &KLlist);
+//	write_unlock_irqrestore(&KLlock, flags);
 	return 0;
 
 out:
@@ -1944,13 +1971,15 @@ static void kl_disconnect(struct usb_interface *intf)
 
 	release_hw(hw);
 
-	list_for_each_entry_safe(hw, next, &KLlist, list)
-		cnt++;
-	if (!cnt)
-		klusb_cnt = 0;
+//	list_for_each_entry_safe(hw, next, &KLlist, list)
+//		cnt++;
+//	if (!cnt)
+//		klusb_cnt = 0;
+
+	klusb_cnt = 0;
 
 	/* TODO is this not already done in release_hw() ??? */
-	usb_set_intfdata(intf, NULL);
+//	usb_set_intfdata(intf, NULL);
 
 
 
