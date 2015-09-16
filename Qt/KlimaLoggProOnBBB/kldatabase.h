@@ -20,7 +20,7 @@ public:
     ~KLDatabase();
 
     void StoreRecord(Record data);
-    bool getValues(QVector<double>& x1 , QVector<double>& y1);
+    bool getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4);
 
 private:
     static const QString sDatabaseName;

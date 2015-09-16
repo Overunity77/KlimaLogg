@@ -18,8 +18,18 @@ public:
 
 private slots:
     void makePlot();
-    void ReadUSBFrame();
+
+
+
+
+    void selectShortTimespan();
+    void selectMediumTimespan();
+    void selectLongTimespan();
+
+
 private:
+    void ReadUSBFrame();
+
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;
 };
