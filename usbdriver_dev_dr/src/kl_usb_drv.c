@@ -182,6 +182,7 @@ static void ctrl_start_transfer(struct kl_usb *hw)
 }
 
 /* queue a control transfer write request */
+/* the param: void* data will be de-allocated when the urb completes */
 static int write_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data)
 {
 	struct usb_ctrl_buf *buf;
@@ -207,7 +208,7 @@ static int write_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* dat
 
 	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
 		hw->ctrl_in_idx = 0;
-	if (++hw->ctrl_cnt == 1) //TODO why ctrl_cnt == 1 and not ctrl_cnt > 0 ??
+	if (++hw->ctrl_cnt == 1) 	/* start transfer if it's the first item in the queue */
 		ctrl_start_transfer(hw);
 	spin_unlock(&hw->ctrl_lock);
 
@@ -215,6 +216,7 @@ static int write_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* dat
 }
 
 /* queue a control transfer write request */
+/* the param: void* data will be de-allocated when the urb completes */
 static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data)
 {
 	struct usb_ctrl_buf *buf;
@@ -240,7 +242,7 @@ static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data
 
 	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
 		hw->ctrl_in_idx = 0;
-	if (++hw->ctrl_cnt == 1)
+	if (++hw->ctrl_cnt == 1)	/* start transfer if it's the first item in the queue */
 		ctrl_start_transfer(hw);
 	spin_unlock(&hw->ctrl_lock);
 
@@ -254,59 +256,31 @@ static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data
  * queue a control transfer request to write HFC-S USB
  * chip register using CTRL request queue
  */
-//static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
-//{
-//	struct usb_ctrl_buf *buf;
-//
-//	spin_lock(&hw->ctrl_lock);
-//	if (hw->ctrl_cnt >= KL_USB_CTRL_BUFSIZE) {
-//		DBG_ERR("usb control buffer full!");
-//		spin_unlock(&hw->ctrl_lock);
-//		return 1;
-//	}
-//	buf = &hw->usb_ctrl_buff[hw->ctrl_in_idx];
-//
-//	buf->ctrlrequest.bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT;
-//	buf->ctrlrequest.bRequest = USB_REQ_SET_CONFIGURATION;
-//	buf->ctrlrequest.wValue = cpu_to_le16((USB_HID_FEATURE_REPORT << 8) |
-//			                       KL_MSG_WRITE_REG); /* convert to little-endian */
-//	buf->ctrlrequest.wIndex = cpu_to_le16(0);
-//	buf->ctrlrequest.wLength = cpu_to_le16(KL_LEN_WRITE_REG);
-//
-//	reg->buf[0] = 0xf0;
-//	reg->buf[1] = reg->addr & 0x7f;
-//	reg->buf[2] = 0x01;
-//	reg->buf[3] = reg->value;
-//	reg->buf[4] = 0x00;
-//
-//	buf->buf = reg->buf;
-//	buf->buflen = KL_LEN_WRITE_REG;
-//
-//	buf->pipe = hw->ctrl_out_pipe;
-//
-////	DBG_INFO(" reg: 0x%p", reg);
-////	DBG_INFO(" buf->buf: 0x%p", buf->buf);
-////	DBG_INFO("&buf->buf: 0x%p", &buf->buf);
-//
-//	kl_debug_data(__FUNCTION__, buf->buflen, buf->buf);
-//
-//
-//	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
-//		hw->ctrl_in_idx = 0;
-//	if (++hw->ctrl_cnt == 1) //TODO why ctrl_cnt == 1 and not ctrl_cnt > 0 ??
-//		ctrl_start_transfer(hw);
-//	spin_unlock(&hw->ctrl_lock);
-//
-//	return 0;
-//}
-
 static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 {
+	struct usb_ctrl_buf *buf;
 	int ret = 0;
-	reg->buf = kcalloc(KL_LEN_WRITE_REG, 1, GFP_KERNEL);
+
+	reg->buf = kcalloc(KL_LEN_WRITE_REG, 1, GFP_KERNEL); 	/* reg->buf will be de-allocated when the urb completes */
 
 	if (!reg->buf)
 		return -ENOMEM;
+
+	spin_lock(&hw->ctrl_lock);
+	if (hw->ctrl_cnt >= KL_USB_CTRL_BUFSIZE) {
+		DBG_ERR("usb control buffer full!");
+		spin_unlock(&hw->ctrl_lock);
+		kfree(reg->buf);
+		return 1;
+	}
+	buf = &hw->usb_ctrl_buff[hw->ctrl_in_idx];
+
+	buf->ctrlrequest.bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT;
+	buf->ctrlrequest.bRequest = USB_REQ_SET_CONFIGURATION;
+	buf->ctrlrequest.wValue = cpu_to_le16((USB_HID_FEATURE_REPORT << 8) |
+			                       KL_MSG_WRITE_REG); /* convert to little-endian */
+	buf->ctrlrequest.wIndex = cpu_to_le16(0);
+	buf->ctrlrequest.wLength = cpu_to_le16(KL_LEN_WRITE_REG);
 
 	reg->buf[0] = 0xf0;
 	reg->buf[1] = reg->addr & 0x7f;
@@ -314,22 +288,53 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 	reg->buf[3] = reg->value;
 	reg->buf[4] = 0x00;
 
-	ret =
-	    usb_control_msg(hw->dev,
-			    usb_sndctrlpipe(hw->dev, 0),
-			    USB_REQ_SET_CONFIGURATION,
-			    USB_TYPE_CLASS |
-			    USB_RECIP_INTERFACE |
-			    USB_DIR_OUT, 0x3f0, 0, reg->buf, 5, KL_USB_CTRL_TIMEOUT);
-	if (ret < 0) {
-		DBG_ERR("ret = %d", ret);
-	}
-	kl_debug_data(__FUNCTION__, KL_LEN_WRITE_REG, reg->buf);
+	buf->buf = reg->buf;
+	buf->buflen = KL_LEN_WRITE_REG;
 
-	kfree(reg->buf);
+	buf->pipe = hw->ctrl_out_pipe;
+
+//	kl_debug_data(__FUNCTION__, buf->buflen, buf->buf);
+
+
+	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
+		hw->ctrl_in_idx = 0;
+	if (++hw->ctrl_cnt == 1)	/* start transfer if it's the first item in the queue */
+		ctrl_start_transfer(hw);
+	spin_unlock(&hw->ctrl_lock);
 
 	return 0;
 }
+
+//static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
+//{
+//	int ret = 0;
+//	reg->buf = kcalloc(KL_LEN_WRITE_REG, 1, GFP_KERNEL);
+//
+//	if (!reg->buf)
+//		return -ENOMEM;
+//
+//	reg->buf[0] = 0xf0;
+//	reg->buf[1] = reg->addr & 0x7f;
+//	reg->buf[2] = 0x01;
+//	reg->buf[3] = reg->value;
+//	reg->buf[4] = 0x00;
+//
+//	ret =
+//	    usb_control_msg(hw->dev,
+//			    usb_sndctrlpipe(hw->dev, 0),
+//			    USB_REQ_SET_CONFIGURATION,
+//			    USB_TYPE_CLASS |
+//			    USB_RECIP_INTERFACE |
+//			    USB_DIR_OUT, 0x3f0, 0, reg->buf, 5, KL_USB_CTRL_TIMEOUT);
+//	if (ret < 0) {
+//		DBG_ERR("ret = %d", ret);
+//	}
+//	kl_debug_data(__FUNCTION__, KL_LEN_WRITE_REG, reg->buf);
+//
+//	kfree(reg->buf);
+//
+//	return 0;
+//}
 
 
 
@@ -347,11 +352,11 @@ static void ctrl_complete(struct urb *urb)
 //	DBG_INFO("transfer flags: 0x%x, actual length: %d", urb->transfer_flags, urb->actual_length);
 //	DBG_INFO("ctrl_complete buffer:");
 
+	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
+	kfree(urb->transfer_buffer);
+
 	spin_lock(&hw->ctrl_lock);
 
-	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
-
-	urb->dev = hw->dev;
 	if (hw->ctrl_cnt) {
 		hw->ctrl_cnt--;	/* decrement actual count */
 		if (++hw->ctrl_out_idx >= KL_USB_CTRL_BUFSIZE)
@@ -769,8 +774,11 @@ static int doRfSetup(struct kl_usb *hw)
 {
 	int ret = 0;
 
-
 	/* execute(5) */
+	hw->rf_setup_buffers.buf_execute = kcalloc(KL_LEN_EXECUTE, 1, GFP_KERNEL);
+	if (!hw->rf_setup_buffers.buf_execute)
+		return -ENOMEM;
+
 	hw->rf_setup_buffers.buf_execute[0] = 0xd9;
 	hw->rf_setup_buffers.buf_execute[1] = 0x05;
 	ret = write_usb_ctrl(hw,
@@ -784,6 +792,10 @@ static int doRfSetup(struct kl_usb *hw)
 	}
 
 	/* setPreamblePattern(0xaa) */
+	hw->rf_setup_buffers.buf_preamble_first = kcalloc(KL_LEN_SET_PREAMBLE_PATTERN, 1, GFP_KERNEL);
+	if (!hw->rf_setup_buffers.buf_preamble_first)
+		return -ENOMEM;
+
 	hw->rf_setup_buffers.buf_preamble_first[0] = 0xd8;
 	hw->rf_setup_buffers.buf_preamble_first[1] = 0xaa;
 	ret = write_usb_ctrl(hw,
@@ -797,6 +809,10 @@ static int doRfSetup(struct kl_usb *hw)
 	}
 
 	/* setState(0) */
+	hw->rf_setup_buffers.buf_setstate_first = kcalloc(KL_LEN_SET_STATE, 1, GFP_KERNEL);
+	if (!hw->rf_setup_buffers.buf_setstate_first)
+		return -ENOMEM;
+
 	hw->rf_setup_buffers.buf_setstate_first[0] = 0xd7;
 	hw->rf_setup_buffers.buf_setstate_first[1] = 0x00;
 	ret = write_usb_ctrl(hw,
@@ -813,6 +829,10 @@ static int doRfSetup(struct kl_usb *hw)
 	msleep(1000);
 
 	/* setRx() */
+	hw->rf_setup_buffers.buf_setRx_first = kcalloc(KL_LEN_SET_RX, 1, GFP_KERNEL);
+	if (!hw->rf_setup_buffers.buf_setRx_first)
+		return -ENOMEM;
+
 	hw->rf_setup_buffers.buf_setRx_first[0] = 0xd0;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_RX,
@@ -825,6 +845,10 @@ static int doRfSetup(struct kl_usb *hw)
 	}
 
 	/* setPreamblePattern(0xaa) */
+	hw->rf_setup_buffers.buf_preamble_second = kcalloc(KL_LEN_SET_PREAMBLE_PATTERN, 1, GFP_KERNEL);
+	if (!hw->rf_setup_buffers.buf_preamble_second)
+		return -ENOMEM;
+
 	hw->rf_setup_buffers.buf_preamble_second[0] = 0xd8;
 	hw->rf_setup_buffers.buf_preamble_second[1] = 0xaa;
 	ret = write_usb_ctrl(hw,
@@ -838,6 +862,10 @@ static int doRfSetup(struct kl_usb *hw)
 	}
 
 	/* setState(0x1e) */
+	hw->rf_setup_buffers.buf_setstate_second = kcalloc(KL_LEN_SET_STATE, 1, GFP_KERNEL);
+	if (!hw->rf_setup_buffers.buf_setstate_second)
+		return -ENOMEM;
+
 	hw->rf_setup_buffers.buf_setstate_second[0] = 0xd7;
 	hw->rf_setup_buffers.buf_setstate_second[1] = 0x1e;
 	ret = write_usb_ctrl(hw,
@@ -854,6 +882,10 @@ static int doRfSetup(struct kl_usb *hw)
 	msleep(1000);
 
 	/* setRx() */
+	hw->rf_setup_buffers.buf_setRx_second = kcalloc(KL_LEN_SET_RX, 1, GFP_KERNEL);
+	if (!hw->rf_setup_buffers.buf_setRx_second)
+		return -ENOMEM;
+
 	hw->rf_setup_buffers.buf_setRx_second[0] = 0xd0;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_RX,
