@@ -301,6 +301,10 @@ static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data
 static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 {
 	int ret = 0;
+	reg->buf = kcalloc(KL_LEN_WRITE_REG, 1, GFP_KERNEL);
+
+	if (!reg->buf)
+		return -ENOMEM;
 
 	reg->buf[0] = 0xf0;
 	reg->buf[1] = reg->addr & 0x7f;
@@ -321,6 +325,8 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 	printk
 	    ("writeReg nach= %02x %02x %02x %02x %02x\n",
 			    reg->buf[0], reg->buf[1], reg->buf[2], reg->buf[3], reg->buf[4]);
+
+	kfree(reg->buf);
 
 	return 0;
 }
