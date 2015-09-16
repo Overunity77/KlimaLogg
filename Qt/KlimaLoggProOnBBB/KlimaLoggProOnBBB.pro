@@ -17,11 +17,14 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
         qcustomplot.cpp \
-        kldatabase.cpp
+        kldatabase.cpp \
+    bitconverter.cpp
 
 HEADERS  += mainwindow.h \
         qcustomplot.h \
-        kldatabase.h
+        kldatabase.h \
+    bitconverter.h \
+    definitions.h
 
 FORMS    += mainwindow.ui
 

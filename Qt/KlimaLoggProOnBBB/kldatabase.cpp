@@ -27,6 +27,12 @@ KLDatabase::~KLDatabase()
     delete db;
 }
 
+
+void KLDatabase::StoreRecord(Record data)
+{
+
+}
+
 bool KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1)
 {
     int counter = 0;

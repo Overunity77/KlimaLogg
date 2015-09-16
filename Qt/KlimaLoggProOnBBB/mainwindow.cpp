@@ -2,6 +2,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "bitconverter.h"
 
 #include <QDebug>
 
@@ -16,7 +17,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     m_kldatabase = new KLDatabase(this);
 
-    MainWindow::makePlot();
+    //MainWindow::makePlot();
+    ReadUSBFrame();
 }
 
 MainWindow::~MainWindow()
@@ -26,14 +28,62 @@ MainWindow::~MainWindow()
 }
 
 
+void MainWindow::ReadUSBFrame()
+{
+    char *usbframe = new char[238];
+    int retValue = 0;
+
+    FILE *fd = NULL;
+
+    fd = fopen("/dev/kl0", "rb");
+    if(!fd)
+    {
+        qDebug() << "could not open /dev/kl0";
+        return;
+    }
+
+    retValue = fread(usbframe,sizeof(char),238,fd);
+
+    fclose(fd);
+
+    if(retValue < 0)
+    {
+        qDebug() << "Error: " << retValue;
+
+        //TODO: inform user
+        return;
+    }
+
+    ResponseType response = BitConverter::GetResponseType(usbframe,retValue);
+    if(response == RESPONSE_GET_CURRENT)
+    {
+        Record rec = BitConverter::GetSensorValuesFromCurrentData(usbframe);
+        m_kldatabase->StoreRecord(rec);
+    }
+    else if(response == RESPONSE_GET_HISTORY)
+    {
+        for(int i = 0; i < 7;i++)
+        {
+            Record rec = BitConverter::GetSensorValuesFromHistoryData(usbframe,i);
+            m_kldatabase->StoreRecord(rec);
+        }
+    }
+    else
+    {
+        qDebug() << "Response Type " << response << " unknown";
+    }
+
+
+}
+
 void MainWindow::makePlot()
 {
     // prepare data:
-//    double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+    //    double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
     QVector<double> x1(14000), y1(14000);
 
 
-/*
+    /*
     char data[100];
     int retValue = 0;
     int counter = 0;

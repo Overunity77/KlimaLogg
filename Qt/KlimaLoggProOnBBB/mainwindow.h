@@ -18,7 +18,7 @@ public:
 
 private slots:
     void makePlot();
-
+    void ReadUSBFrame();
 private:
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;
