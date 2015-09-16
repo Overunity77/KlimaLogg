@@ -11,9 +11,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-
-
     ui->setupUi(this);
+
+    connect(ui->radioButton_1, SIGNAL(clicked()), this, SLOT(selectLongTimespan()));
+    connect(ui->radioButton_2, SIGNAL(clicked()), this, SLOT(selectMediumTimespan()));
+    connect(ui->radioButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()));
+
     m_kldatabase = new KLDatabase(this);
 
     MainWindow::makePlot();
@@ -29,11 +32,13 @@ MainWindow::~MainWindow()
 void MainWindow::makePlot()
 {
     // prepare data:
-//    double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-    QVector<double> x1(14000), y1(14000);
+    double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+    qDebug() << "actualTime" << actualTime ;
+
+    QVector<double> x1(14000), y1(14000), y2(14000), y3(14000), y4(14000);
 
 
-/*
+    /*
     char data[100];
     int retValue = 0;
     int counter = 0;
@@ -74,7 +79,7 @@ void MainWindow::makePlot()
 
 
     //read DB
-    bool ok = m_kldatabase->getValues(x1, y1);
+    bool ok = m_kldatabase->getValues(x1, y1, y2, y3, y4);
 
     if (ok)
     {
@@ -92,10 +97,25 @@ void MainWindow::makePlot()
 
     // create and configure plottables:
     QCPGraph *graph1 = ui->customPlot->addGraph();
-    graph1->setData(x1, y1);
-    graph1->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(Qt::black, 1.5), QBrush(Qt::white), 9));
-    graph1->setPen(QPen(QColor(120, 120, 120), 2));
+    QCPGraph *graph2 = ui->customPlot->addGraph();
+    QCPGraph *graph3 = ui->customPlot->addGraph();
+    QCPGraph *graph4 = ui->customPlot->addGraph();
 
+    graph1->setData(x1, y1);
+    graph2->setData(x1, y2);
+    graph3->setData(x1, y3);
+    graph4->setData(x1, y4);
+    //   graph1->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, QPen(Qt::black, 1.5), QBrush(Qt::white), 9));
+
+    graph1->setPen(QPen(Qt::red));                 //(QPen(QColor(120, 120, 120), 2));
+    graph2->setPen(QPen(Qt::blue));
+    graph3->setPen(QPen(Qt::green));
+    graph4->setPen(QPen(Qt::yellow));
+
+    graph1->setLineStyle(QCPGraph::lsLine);
+    graph2->setLineStyle(QCPGraph::lsLine);
+    graph3->setLineStyle(QCPGraph::lsLine);
+    graph4->setLineStyle(QCPGraph::lsLine);
 
     // move bars above graphs and grid below bars:
     ui->customPlot->addLayer("abovemain", ui->customPlot->layer("main"),QCustomPlot::limAbove);
@@ -120,7 +140,7 @@ void MainWindow::makePlot()
     ui->customPlot->xAxis->setTickStep(86400);
 
     ui->customPlot->yAxis->setAutoTickStep(false);
-    ui->customPlot->yAxis->setTickStep(1);
+    ui->customPlot->yAxis->setTickStep(5);
 
     ui->customPlot->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
     ui->customPlot->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
@@ -146,7 +166,23 @@ void MainWindow::makePlot()
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
 
     ui->customPlot->xAxis->setRange(x1[0], x1[13000]);
-    ui->customPlot->yAxis->setRange(20, 32);
+    ui->customPlot->yAxis->setRange(20, 70);
+
+    ui->customPlot->xAxis->setLabel("Zeit");
+    ui->customPlot->yAxis->setLabel("Temperatur");
 
 
+}
+
+void MainWindow::selectShortTimespan() {
+    qDebug() << "15 Minuten";
+}
+
+
+void MainWindow::selectMediumTimespan() {
+    qDebug() << "24 Stunden";
+}
+
+void MainWindow::selectLongTimespan() {
+    qDebug() << "7 Tage";
 }

@@ -19,6 +19,10 @@ public:
 private slots:
     void makePlot();
 
+    void selectShortTimespan();
+    void selectMediumTimespan();
+    void selectLongTimespan();
+
 private:
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;

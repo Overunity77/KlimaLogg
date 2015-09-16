@@ -27,19 +27,31 @@ KLDatabase::~KLDatabase()
     delete db;
 }
 
-bool KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1)
+bool KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
 {
     int counter = 0;
-    QSqlQuery* myQuery = new QSqlQuery("select dateTime, temp0 from measurement", QSqlDatabase::database("KlimaLoggDb"));
+    QSqlQuery* myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp1, humidity1 from measurement", QSqlDatabase::database("KlimaLoggDb"));
 
     //   bool queryOk = myQuery->last();
     while (myQuery->next()) {
         QSqlRecord myRecord = myQuery->record();
 
         QSqlField dateTime = myRecord.field("dateTime");
+
         x1[counter] = dateTime.value().toUInt();
-        QSqlField temp1 = myRecord.field("temp0");
-        y1[counter] = temp1.value().toDouble();
+        QSqlField temp0 = myRecord.field("temp0");
+        y1[counter] = temp0.value().toDouble();
+
+        QSqlField humidity0 = myRecord.field("humidity0");
+        y2[counter] = humidity0.value().toDouble();
+
+        QSqlField temp1 = myRecord.field("temp1");
+        y3[counter] = temp1.value().toDouble();
+
+        QSqlField humidity1 = myRecord.field("humidity1");
+        y4[counter] = humidity1.value().toDouble();
+
+
         counter = counter +1;
     }
 
