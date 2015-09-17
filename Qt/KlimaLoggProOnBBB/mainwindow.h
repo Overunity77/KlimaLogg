@@ -15,20 +15,24 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-     void ReadUSBFrame();
+
 
 private slots:
+    void TimerEvent();
+    void ReadUSBFrame();
     void makePlot();
+    void DrawPlot();
     void selectShortTimespan();
     void selectMediumTimespan();
     void selectLongTimespan();
-
 
 private:
 
 
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;
+    QThread *m_AcquisitionThread;
+    QTimer *m_AcquisitionTimer;
 };
 
 #endif // MAINWINDOW_H

@@ -19,13 +19,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->radioButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()));
 
     m_kldatabase = new KLDatabase(this);
+    m_AcquisitionTimer = new QTimer(this);
+    // setup signal and slot
+    connect(m_AcquisitionTimer, SIGNAL(timeout()),
+            this, SLOT(TimerEvent()));
+    m_AcquisitionTimer->start(5000);
 
-    MainWindow::makePlot();
-/*    while(true)
-    {
-    ReadUSBFrame();
-    }*/
+    //initialize plot
+    makePlot();
 }
+
+
 
 MainWindow::~MainWindow()
 {
@@ -33,9 +37,16 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::TimerEvent()
+{
+    ReadUSBFrame();
+    DrawPlot();
+}
+
 
 void MainWindow::ReadUSBFrame()
 {
+
     char *usbframe = new char[238];
     int retValue = 0;
 
@@ -78,15 +89,44 @@ void MainWindow::ReadUSBFrame()
     {
         qDebug() << "Response Type " << response << " unknown";
     }
+}
 
 
+//
+//  Get new values and update plot
+//
+void MainWindow::DrawPlot()
+{
+    QVector<double> x1(14000), y1(14000), y2(14000), y3(14000), y4(14000);
+
+    bool ok = m_kldatabase->getValues(x1, y1, y2, y3, y4);
+
+    if (ok)
+    {
+        //update UI
+        // get created graphs
+        QCPGraph *graph1 = ui->customPlot->graph(0);
+        QCPGraph *graph2 = ui->customPlot->graph(1);
+        QCPGraph *graph3 = ui->customPlot->graph(2);
+        QCPGraph *graph4 = ui->customPlot->graph(3);
+
+        //.. and update the values
+        graph1->setData(x1, y1);
+        graph2->setData(x1, y2);
+        graph3->setData(x1, y3);
+        graph4->setData(x1, y4);
+    }
+    else
+    {
+        //qDebug();
+    }
 }
 
 void MainWindow::makePlot()
 {
     // prepare data:
     //    double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-   // QVector<double> x1(14000), y1(14000);
+    // QVector<double> x1(14000), y1(14000);
     double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
     qDebug() << "actualTime" << actualTime ;
 
