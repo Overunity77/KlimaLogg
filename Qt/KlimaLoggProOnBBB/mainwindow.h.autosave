@@ -23,7 +23,6 @@ private slots:
     void selectMediumTimespan();
     void selectLongTimespan();
 
-
 private:
 
 

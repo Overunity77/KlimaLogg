@@ -20,8 +20,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_kldatabase = new KLDatabase(this);
 
-    //MainWindow::makePlot();
+    MainWindow::makePlot();
+/*    while(true)
+    {
     ReadUSBFrame();
+    }*/
 }
 
 MainWindow::~MainWindow()

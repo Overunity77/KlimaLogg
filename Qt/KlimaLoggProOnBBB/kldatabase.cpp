@@ -29,7 +29,22 @@ KLDatabase::~KLDatabase()
 
 void KLDatabase::StoreRecord(Record data)
 {
+    QVariant null = QVariant();
+    QSqlQuery insert;
+    insert.prepare("INSERT INTO measurement (dateTime,temp0,humidity0,temp1,humidity1,temp2,humidity2,temp3,humidity3"
+                   ",temp4,humidity4,temp5,humidity5,temp6,humidity6,temp7,humidity7,temp8,humidity8"
+                   "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    insert.addBindValue((qlonglong)data.Timestamp);
 
+    for(int i = 0;i< 9;i++)
+    {
+        QVariant temp = QVariant(data.SensorDatas[i].Temperature);
+        QVariant humi = QVariant(data.SensorDatas[i].Humidity);
+
+        insert.addBindValue(data.SensorDatas[i].TempValid ? temp : null);
+        insert.addBindValue(data.SensorDatas[i].HumValid ? humi : null);
+    }
+    insert.exec();
 }
 
 bool KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
