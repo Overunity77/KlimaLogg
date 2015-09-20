@@ -48,13 +48,13 @@ int main(int argc, char **argv)
 
 	int counter = 0;
 
-	fd_klimalogg = fopen("/dev/kl2", "rb");
+	fd_klimalogg = fopen("/dev/kl1", "rb");
 	if (!fd_klimalogg) {
-		printf("kann /dev/kl2 nicht oeffnen\n");
+		printf("kann /dev/kl1 nicht oeffnen\n");
 		return -1;
 	}
 
-	usleep(75000);
+//	usleep(75000);
 
 	while (counter < 20) {
 	//while (retValue == 0) {

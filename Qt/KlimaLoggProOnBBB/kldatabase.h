@@ -20,13 +20,13 @@ public:
     ~KLDatabase();
 
     void StoreRecord(Record data);
-    bool getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4);
+    int getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4);
 
 private:
     static const QString sDatabaseName;
     QSqlDatabase* db;
     //    QSqlQueryModel* plainModel;
-
+    QSqlQuery* myQuery;
     KLDatabase() { };
 };
 

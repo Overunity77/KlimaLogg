@@ -16,6 +16,12 @@ KLDatabase::KLDatabase(QWidget *parent)
                                          "to build it.\n\n"
                                          "Click Cancel to exit."), QMessageBox::Cancel);
     }
+
+    // 900 sec = 15 min
+    // 86'400 sec = 24 hours
+    // 604'800 sec = 7 days
+    myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp1, humidity1 from measurement where datetime >=(1444869360 - 604800) and datetime <= 1444869360 order by datetime asc", QSqlDatabase::database("KlimaLoggDb"));
+
     //    plainModel = new QSqlQueryModel();
     //    plainModel->setQuery("select * from archive", QSqlDatabase::database("KlimaLoggDb"));
 }
@@ -29,28 +35,36 @@ KLDatabase::~KLDatabase()
 
 void KLDatabase::StoreRecord(Record data)
 {
+    qDebug() << "Start StoreRecord()";
     QVariant null = QVariant();
-    QSqlQuery insert;
-    insert.prepare("INSERT INTO measurement (dateTime,temp0,humidity0,temp1,humidity1,temp2,humidity2,temp3,humidity3"
-                   ",temp4,humidity4,temp5,humidity5,temp6,humidity6,temp7,humidity7,temp8,humidity8"
-                   "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    insert.addBindValue((qlonglong)data.Timestamp);
+
+    myQuery->prepare("INSERT INTO measurement (dateTime,temp0,humidity0,temp1,humidity1,temp2,humidity2,temp3,humidity3"
+                     ",temp4,humidity4,temp5,humidity5,temp6,humidity6,temp7,humidity7,temp8,humidity8)"
+                     " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+
+    myQuery->addBindValue((qlonglong)data.Timestamp);
 
     for(int i = 0;i< 9;i++)
     {
         QVariant temp = QVariant(data.SensorDatas[i].Temperature);
         QVariant humi = QVariant(data.SensorDatas[i].Humidity);
 
-        insert.addBindValue(data.SensorDatas[i].TempValid ? temp : null);
-        insert.addBindValue(data.SensorDatas[i].HumValid ? humi : null);
+        myQuery->addBindValue(data.SensorDatas[i].TempValid ? temp : null);
+        myQuery->addBindValue(data.SensorDatas[i].HumValid ? humi : null);
     }
-    insert.exec();
+
+    if (! myQuery->exec() ) {
+        qDebug() << myQuery->lastError();
+    } else {
+        qDebug() << "after exec() of INSERT: OK";
+    }
+
 }
 
-bool KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
+int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
 {
     int counter = 0;
-    QSqlQuery* myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp1, humidity1 from measurement", QSqlDatabase::database("KlimaLoggDb"));
+    //   QSqlQuery* myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp1, humidity1 from measurement", QSqlDatabase::database("KlimaLoggDb"));
 
     //   bool queryOk = myQuery->last();
     while (myQuery->next()) {
@@ -71,11 +85,10 @@ bool KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<do
         QSqlField humidity1 = myRecord.field("humidity1");
         y4[counter] = humidity1.value().toDouble();
 
+        qDebug() << "Record Nr: " << counter << "," << x1[counter] << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];
 
         counter = counter +1;
     }
-
-
-    return true;
+    return (counter -1);
 
 }

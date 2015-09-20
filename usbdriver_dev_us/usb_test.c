@@ -185,11 +185,11 @@ static atomic_t bytes_available = ATOMIC_INIT(0);
 int klimaloggRecord = 30000;
 
 /* Entspricht getState aus kl.py */
-static ssize_t usb_test_read(struct file *instanz, char *buffer,
+static ssize_t kl1_read(struct file *instanz, char *buffer,
 			     size_t count, loff_t * ofs)
 {
 	size_t to_copy, not_copied;
-	printk("Count is: %d\n", count);
+	
 
 	int ret;
 	int nbytes;
@@ -209,10 +209,13 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 
 	unsigned char *resultBuf = kcalloc(128, 1, GFP_KERNEL);
 
+	printk("\n\nCount is: %d\n", (int)count);
+	printk("ofs is: %d\n", (int)ofs);
+	
 	if (!data)
 		goto read_out;
 
-	printk("usb_test: read\n");
+	printk("kl1: read\n");
 	mutex_lock(&ulock);	/* Jetzt nicht disconnecten... */
 //      printk("read vor = %02x %02x %02x %02x\n", data[0], data[1], data[2],
 //             data[3]);
@@ -227,8 +230,9 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 		goto read_out;
 	}
 
-	printk("read nach= %02x %02x %02x %02x\n", data[0], data[1], data[2],
-	       data[3]);
+	//printk("read nach= %02x %02x %02x %02x\n", data[0], data[1], data[2],
+	//       data[3]);
+	printk("Status nach usb_control_msg: %02x\n", data[1]);
 	/* getFrame in kl.py */
 	if (data[1] == 0x16) {
 		printk("Success!\n");
@@ -249,22 +253,26 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 		for (i = 0; i < nbytes; i++) {
 			retBuf[i] = rawdata[i + 3];
 		}
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		atomic_set(&bytes_available, nbytes);
+		//atomic_set(&bytes_available, 238);
+		
+		
+		printk("rawdata = %02x %02x %02x %02x %02x %02x %02x %02x\n",
 		       rawdata[0], rawdata[1], rawdata[2], rawdata[3],
 		       rawdata[4], rawdata[5], rawdata[6], rawdata[7]);
 
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		printk("rawdata = %02x %02x %02x %02x %02x %02x %02x %02x\n",
 		       rawdata[8], rawdata[9], rawdata[10], rawdata[11],
 		       rawdata[12], rawdata[13], rawdata[14], rawdata[15]);
 
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		printk("rawdata = %02x %02x %02x %02x %02x %02x %02x %02x\n",
 		       rawdata[16], rawdata[17], rawdata[18], rawdata[19],
 		       rawdata[20], rawdata[21], rawdata[22], rawdata[23]);
 
-		printk("getFrame = %02x %02x %02x %02x %02x %02x %02x %02x\n",
+		printk("rawdata = %02x %02x %02x %02x %02x %02x %02x %02x\n",
 		       rawdata[24], rawdata[25], rawdata[26], rawdata[27],
 		       rawdata[28], rawdata[29], rawdata[30], rawdata[31]);
-
+/*
 		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
 		       retBuf[0], retBuf[1], retBuf[2], retBuf[3],
 		       retBuf[4], retBuf[5], retBuf[6], retBuf[7]);
@@ -280,12 +288,12 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 		printk("retBuf   = %02x %02x %02x %02x %02x %02x %02x %02x\n",
 		       retBuf[24], retBuf[25], retBuf[26], retBuf[27],
 		       retBuf[28], retBuf[29], retBuf[30], retBuf[31]);
-
+*/
 		// generateResponse in kl.py
 		bufferID = (retBuf[0] << 8) | retBuf[1];
 		respType = (retBuf[3] & 0xF0);
-		printk("bufferID = %02x\n", bufferID);
-		printk("respType = %02x\n", respType);
+//		printk("bufferID = %02x\n", bufferID);
+//		printk("respType = %02x\n", respType);
 
 		if (bufferID == 0xF0F0) {
 			printk
@@ -296,11 +304,13 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 			} else if (respType == RESPONSE_GET_CONFIG) {
 				printk("RESPONSE_GET_CONFIG\n");
 			} else if (respType == RESPONSE_GET_CURRENT) {
+			  
+				//atomic_set(&bytes_available, 0x111);
 				printk("RESPONSE_GET_CURRENT\n");
 
 				// handleCurrentData in kl.py
 				cs = retBuf[6] | (retBuf[5] << 8);
-				printk("handleCurrentData: cs = %02x\n", cs);
+			//	printk("handleCurrentData: cs = %02x\n", cs);
 
 				// wird wohl eine Art Index für die Daten sein 
 				haddr = 0xffffff;
@@ -350,11 +360,13 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 				}
 
 			} else if (respType == RESPONSE_GET_HISTORY) {
+			  
+				//atomic_set(&bytes_available, 0x111);
 				printk("RESPONSE_GET_HISTORY\n");
 
 				// handleHistoryData in kl.py
 				cs = retBuf[6] | (retBuf[5] << 8);
-				printk("handleHistoryData: cs = %02x\n", cs);
+			//	printk("handleHistoryData: cs = %02x\n", cs);
 
 				printk("Year   : %04d\n",
 				       (retBuf[176] >> 4) * 10 +
@@ -397,7 +409,7 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 				resultBuf[6] = (retBuf[174] & 0xF) * 10 +
 				    (retBuf[174 + 1] >> 4) * 1;
 				resultBuf[7] = (retBuf[174 + 1] & 0xF) * 1;
-				atomic_set(&bytes_available, 8);
+				//atomic_set(&bytes_available, 0x111);
 
 				// bytes_to_addr
 				// index_to_addr
@@ -467,10 +479,12 @@ static ssize_t usb_test_read(struct file *instanz, char *buffer,
 		printk("\n");
 	}
 
-	ssleep(1);
+//	ssleep(1);
 
 	to_copy = min((size_t) atomic_read(&bytes_available), count);
-	not_copied = copy_to_user(buffer, resultBuf, to_copy);
+//	not_copied = copy_to_user(buffer, resultBuf, to_copy);
+	not_copied = copy_to_user(buffer, rawdata, to_copy);
+	
 	atomic_sub(to_copy - not_copied, &bytes_available);
 	count = to_copy - not_copied;
 
@@ -528,7 +542,7 @@ static void writeReg(unsigned char *buf, int regAddr, int data)
         self.hid.setRX()
         self.setSleep(0.075, 0.005)
 */
-static int usb_test_open(struct inode
+static int kl1_open(struct inode
 			  *devicefile, struct file
 			  *instanz)
 {
@@ -556,7 +570,7 @@ static int usb_test_open(struct inode
 	data[14] = data[15] = 0xcc;
 	if (!data)
 		goto read_out;
-	/*printk("usb_test: read\n"); */
+	/*printk("kl1: read\n"); */
 	mutex_lock(&ulock);	/* Jetzt nicht disconnecten... */
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
@@ -625,7 +639,7 @@ static int usb_test_open(struct inode
 	data2[14] = data2[15] = 0xcc;
 	if (!data2)
 		goto read_out;
-	/*printk("usb_test: read\n"); */
+	/*printk("kl1: read\n"); */
 	printk("open vor = %x %x %x %x\n",
 	       data2[0], data2[1], data2[2], data2[3]);
 	ret =
@@ -785,7 +799,7 @@ static int usb_test_open(struct inode
 	data[2] = data[3] = data[4] = data[5] = data[6] = data[7] = 0;
 	data[8] = data[9] = data[10] = data[11] = data[12] = data[13] = 0;
 	data[14] = data[15] = data[16] = data[17] = data[18] = data[19] = 0;
-	data[20] = data[21] = 0;
+	data[20] = 0;
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
 	    usb_control_msg(dev,
@@ -805,7 +819,7 @@ static int usb_test_open(struct inode
 	data[2] = data[3] = data[4] = data[5] = data[6] = data[7] = 0;
 	data[8] = data[9] = data[10] = data[11] = data[12] = data[13] = 0;
 	data[14] = data[15] = data[16] = data[17] = data[18] = data[19] = 0;
-	data[20] = data[21] = 0;
+	data[20] = 0;
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
 	    usb_control_msg(dev,
@@ -825,7 +839,7 @@ static int usb_test_open(struct inode
 	data[2] = data[3] = data[4] = data[5] = data[6] = data[7] = 0;
 	data[8] = data[9] = data[10] = data[11] = data[12] = data[13] = 0;
 	data[14] = data[15] = data[16] = data[17] = data[18] = data[19] = 0;
-	data[20] = data[21] = 0;
+	data[20] = 0;
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
 	    usb_control_msg(dev,
@@ -846,7 +860,7 @@ static int usb_test_open(struct inode
 	data[2] = data[3] = data[4] = data[5] = data[6] = data[7] = 0;
 	data[8] = data[9] = data[10] = data[11] = data[12] = data[13] = 0;
 	data[14] = data[15] = data[16] = data[17] = data[18] = data[19] = 0;
-	data[20] = data[21] = 0;
+	data[20] = 0;
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
 	    usb_control_msg(dev,
@@ -866,7 +880,7 @@ static int usb_test_open(struct inode
 	data[2] = data[3] = data[4] = data[5] = data[6] = data[7] = 0;
 	data[8] = data[9] = data[10] = data[11] = data[12] = data[13] = 0;
 	data[14] = data[15] = data[16] = data[17] = data[18] = data[19] = 0;
-	data[20] = data[21] = 0;
+	data[20] = 0;
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
 	    usb_control_msg(dev,
@@ -886,7 +900,7 @@ static int usb_test_open(struct inode
 	data[2] = data[3] = data[4] = data[5] = data[6] = data[7] = 0;
 	data[8] = data[9] = data[10] = data[11] = data[12] = data[13] = 0;
 	data[14] = data[15] = data[16] = data[17] = data[18] = data[19] = 0;
-	data[20] = data[21] = 0;
+	data[20] = 0;
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
 	    usb_control_msg(dev,
@@ -907,7 +921,7 @@ static int usb_test_open(struct inode
 	data[2] = data[3] = data[4] = data[5] = data[6] = data[7] = 0;
 	data[8] = data[9] = data[10] = data[11] = data[12] = data[13] = 0;
 	data[14] = data[15] = data[16] = data[17] = data[18] = data[19] = 0;
-	data[20] = data[21] = 0;
+	data[20] = 0;
 	printk("open vor = %x %x %x %x\n", data[0], data[1], data[2], data[3]);
 	ret =
 	    usb_control_msg(dev,
@@ -921,7 +935,7 @@ static int usb_test_open(struct inode
 		goto read_out;
 	}
 	printk("open nach= %x %x %x %x\n", data[0], data[1], data[2], data[3]);
-	printk("usb_test_open end\n");
+	printk("kl1_open end\n");
 read_out:
 	mutex_unlock(&ulock);
 	kfree(register_buf);
@@ -932,7 +946,7 @@ read_out:
 }
 
 static struct file_operations usb_fops = {
-	.owner = THIS_MODULE,.open = usb_test_open,.read = usb_test_read,
+	.owner = THIS_MODULE,.open = kl1_open,.read = kl1_read,
 };
 
 static struct usb_device_id usbid[] = {
@@ -946,19 +960,19 @@ static struct usb_device_id usbid[] = {
 
 MODULE_DEVICE_TABLE(usb, usbid);
 struct usb_class_driver class_descr = {
-	.name = "usb_test",.fops = &usb_fops,.minor_base = 16,
+	.name = "kl1",.fops = &usb_fops,.minor_base = 16,
 };
 
-static int usb_test_probe(struct
+static int kl1_probe(struct
 			  usb_interface
 			  *interface, const struct
 			  usb_device_id
 			  *id)
 {
-	printk("usb_test: probe\n");
+	printk("kl1: probe\n");
 	dev = interface_to_usbdev(interface);
 	printk
-	    ("usb_test: 0x%4.4x|0x%4.4x, if=%p\n",
+	    ("kl1: 0x%4.4x|0x%4.4x, if=%p\n",
 	     dev->descriptor.idVendor, dev->descriptor.idProduct, interface);
 	if (dev->descriptor.idVendor ==
 	    USB_VENDOR_ID && dev->descriptor.idProduct == USB_DEVICE_ID) {
@@ -971,39 +985,39 @@ static int usb_test_probe(struct
 	return -ENODEV;
 }
 
-static void usb_test_disconnect(struct
+static void kl1_disconnect(struct
 				usb_interface
 				*iface)
 {
-	printk("usb_test: disconnect\n");
+	printk("kl1: disconnect\n");
 	/* Ausstehende Auftraege muessen abgearbeitet sein... */
 	mutex_lock(&ulock);
 	usb_deregister_dev(iface, &class_descr);
 	mutex_unlock(&ulock);
 }
 
-static struct usb_driver usb_test = {
-	.name = "usb_test",.id_table =
-	    usbid,.probe = usb_test_probe,.disconnect = usb_test_disconnect,
+static struct usb_driver kl1 = {
+	.name = "kl1",.id_table =
+	    usbid,.probe = kl1_probe,.disconnect = kl1_disconnect,
 };
 
-static int __init usb_test_init(void)
+static int __init kl1_init(void)
 {
-	printk("usb_test: init");
-	if (usb_register(&usb_test)) {
-		printk("usb_test: unable to register usb driver\n");
+	printk("kl1: init");
+	if (usb_register(&kl1)) {
+		printk("kl1: unable to register usb driver\n");
 		return -EIO;
 	}
 	return 0;
 }
 
-static void __exit usb_test_exit(void)
+static void __exit kl1_exit(void)
 {
-	printk("usb_test: exit\n");
-	usb_deregister(&usb_test);
+	printk("kl1: exit\n");
+	usb_deregister(&kl1);
 }
 
-module_init(usb_test_init);
-module_exit(usb_test_exit);
+module_init(kl1_init);
+module_exit(kl1_exit);
 MODULE_LICENSE("GPL");
 /* MODULE_ALIAS("usb:v6666p5555d0100dc03dsc00dpFFic03isc00ip00in00"); */

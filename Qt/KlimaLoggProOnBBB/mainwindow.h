@@ -33,6 +33,9 @@ private:
     KLDatabase* m_kldatabase;
     QThread *m_AcquisitionThread;
     QTimer *m_AcquisitionTimer;
+
+    FILE *fd = NULL;
+
 };
 
 #endif // MAINWINDOW_H
