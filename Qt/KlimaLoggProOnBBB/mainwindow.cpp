@@ -14,9 +14,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->radioButton_1, SIGNAL(clicked()), this, SLOT(selectLongTimespan()));
-    connect(ui->radioButton_2, SIGNAL(clicked()), this, SLOT(selectMediumTimespan()));
-    connect(ui->radioButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()));
+    connect(ui->pushButton_1, SIGNAL(clicked()), this, SLOT(selectLongTimespan()));
+    connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(selectMediumTimespan()));
+    connect(ui->pushButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()));
 
     m_kldatabase = new KLDatabase(this);
     m_AcquisitionTimer = new QTimer(this);
@@ -24,6 +24,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_AcquisitionTimer, SIGNAL(timeout()),
             this, SLOT(TimerEvent()));
     m_AcquisitionTimer->start(5000);
+
+
+    fd = fopen("/dev/kl1", "rb");
+    if(!fd)
+    {
+        qDebug() << "could not open /dev/kl1";
+        return;
+    }
+
 
     //initialize plot
     makePlot();
@@ -33,14 +42,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    fclose(fd);
     delete m_kldatabase;
     delete ui;
+
 }
 
 void MainWindow::TimerEvent()
 {
     ReadUSBFrame();
-    DrawPlot();
+    //   DrawPlot();
 }
 
 
@@ -50,19 +61,19 @@ void MainWindow::ReadUSBFrame()
     char *usbframe = new char[238];
     int retValue = 0;
 
-    FILE *fd = NULL;
+ //   FILE *fd = NULL;
 
-    fd = fopen("/dev/kl0", "rb");
-    if(!fd)
-    {
-        qDebug() << "could not open /dev/kl0";
-        return;
-    }
+//    fd = fopen("/dev/kl1", "rb");
+//    if(!fd)
+//    {
+//        qDebug() << "could not open /dev/kl1";
+//        return;
+//    }
 
-    retValue = fread(usbframe,sizeof(char),238,fd);
-
-    fclose(fd);
-
+    retValue = fread(usbframe,238,1,fd);
+    qDebug() << "retValue bei fread war: " << retValue;
+//    fclose(fd);
+    qDebug() << "(int)usbframe[6]: "<< (int)usbframe[6];
     if(retValue < 0)
     {
         qDebug() << "Error: " << retValue;
@@ -71,19 +82,35 @@ void MainWindow::ReadUSBFrame()
         return;
     }
 
-    ResponseType response = BitConverter::GetResponseType(usbframe,retValue);
+    ResponseType response = BitConverter::GetResponseType(usbframe,238);
     if(response == RESPONSE_GET_CURRENT)
     {
+        qDebug() << "RESPONSE_GET_CURRENT";
         Record rec = BitConverter::GetSensorValuesFromCurrentData(usbframe);
         m_kldatabase->StoreRecord(rec);
     }
     else if(response == RESPONSE_GET_HISTORY)
     {
-        for(int i = 0; i < 7;i++)
+        qDebug() << "RESPONSE_GET_HISTORY";
+
+        long  latestIndex =
+                (((((usbframe[10] << 8) | usbframe[11]) << 8) |
+                usbframe[12]) - 0x070000) / 32;
+        long thisIndex =
+                (((((usbframe[13] << 8) | usbframe[14]) << 8)
+                | usbframe[15]) - 0x070000) / 32;
+        qDebug() << "latestIndex = "<<latestIndex;
+        qDebug() << "thisIndex = "<<thisIndex;
+
+
+        for(int i = 0; i < 6;i++)
         {
             Record rec = BitConverter::GetSensorValuesFromHistoryData(usbframe,i);
             m_kldatabase->StoreRecord(rec);
         }
+
+        m_kldatabase->updateLastRetrievedIndex(42111); // TODO sollte mal thisIndex mit
+        // latestIndex vergleichen
     }
     else
     {
@@ -97,7 +124,7 @@ void MainWindow::ReadUSBFrame()
 //
 void MainWindow::DrawPlot()
 {
-    QVector<double> x1(14000), y1(14000), y2(14000), y3(14000), y4(14000);
+    QVector<double> x1(140000), y1(140000), y2(140000), y3(140000), y4(140000);
 
     bool ok = m_kldatabase->getValues(x1, y1, y2, y3, y4);
 
@@ -129,6 +156,7 @@ void MainWindow::makePlot()
     // QVector<double> x1(14000), y1(14000);
     double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
     qDebug() << "actualTime" << actualTime ;
+
 
     QVector<double> x1(14000), y1(14000), y2(14000), y3(14000), y4(14000);
     /*
@@ -169,24 +197,9 @@ void MainWindow::makePlot()
     fclose(fd_klimalogg);
 */
 
-
-
     //read DB
-    bool ok = m_kldatabase->getValues(x1, y1, y2, y3, y4);
-
-    if (ok)
-    {
-        //update UI
-
-    }
-    else
-    {
-        //qDebug();
-    }
-
-
-
-
+    int recordCount = m_kldatabase->getValues(x1, y1, y2, y3, y4);
+    qDebug() << "recordCount read to display " << recordCount;
 
     // create and configure plottables:
     QCPGraph *graph1 = ui->customPlot->addGraph();
@@ -230,7 +243,7 @@ void MainWindow::makePlot()
     ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yyyy hh:mm");
     ui->customPlot->xAxis->setAutoTickStep(false);
-    ui->customPlot->xAxis->setTickStep(86400);
+    ui->customPlot->xAxis->setTickStep(86400/4); //(2*86400);
 
     ui->customPlot->yAxis->setAutoTickStep(false);
     ui->customPlot->yAxis->setTickStep(5);
@@ -258,8 +271,8 @@ void MainWindow::makePlot()
     axisRectGradient.setColorAt(1, QColor(30, 30, 30));
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
 
-    ui->customPlot->xAxis->setRange(x1[0], x1[13000]);
-    ui->customPlot->yAxis->setRange(20, 70);
+    ui->customPlot->xAxis->setRange(x1[0], x1[recordCount]);
+    ui->customPlot->yAxis->setRange(10, 70);
 
     ui->customPlot->xAxis->setLabel("Zeit");
     ui->customPlot->yAxis->setLabel("Temperatur");
@@ -268,6 +281,7 @@ void MainWindow::makePlot()
 }
 
 void MainWindow::selectShortTimespan() {
+
     qDebug() << "15 Minuten";
 }
 

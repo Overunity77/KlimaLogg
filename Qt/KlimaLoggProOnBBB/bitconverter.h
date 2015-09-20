@@ -9,7 +9,7 @@ class BitConverter
 
 public:
     BitConverter();
-    static bool ConvertTemperature(short data, bool highByteFull, double *value);
+    static bool ConvertTemperature(char data1, char data2, bool startOnHiNibble, double *value);
     static bool ConvertHumidity(char data, double *value);
     static bool ConvertHistoryTimestamp(char *data, long *value);
     static bool ConvertCurrentTimestamp(char *data, bool startOnHighNibble, long *value);
