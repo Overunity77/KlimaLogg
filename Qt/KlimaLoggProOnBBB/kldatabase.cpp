@@ -20,7 +20,7 @@ KLDatabase::KLDatabase(QWidget *parent)
     // 900 sec = 15 min
     // 86'400 sec = 24 hours
     // 604'800 sec = 7 days
-    myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp1, humidity1 from measurement where datetime >=(1444869360 - 604800) and datetime <= 1444869360 order by datetime asc", QSqlDatabase::database("KlimaLoggDb"));
+    myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp3, humidity3 from measurement where datetime >=(1442788380 - 86400) and datetime <= 1442788380 order by datetime asc", QSqlDatabase::database("KlimaLoggDb"));
 
     //    plainModel = new QSqlQueryModel();
     //    plainModel->setQuery("select * from archive", QSqlDatabase::database("KlimaLoggDb"));
@@ -61,6 +61,22 @@ void KLDatabase::StoreRecord(Record data)
 
 }
 
+void KLDatabase::updateLastRetrievedIndex(long index)
+{
+    myQuery->prepare("UPDATE PARAMETER SET VALUE= :index WHERE KEY='lastRetrievedIndex'");
+
+    myQuery->bindValue(":index", (qlonglong)index);
+
+    if (! myQuery->exec() ) {
+        qDebug() << myQuery->lastError();
+    } else {
+        qDebug() << "lastRetrievedIndex updated";
+    }
+
+}
+
+
+
 int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
 {
     int counter = 0;
@@ -79,10 +95,10 @@ int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<dou
         QSqlField humidity0 = myRecord.field("humidity0");
         y2[counter] = humidity0.value().toDouble();
 
-        QSqlField temp1 = myRecord.field("temp1");
+        QSqlField temp1 = myRecord.field("temp3");
         y3[counter] = temp1.value().toDouble();
 
-        QSqlField humidity1 = myRecord.field("humidity1");
+        QSqlField humidity1 = myRecord.field("humidity3");
         y4[counter] = humidity1.value().toDouble();
 
         qDebug() << "Record Nr: " << counter << "," << x1[counter] << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];

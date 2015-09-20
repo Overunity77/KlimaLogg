@@ -2,6 +2,7 @@
 #include <ctime>
 
 #include <QDebug>
+#include <QDateTime>
 
 bool inline CheckOverflow(char data)
 {
@@ -107,13 +108,25 @@ bool BitConverter::ConvertHistoryTimestamp(char *data, long *value)
 	timeinfo->tm_year = (year10 * 10 + year1) + 100; //weewx year is from 2000, timeinfo is from 1900
 	timeinfo->tm_mon = (month10 * 10 + month1);
 	timeinfo->tm_mday = day10 * 10 + day1;
-	timeinfo->tm_hour = hours10 * 10 + hours1;;
+    timeinfo->tm_hour = hours10 * 10 + hours1;
 	timeinfo->tm_min = minute10 * 10 + minute1;
 	timeinfo->tm_sec = 0;
 
-	//convert time to unix timestamp
-	(*value) = mktime(timeinfo);
-	return true;
+    qDebug() << "Year   : " << timeinfo->tm_year;
+    qDebug() << "Month  : " << timeinfo->tm_mon;
+    qDebug() << "Days   : " << timeinfo->tm_mday;
+    qDebug() << "Hours  : " << timeinfo->tm_hour;
+    qDebug() << "Minutes: " << timeinfo->tm_min;
+
+    long qDateTimePoint;
+    qDateTimePoint= QDateTime(  QDate((year10 * 10 + year1) + 2000, (month10 * 10 + month1),day10 * 10 + day1),
+                                QTime(hours10 * 10 + hours1, minute10 * 10 + minute1)).toMSecsSinceEpoch()/1000.0;
+    qDebug() << "UNIX Timestamp: " <<qDateTimePoint;
+
+    //convert time to unix timestamp
+    //(*value) = mktime(timeinfo);
+    (*value) = qDateTimePoint;
+    return true;
 }
 
 

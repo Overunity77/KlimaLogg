@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // setup signal and slot
     connect(m_AcquisitionTimer, SIGNAL(timeout()),
             this, SLOT(TimerEvent()));
-    m_AcquisitionTimer->start(300);
+    m_AcquisitionTimer->start(5000);
 
 
     fd = fopen("/dev/kl1", "rb");
@@ -108,6 +108,9 @@ void MainWindow::ReadUSBFrame()
             Record rec = BitConverter::GetSensorValuesFromHistoryData(usbframe,i);
             m_kldatabase->StoreRecord(rec);
         }
+
+        m_kldatabase->updateLastRetrievedIndex(42111); // TODO sollte mal thisIndex mit
+        // latestIndex vergleichen
     }
     else
     {
@@ -153,6 +156,7 @@ void MainWindow::makePlot()
     // QVector<double> x1(14000), y1(14000);
     double actualTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
     qDebug() << "actualTime" << actualTime ;
+
 
     QVector<double> x1(14000), y1(14000), y2(14000), y3(14000), y4(14000);
     /*
@@ -239,7 +243,7 @@ void MainWindow::makePlot()
     ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yyyy hh:mm");
     ui->customPlot->xAxis->setAutoTickStep(false);
-    ui->customPlot->xAxis->setTickStep(86400);
+    ui->customPlot->xAxis->setTickStep(86400/4); //(2*86400);
 
     ui->customPlot->yAxis->setAutoTickStep(false);
     ui->customPlot->yAxis->setTickStep(5);
@@ -268,7 +272,7 @@ void MainWindow::makePlot()
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
 
     ui->customPlot->xAxis->setRange(x1[0], x1[recordCount]);
-    ui->customPlot->yAxis->setRange(20, 70);
+    ui->customPlot->yAxis->setRange(10, 70);
 
     ui->customPlot->xAxis->setLabel("Zeit");
     ui->customPlot->yAxis->setLabel("Temperatur");
