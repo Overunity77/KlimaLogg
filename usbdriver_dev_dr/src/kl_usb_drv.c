@@ -2,7 +2,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
-#include <linux/slab.h>			/* kmalloc() */
+#include <linux/slab.h>
 #include <linux/usb.h>			/* USB stuff */
 #include <linux/mutex.h>		/* mutexes */
 #include <linux/ioctl.h>
@@ -81,43 +81,6 @@ MODULE_VERSION("0.1");
 #define ML_MINOR_BASE	96
 #endif
 
-//static LIST_HEAD(KLlist);
-//static DEFINE_RWLOCK(KLlock);
-
-static int klusb_cnt;
-
-//struct usb_kl
-//{
-//	/* One structure for each connected device */
-//	struct usb_device *dev;
-//	struct usb_interface *interface;
-//	unsigned char minor;
-//	char serial_number[8];
-//
-//	int open_count; /* Open count for this port */
-//	struct semaphore sem; /* Locks this structure */
-//	spinlock_t cmd_spinlock; /* locks hw->command */
-//
-//	char *int_in_buffer;
-//	struct usb_endpoint_descriptor *int_in_endpoint;
-//	struct urb *int_in_urb;
-//	int int_in_running;
-//
-//	char *ctrl_buffer; /* 8 byte buffer for ctrl msg */
-//	struct urb *ctrl_urb;
-//	struct usb_ctrlrequest *ctrl_dr; /* Setup packet information */
-//	int correction_required;
-//
-//	char *ctrl_read_buffer;
-//	char *ctrl_read_buffer2;
-//	struct urb *ctrl_read_urb;
-//	struct urb *ctrl_read_urb2;
-//	struct usb_ctrlrequest *ctrl_read_dr;
-//	struct usb_ctrlrequest *ctrl_read_dr2;
-//	unsigned int ctrl_read_transfer_count; /* bytes transfered */
-//
-//	__u8 command;/* Last issued command */
-//};
 
 static struct usb_device_id kl_table[] = { {
 		USB_DEVICE(KL_VENDOR_ID, KL_PRODUCT_ID) }, { } };
@@ -135,6 +98,8 @@ MODULE_PARM_DESC(debug_trace, "enable function tracing");
 
 /* Prevent races between open() and disconnect */
 static DEFINE_MUTEX(disconnect_mutex);
+
+/* forward declaration */
 static struct usb_driver kl_driver;
 
 
@@ -271,7 +236,7 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 		DBG_ERR("usb control buffer full!");
 		spin_unlock(&hw->ctrl_lock);
 		kfree(reg->buf);
-		return 1;
+		return 1;	// TODO handle this in caller (make retry)
 	}
 	buf = &hw->usb_ctrl_buff[hw->ctrl_in_idx];
 
@@ -305,54 +270,16 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 	return 0;
 }
 
-//static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
-//{
-//	int ret = 0;
-//	reg->buf = kcalloc(KL_LEN_WRITE_REG, 1, GFP_KERNEL);
-//
-//	if (!reg->buf)
-//		return -ENOMEM;
-//
-//	reg->buf[0] = 0xf0;
-//	reg->buf[1] = reg->addr & 0x7f;
-//	reg->buf[2] = 0x01;
-//	reg->buf[3] = reg->value;
-//	reg->buf[4] = 0x00;
-//
-//	ret =
-//	    usb_control_msg(hw->dev,
-//			    usb_sndctrlpipe(hw->dev, 0),
-//			    USB_REQ_SET_CONFIGURATION,
-//			    USB_TYPE_CLASS |
-//			    USB_RECIP_INTERFACE |
-//			    USB_DIR_OUT, 0x3f0, 0, reg->buf, 5, KL_USB_CTRL_TIMEOUT);
-//	if (ret < 0) {
-//		DBG_ERR("ret = %d", ret);
-//	}
-//	kl_debug_data(__FUNCTION__, KL_LEN_WRITE_REG, reg->buf);
-//
-//	kfree(reg->buf);
-//
-//	return 0;
-//}
-
 
 
 /* control completion routine handling background control cmds */
 static void ctrl_complete(struct urb *urb)
 {
 	struct kl_usb *hw = (struct kl_usb *) urb->context;
-	int ret;
-
-//	/* The following flags are used internally by usbcore and HCDs */
-//	#define URB_DIR_IN		0x0200	/* Transfer from device to host */
-//	#define URB_DIR_OUT		0
-//	#define URB_DIR_MASK		URB_DIR_IN
-
-//	DBG_INFO("transfer flags: 0x%x, actual length: %d", urb->transfer_flags, urb->actual_length);
-//	DBG_INFO("ctrl_complete buffer:");
 
 	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
+
+	/* release memory of completed urb buffer */
 	kfree(urb->transfer_buffer);
 
 	spin_lock(&hw->ctrl_lock);
@@ -368,49 +295,6 @@ static void ctrl_complete(struct urb *urb)
 	spin_unlock(&hw->ctrl_lock);
 }
 
-
-static void kl_abort_transfers(struct kl_usb *hw)
-{
-
-//	if (!hw)
-//	{
-//		DBG_ERR("hw is NULL");
-//		return;
-//	}
-//
-//	if (!hw->dev)
-//	{
-//		DBG_ERR("dev is NULL");
-//		return;
-//	}
-//
-//	if (hw->dev->state == USB_STATE_NOTATTACHED)
-//	{
-//		DBG_ERR("dev not attached");
-//		return;
-//	}
-//
-//	/* Shutdown transfer */
-//	if (hw->int_in_running)
-//	{
-//		hw->int_in_running = 0;
-//		mb();
-//		if (hw->int_in_urb)
-//			usb_kill_urb(hw->int_in_urb);
-//	}
-//
-//	if (hw->ctrl_urb)
-//		usb_kill_urb(hw->ctrl_urb);
-//
-//
-//
-//
-////	if (hw->ctrl_read_urb)
-////		usb_kill_urb(hw->ctrl_read_urb);
-////
-////	if (hw->ctrl_read_urb2)
-////		usb_kill_urb(hw->ctrl_read_urb2);
-}
 
 static inline void kl_delete(struct kl_usb *hw)
 {
@@ -436,248 +320,106 @@ static inline void kl_delete(struct kl_usb *hw)
 //	kfree(hw);
 }
 
-static void kl_ctrl_callback(struct urb *urb)
-{
-//	struct kl_usb *hw = urb->context;
-//	hw->correction_required = 0; /* TODO: do we need race protection? */
-//	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
-}
-
-static void kl_ctrl_read_callback2(struct urb *urb)
-{
-//	struct kl_usb *hw = urb->context;
-//	DBG_INFO(
-//			"urb->status: %d, urb->transfer_flags: 0x%x, urb->transfer_dma: 0x%x, urb->error_count: %d",
-//			urb->status, urb->transfer_flags,
-//			(unsigned int )urb->transfer_dma, urb->error_count);
-//	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
-//	hw->ctrl_read_transfer_count = urb->actual_length;
-}
-
-static void kl_ctrl_read_callback(struct urb *urb)
-{
-//	struct kl_usb *hw = urb->context;
-//	int ret = 0;
-//
-//	DBG_INFO(
-//			"urb->status: %d, urb->transfer_flags: 0x%x, urb->transfer_dma: 0x%x, urb->error_count: %d",
-//			urb->status, urb->transfer_flags,
-//			(unsigned int )urb->transfer_dma, urb->error_count);
-//	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
-//
-//	hw->ctrl_read_dr2->bRequestType = 0xa1;
-//	hw->ctrl_read_dr2->bRequest = 0x01;
-//	hw->ctrl_read_dr2->wValue = cpu_to_le16(0x03dc); /* convert to little-endian */
-//	hw->ctrl_read_dr2->wIndex = cpu_to_le16(0);
-//	hw->ctrl_read_dr2->wLength = cpu_to_le16(KL_CTRL_READ_BUFFER2_SIZE);
-//
-//	usb_fill_control_urb(hw->ctrl_read_urb2, hw->dev,
-//			usb_sndctrlpipe(hw->dev, 0),
-//			(unsigned char *) hw->ctrl_read_dr2,
-//			hw->ctrl_read_buffer2,
-//			KL_CTRL_READ_BUFFER2_SIZE, kl_ctrl_read_callback2, hw);
-//
-//	DBG_INFO("going to submit control urb");
-//
-//	ret = usb_submit_urb(hw->ctrl_read_urb2, GFP_ATOMIC);
-//	if (ret)
-//	{
-//		DBG_ERR("submitting get_report control URB failed (%d)", ret);
-//	}
-}
-
-static void kl_int_in_callback(struct urb *urb)
-{
-//	struct kl_usb *hw = urb->context;
-//	int retval;
-//
-//	kl_debug_data(__FUNCTION__, urb->actual_length, urb->transfer_buffer);
-//
-//	DBG_INFO(
-//			"urb->status = %d (-2 = -ENOENT: The urb was stopped by a call to usb_kill_urb)",
-//			urb->status);
-//
-//	if (urb->status)
-//	{
-//		if (urb->status == -ENOENT || urb->status == -ECONNRESET
-//				|| urb->status == -ESHUTDOWN)
-//		{
-//			return;
-//		} else
-//		{
-//			DBG_ERR("non-zero urb status (%d)", urb->status);
-//			goto resubmit;
-//			/* Maybe we can recover. */
-//		}
-//	}
-//
-//	if (urb->actual_length > 0)
-//	{
-//		spin_lock(&hw->cmd_spinlock);
-//
-//		if (hw->int_in_buffer[0] & ML_MAX_UP && hw->command & ML_UP)
-//		{
-//			hw->command &= ~ML_UP;
-//			hw->correction_required = 1;
-//		} else if (hw->int_in_buffer[0] & ML_MAX_DOWN
-//				&& hw->command & ML_DOWN)
-//		{
-//			hw->command &= ~ML_DOWN;
-//			hw->correction_required = 1;
-//		}
-//
-//		if (hw->int_in_buffer[1] & ML_MAX_LEFT
-//				&& hw->command & ML_LEFT)
-//		{
-//			hw->command &= ~ML_LEFT;
-//			hw->correction_required = 1;
-//		} else if (hw->int_in_buffer[1] & ML_MAX_RIGHT
-//				&& hw->command & ML_RIGHT)
-//		{
-//			hw->command &= ~ML_RIGHT;
-//			hw->correction_required = 1;
-//		}
-//
-//		if (hw->correction_required)
-//		{
-//			hw->ctrl_buffer[0] = hw->command;
-//			spin_unlock(&hw->cmd_spinlock);
-//			retval = usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
-//			if (retval)
-//			{
-//				DBG_ERR(
-//						"submitting correction control URB failed (%d)",
-//						retval);
-//			}
-//		} else
-//		{
-//			spin_unlock(&hw->cmd_spinlock);
-//		}
-//	}
-//
-//	resubmit:
-//	/* Resubmit if we're still running. */
-//	if (hw->int_in_running && hw->dev)
-//	{
-//		retval = usb_submit_urb(hw->int_in_urb, GFP_ATOMIC);
-//		if (retval)
-//		{
-//			DBG_ERR("resubmitting urb failed (%d)", retval);
-//			hw->int_in_running = 0;
-//		}
-//	}
-}
 
 
-
-
-
-/* receive completion routine for all interrupt rx fifos */
+/* receive completion routine for rx interrupt endpoint */
 static void rx_int_complete(struct urb *urb)
 {
-	int len, status, i;
-	__u8 *buf, maxlen, fifon;
-	struct usb_fifo *fifo = (struct usb_fifo *) urb->context;
-	struct kl_usb *hw = fifo->hw;
-	static __u8 eof[8];
-
-	spin_lock(&hw->lock);
-	if (fifo->stop_gracefull) {
-		fifo->stop_gracefull = 0;
-		fifo->active = 0;
-		spin_unlock(&hw->lock);
-		return;
-	}
-	spin_unlock(&hw->lock);
-
-	fifon = fifo->fifonum;
-	if ((!fifo->active) || (urb->status)) {
-		DBG_ERR("RX-Fifo %i is going down (%i)", fifon, urb->status);
-
-		fifo->urb->interval = 0; /* cancel automatic rescheduling */
-		return;
-	}
-	len = urb->actual_length;
-	buf = fifo->buffer;
-	maxlen = fifo->usb_packet_maxlen;
+	struct kl_usb *hw = (struct kl_usb *) urb->context;
+	int retval = 0;
 
 	if (urb->status) {
-		DBG_INFO("urb->status = %d", urb->status);
+		DBG_INFO("urb->status: %s (%d)", symbolic(urb_errlist, urb->status), urb->status);
 		if (urb->status == -ENOENT ||
 		    urb->status == -ECONNRESET ||
 		    urb->status == -ESHUTDOWN) {
 			return;
 		} else {
-			DBG_ERR("non-zero urb status (%d)", urb->status);
+			DBG_ERR("non-zero urb status: %s (%d)",symbolic(urb_errlist, urb->status), urb->status);
 			goto resubmit; /* Maybe we can recover. */
 		}
 	}
 
+	atomic_set(&hw->logger_state, hw->rx_int_buffer[1]);
 
 	/* USB data log for RX INT in */
-	DBG_INFO("RX INT len(%d", len);
-	kl_debug_data(__FUNCTION__, len + 16, buf);
-
-	fifo->last_urblen = urb->actual_length;
+	DBG_INFO("RX INT length(%d)", urb->actual_length);
+	kl_debug_data(__FUNCTION__, urb->actual_length, hw->rx_int_buffer);
 
 resubmit:
-	status = usb_submit_urb(urb, GFP_ATOMIC);
-	if (status) {
-		DBG_ERR("error resubmitting USB Int urb");
+	/* Resubmit if we're still running. */
+	if (hw->rx_int_running && hw->dev) {
+		retval = usb_submit_urb(hw->rx_int_urb, GFP_ATOMIC);
+		if (retval) {
+			DBG_ERR("resubmitting urb failed: %s (%d)", symbolic(urb_errlist, retval), retval);
+			hw->rx_int_running = 0;
+		}
 	}
 }
 
 
-static void stop_int_gracefull(struct usb_fifo *fifo)
+static void abort_rx_int_transfer(struct kl_usb *hw)
 {
-	struct kl_usb *hw = fifo->hw;
-	int timeout;
-	u_long flags;
-
-	spin_lock_irqsave(&hw->lock, flags);
-	DBG_INFO("stopping interrupt gracefull for fifo %i", fifo->fifonum);
-
-	if (fifo->urb) {
-		usb_kill_urb(fifo->urb);
-		usb_free_urb(fifo->urb);
+	if(!hw) {
+		DBG_ERR("hw is NULL");
+		return;
 	}
 
-//	fifo->stop_gracefull = 1;
+	if(!hw->dev) {
+		DBG_ERR("dev is NULL");
+		return;
+	}
 
-	spin_unlock_irqrestore(&hw->lock, flags);
+	if(!hw->dev->state == USB_STATE_NOTATTACHED) {
+		DBG_ERR("dev not attached");
+		return;
+	}
 
-//	timeout = 3;
-//	while (fifo->stop_gracefull && timeout--)
-//		schedule_timeout_interruptible((HZ / 1000) * 3);
-//	if (fifo->stop_gracefull)
-//		DBG_ERR("ERROR stopping interrupt gracefull for fifo %i", fifo->fifonum);
+	/* Shutdown transfer */
+	if(hw->rx_int_running) {
+		hw->rx_int_running = 0;
+		mb();
+		if(hw->rx_int_urb)
+			usb_kill_urb(hw->rx_int_urb);
+	}
 }
 
-/* start the interrupt transfer for the given fifo */
-static void start_int_fifo(struct usb_fifo *fifo)
+/* start the rx interrupt endpoint transfer */
+static int start_rx_int_transfer(struct kl_usb *hw)
 {
-	struct kl_usb *hw = fifo->hw;
-	int errcode;
+	int retval = 0;
 
-	DBG_INFO("starting interrupt transfer: INT IN fifo:%d", fifo->fifonum);
+	DBG_INFO("starting rx interrupt transfer");
 
-	if (!fifo->urb)
+	hw->rx_int_urb = usb_alloc_urb(0, GFP_KERNEL);
+
+	if(!hw->rx_int_urb)
 	{
-		fifo->urb = usb_alloc_urb(0, GFP_KERNEL);
-		if (!fifo->urb)
-			return;
+		return -ENOMEM;
 	}
-	usb_fill_int_urb(fifo->urb, fifo->hw->dev, fifo->pipe,
-			 fifo->buffer, fifo->usb_packet_maxlen,
-			 (usb_complete_t)rx_int_complete, fifo, fifo->intervall);
-	fifo->active = 1;
-	fifo->stop_gracefull = 0;
-	errcode = usb_submit_urb(fifo->urb, GFP_KERNEL);
-	if (errcode)
-	{
-		DBG_ERR("submit URB: status:%i", errcode);
-		fifo->active = 0;
+
+	usb_fill_int_urb(hw->rx_int_urb,
+			 hw->dev,
+			 hw->rx_int_in_pipe,
+			 hw->rx_int_buffer,
+			 le16_to_cpu(hw->rx_int_endpoint_desc->wMaxPacketSize),
+			 (usb_complete_t)rx_int_complete,
+			 hw,
+			 hw->rx_int_endpoint_desc->bInterval);
+
+	hw->rx_int_running = 1;
+	mb();
+
+	retval = usb_submit_urb(hw->rx_int_urb, GFP_KERNEL);
+
+	if (retval) {
+		DBG_ERR("submitting rx interrupt urb failed (%d)", retval);
+		hw->rx_int_running = 0;
+		kfree(hw->rx_int_urb); // TODO check for release on driver exit
+		return retval;
 	}
+
+	return retval;
 }
 
 static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *config) {
@@ -867,7 +609,6 @@ static void setRegisterValue(__u8 addr, int value)
 
 static int initTranseiver(struct kl_usb *hw)
 {
-	struct usb_fifo *fifo;
 	struct usb_read_config_flash freqCorrection;
 	struct usb_read_config_flash transceiverId;
 	unsigned int corVal = 0;
@@ -949,167 +690,35 @@ static int initTranseiver(struct kl_usb *hw)
 	ret = doRfSetup(hw);
 
 	return ret;
-
-//	    def doRFSetup(self):
-//	        self.hid.execute(5)
-//	        self.hid.setPreamblePattern(0xaa)
-//	        self.hid.setState(0)
-//	        time.sleep(1)
-//	        self.hid.setRX()
-//
-//	        self.hid.setPreamblePattern(0xaa)
-//	        self.hid.setState(0x1e)
-//	        time.sleep(1)
-//	        self.hid.setRX()
-//	        self.setSleep(0.075, 0.005)
-
-
-
-//	write_usb_ctrl(hw,
-//		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].msg_type,
-//		       kl_msg_type[KL_READ_CONFIG_FLASH_OUT].length,
-//		       hw->frequency_corr.writeData);
-//
-//
-//
-//
-//	read_usb_ctrl(hw,
-//		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].msg_type,
-//		      kl_msg_type[KL_READ_CONFIG_FLASH_IN].length,
-//		      hw->frequency_corr.readBuf);
-
-
-//	/* do Chip reset */
-//	write_reg(hw, HFCUSB_CIRM, 8);
-//
-//	/* aux = output, reset off */
-//	write_reg(hw, HFCUSB_CIRM, 0x10);
-//
-//	/* set USB_SIZE to match the wMaxPacketSize for INT or BULK transfers */
-//	write_reg(hw, HFCUSB_USB_SIZE, (hw->packet_size / 8) |
-//		  ((hw->packet_size / 8) << 4));
-//
-//	/* set USB_SIZE_I to match the the wMaxPacketSize for ISO transfers */
-//	write_reg(hw, HFCUSB_USB_SIZE_I, hw->iso_packet_size);
-//
-//	/* enable PCM/GCI master mode */
-//	write_reg(hw, HFCUSB_MST_MODE1, 0);	/* set default values */
-//	write_reg(hw, HFCUSB_MST_MODE0, 1);	/* enable master mode */
-//
-//	/* init the fifos */
-//	write_reg(hw, HFCUSB_F_THRES,
-//		  (HFCUSB_TX_THRESHOLD / 8) | ((HFCUSB_RX_THRESHOLD / 8) << 4));
-//
-//	fifo = hw->fifos;
-//	for (i = 0; i < HFCUSB_NUM_FIFOS; i++) {
-//		write_reg(hw, HFCUSB_FIFO, i);	/* select the desired fifo */
-//		fifo[i].max_size =
-//			(i <= HFCUSB_B2_RX) ? MAX_BCH_SIZE : MAX_DFRAME_LEN;
-//		fifo[i].last_urblen = 0;
-//
-//		/* set 2 bit for D- & E-channel */
-//		write_reg(hw, HFCUSB_HDLC_PAR, ((i <= HFCUSB_B2_RX) ? 0 : 2));
-//
-//		/* enable all fifos */
-//		if (i == HFCUSB_D_TX)
-//			write_reg(hw, HFCUSB_CON_HDLC,
-//				  (hw->protocol == ISDN_P_NT_S0) ? 0x08 : 0x09);
-//		else
-//			write_reg(hw, HFCUSB_CON_HDLC, 0x08);
-//		write_reg(hw, HFCUSB_INC_RES_F, 2); /* reset the fifo */
-//	}
-//
-//	write_reg(hw, HFCUSB_SCTRL_R, 0); /* disable both B receivers */
-//	handle_led(hw, LED_POWER_ON);
 }
 
 /* Hardware Initialization */
 static int setup_klusb(struct kl_usb *hw)
 {
-	u_char b;
-	int ret;
+	int retval = 0;
 
 	DBG_INFO("%s",__func__);
 
-
-//	/* check the chip id */
-//	if (read_reg_atomic(hw, HFCUSB_CHIP_ID, &b) != 1) {
-//		printk(KERN_DEBUG "%s: %s: cannot read chip id\n",
-//		       hw->name, __func__);
-//		return 1;
-//	}
-//	if (b != HFCUSB_CHIPID) {
-//		printk(KERN_DEBUG "%s: %s: Invalid chip id 0x%02x\n",
-//		       hw->name, __func__, b);
-//		return 1;
-//	}
-
-//	/* first set the needed config, interface and alternate */
-//	(void) usb_set_interface(hw->dev, hw->if_used, hw->alt_used);
-
 	// start usb rx interrupt endpoint
-	start_int_fifo(hw->fifos + KLUSB_INT_RX);
+	retval = start_rx_int_transfer(hw);
+	if(retval)
+		return retval;
 
 	/* init the background machinery for control requests */
 	hw->ctrl_urb->dev = hw->dev;
 	hw->ctrl_urb->complete = (usb_complete_t)ctrl_complete;
 	hw->ctrl_urb->context = hw;
 
-
-
-
-
-//	hw->ctrl_write.bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT;
-//	hw->ctrl_write.bRequest = USB_REQ_SET_CONFIGURATION;
-//	hw->ctrl_write.wValue = cpu_to_le16(0x03dd); /* convert to little-endian */
-//	hw->ctrl_write.wIndex = cpu_to_le16(0);
-//	hw->ctrl_write.wLength = cpu_to_le16(KL_CTRL_READ_BUFFER_SIZE);
-//
-//	usb_fill_control_urb(hw->ctrl_urb,
-//			     hw->dev,
-//			     hw->ctrl_out_pipe,
-//			     (u_char *)&hw->ctrl_write,
-//			     hw->fifos[1].buffer,
-//			     KL_CTRL_READ_BUFFER_SIZE,
-//			     (usb_complete_t)ctrl_complete,
-//			     hw);
-//
-//
-//
-//	kl_debug_data(__FUNCTION__, KL_CTRL_READ_BUFFER_SIZE, hw->fifos[1].buffer);
-//
-//	DBG_INFO("going to submit control write urb");
-//
-//	ret = usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
-//	if (ret)
-//	{
-//		DBG_ERR("submitting write control URB failed (%d)", ret);
-//	}
-
-
-
-//	/* init the background machinery for control requests */
-//	hw->ctrl_read.bRequestType = 0xc0;
-//	hw->ctrl_read.bRequest = 1;
-//	hw->ctrl_read.wLength = cpu_to_le16(1);
-//	hw->ctrl_write.bRequestType = 0x40;
-//	hw->ctrl_write.bRequest = 0;
-//	hw->ctrl_write.wLength = 0;
-//	usb_fill_control_urb(hw->ctrl_urb, hw->dev, hw->ctrl_out_pipe,
-//			     (u_char *)&hw->ctrl_write, NULL, 0,
-//			     (usb_complete_t)ctrl_complete, hw);
-
-	ret = initTranseiver(hw);
-	return ret;
+	retval = initTranseiver(hw);
+	return retval;
 }
 
 static void release_hw(struct kl_usb *hw)
 {
 	DBG_INFO("%s", __func__);
 
-
 	/* rx endpoint using USB INT IN method */
-	stop_int_gracefull(hw->fifos + KLUSB_INT_RX);
+	abort_rx_int_transfer(hw);
 
 	/* rx/tx control endpoint */
 	if (hw->ctrl_urb) {
@@ -1120,7 +729,7 @@ static void release_hw(struct kl_usb *hw)
 
 	if (hw->intf)
 		usb_set_intfdata(hw->intf, NULL);
-//	list_del(&hw->list);
+
 	kfree(hw);
 	hw = NULL;
 }
@@ -1132,11 +741,11 @@ static int kl_open(struct inode *inode, struct file *file)
 	struct usb_interface *interface;
 	int subminor;
 	int retval = 0;
-	int err;
 
 	DBG_INFO("Open device");
 	subminor = iminor(inode);
 
+	/* lock this device */
 	mutex_lock(&disconnect_mutex);
 
 	interface = usb_find_interface(&kl_driver, subminor);
@@ -1154,49 +763,16 @@ static int kl_open(struct inode *inode, struct file *file)
 		goto exit;
 	}
 
-//	start_int_fifo(hw->fifos + KLUSB_INT_RX);
-
-
-	/* lock this device */
-//	if (down_interruptible(&hw->sem))
-//	{
-//		DBG_ERR("sem down failed");
-//		retval = -ERESTARTSYS;
-//		goto exit;
-//	}
+	/* start rx interrupt URB. */
+	// start_rx_int_transfer(hw);
 
 	/* Increment our usage count for the device. */
 	++hw->open_count;
 	if (hw->open_count > 1)
 		DBG_DEBUG("open_count = %d", hw->open_count);
 
-//	/* Initialize interrupt URB. */
-//	usb_fill_int_urb(hw->int_in_urb, hw->dev,
-//			usb_rcvintpipe(hw->dev,
-//					hw->int_in_endpoint->bEndpointAddress),
-//			hw->int_in_buffer,
-//			le16_to_cpu(hw->int_in_endpoint->wMaxPacketSize),
-//			kl_int_in_callback, hw,
-//			hw->int_in_endpoint->bInterval);
-//
-//	hw->int_in_running = 1;
-//	mb();
-//
-//	retval = usb_submit_urb(hw->int_in_urb, GFP_KERNEL);
-//	if (retval)
-//	{
-//		DBG_ERR("submitting int urb failed (%d)", retval);
-//		hw->int_in_running = 0;
-//		--hw->open_count;
-//		goto unlock_exit;
-//	}
-
-
 	/* Save our object in the file's private structure. */
 	file->private_data = hw;
-
-unlock_exit:
-//	up(&hw->sem);
 
 exit:
 	mutex_unlock(&disconnect_mutex);
@@ -1222,11 +798,6 @@ static int kl_release(struct inode *inode, struct file *file)
 	/* Lock our device */
 	mutex_lock(&disconnect_mutex);
 
-//	if (down_interruptible(&hw->sem))
-//	{
-//		retval = -ERESTARTSYS;
-//		goto exit;
-//	}
 
 	if (hw->open_count <= 0)
 	{
@@ -1236,29 +807,21 @@ static int kl_release(struct inode *inode, struct file *file)
 	}
 
 //	/* rx endpoint using USB INT IN method */
-//	stop_int_gracefull(hw->fifos + KLUSB_INT_RX);
+//	abort_rx_int_transfer(hw);
 
 	if (!hw->dev)
 	{
 		DBG_DEBUG("device unplugged before the file was released");
-
-//		up(&hw->sem); /* Unlock here as kl_delete frees hw. */
 		kl_delete(hw);
-//		goto exit;
 		goto unlock_exit;
 	}
 
 	if (hw->open_count > 1)
 		DBG_DEBUG("open_count = %d", hw->open_count);
 
-
-
-//	kl_abort_transfers(hw);
-
 	--hw->open_count;
 
 unlock_exit:
-	// up(&hw->sem);
 	mutex_unlock(&disconnect_mutex);
 
 exit:
@@ -1478,6 +1041,8 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	struct kl_usb *hw = NULL;
 	ssize_t retval = 0;
 
+	int state;
+
 //	printk("Count is: %lu\n", count);
 
 	if (!retBuf || !data || !rawdata || !setFramebuf || !setTXbuf || !resultBuf) {
@@ -1505,21 +1070,71 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 
 //      printk("read vor = %02x %02x %02x %02x\n", data[0], data[1], data[2],
 //             data[3]);
-	ret =
-	    usb_control_msg(hw->dev, usb_rcvctrlpipe(hw->dev, 0), USB_REQ_CLEAR_FEATURE,
-			    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
-			    0x3de, 0, data, 10, KL_USB_CTRL_TIMEOUT);
+//	ret =
+//	    usb_control_msg(hw->dev, usb_rcvctrlpipe(hw->dev, 0), USB_REQ_CLEAR_FEATURE,
+//			    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
+//			    0x3de, 0, data, 10, KL_USB_CTRL_TIMEOUT);
+//
+//	if (ret < 0) {
+//		printk("Error read Nr: %d\n", ret);
+//		count = -EIO;
+//		goto read_out;
+//	}
+//
+//	kl_debug_data(__FUNCTION__, 10, data);
 
-	if (ret < 0) {
-		printk("Error read Nr: %d\n", ret);
-		count = -EIO;
-		goto read_out;
-	}
-
-	kl_debug_data(__FUNCTION__, 10, data);
-
+	// read logger state
+	state = atomic_read(&hw->logger_state);
+	DBG_INFO("INT state: 0x%x", state);
 //	printk("read nach= %02x %02x %02x %02x\n", data[0], data[1], data[2],
 //	       data[3]);
+
+
+	if (state == 0x16) {
+		DBG_INFO("getFrame()");
+
+		ret =
+		    usb_control_msg(hw->dev, usb_rcvctrlpipe(hw->dev, 0),
+				    USB_REQ_CLEAR_FEATURE,
+				    USB_TYPE_CLASS | USB_RECIP_INTERFACE |
+				    USB_DIR_IN, 0x3d6, 0, rawdata, 0x111,
+				    KL_USB_CTRL_TIMEOUT);
+		if (ret < 0) {
+			printk("Error in getFrame Nr: %d\n", ret);
+			count = -EIO;
+			goto read_out;
+		}
+
+		kl_debug_data(__FUNCTION__, 0x111, rawdata);
+
+		// generateResponse in kl.py
+		bufferID = (rawdata[3] << 8) | rawdata[4];
+		respType = (rawdata[6] & 0xF0);
+		DBG_INFO("bufferID: 0x%02x respType: 0x%02x", bufferID, respType);
+
+
+		if (bufferID == 0xF0F0) {
+			DBG_ERR("generateResponse: console not paired (synchronized)");
+		} else {
+			if (respType == RESPONSE_DATA_WRITTEN) {
+				DBG_INFO("RESPONSE_DATA_WRITTEN");
+			} else if (respType == RESPONSE_GET_CONFIG) {
+				DBG_INFO("RESPONSE_GET_CONFIG");
+			} else if (respType == RESPONSE_GET_CURRENT) {
+				DBG_INFO("RESPONSE_GET_CURRENT");
+
+				not_copied = copy_to_user(buffer, rawdata, 0x111);
+
+
+			} else {
+				DBG_INFO("RESPONSE: 0x%02x", respType);
+			}
+		}
+	} else
+	{
+		count = -121;
+		goto read_out;
+	}
 
 	/* getFrame in kl.py */
 //	if (data[1] == 0x16) {
@@ -1759,12 +1374,12 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 //		printk("\n");
 //	}
 
-	ssleep(1);
-
-	to_copy = min((size_t) atomic_read(&bytes_available), count);
-	not_copied = copy_to_user(buffer, resultBuf, to_copy);
-	atomic_sub(to_copy - not_copied, &bytes_available);
-	count = to_copy - not_copied;
+//	ssleep(1);
+//
+//	to_copy = min((size_t) atomic_read(&bytes_available), count);
+//	not_copied = copy_to_user(buffer, resultBuf, to_copy);
+//	atomic_sub(to_copy - not_copied, &bytes_available);
+//	count = to_copy - not_copied;
 
 //	printk("to_copy: %d\n", (int)to_copy);
 //	printk("not_copied: %d\n", (int)not_copied);
@@ -1794,34 +1409,18 @@ static struct usb_class_driver kl_class = { .name = "kl%d",
 
 static int setup_instance(struct kl_usb *hw)
 {
-	u_long	flags;
 	int	err = 0;
-	int	i;
 
 	DBG_INFO("%s", __func__);
 
 //	sema_init(&hw->sem, 1);
 
 	spin_lock_init(&hw->ctrl_lock);
-	spin_lock_init(&hw->lock);
 
 	err = setup_klusb(hw);
 	if (err)
 		goto out;
 
-//	snprintf(hw->name, MISDN_MAX_IDLEN - 1, "%s.%d", DRIVER_NAME,
-//		 hfcsusb_cnt + 1);
-//	printk(KERN_INFO "%s: registered as '%s'\n",
-//	       DRIVER_NAME, hw->name);
-//
-//	err = mISDN_register_device(&hw->dch.dev, parent, hw->name);
-//	if (err)
-//		goto out;
-
-	klusb_cnt++;
-//	write_lock_irqsave(&KLlock, flags);
-//	list_add_tail(&hw->list, &KLlist);
-//	write_unlock_irqrestore(&KLlock, flags);
 	return 0;
 
 out:
@@ -1836,8 +1435,8 @@ static int kl_probe(struct usb_interface *intf,
 
 	struct kl_usb 			*hw = NULL;
 	struct usb_device 		*dev = interface_to_usbdev(intf);
-	struct usb_host_interface	*iface = intf->cur_altsetting;
-	struct usb_host_endpoint	*ep;
+	struct usb_host_interface	*iface_desc = intf->cur_altsetting;
+	struct usb_endpoint_descriptor	*ep_desc;
 
 	int idVendor = le16_to_cpu(dev->descriptor.idVendor);
 	int idProduct = le16_to_cpu(dev->descriptor.idProduct);
@@ -1861,42 +1460,44 @@ static int kl_probe(struct usb_interface *intf,
 		return -ENOMEM;
 	}
 
-
-	ep = iface->endpoint;
-
-
 	/* Set up interrupt endpoint information. */
-	if ( (iface->desc.bNumEndpoints == 1) &&
-	     ((ep->desc.bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
-	       == USB_ENDPOINT_XFER_INT) )
-	{
-		struct usb_fifo *f;
-		f = &hw->fifos[KLUSB_INT_RX];
+	for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
+		ep_desc = &iface_desc->endpoint[i].desc;
 
-		f->pipe = usb_rcvintpipe(dev,
-					 ep->desc.bEndpointAddress);
-		f->usb_transfer_mode = USB_INT;
-		int_end_packet_size = le16_to_cpu(ep->desc.wMaxPacketSize);
-		DBG_INFO("int_end_packet_size = %d", int_end_packet_size);
-		if (f->pipe)
-		{
-			f->fifonum = KLUSB_INT_RX;
-			f->hw = hw;
-			f->usb_packet_maxlen = int_end_packet_size;
-			f->intervall = ep->desc.bInterval;
+		if (((ep_desc->bEndpointAddress & USB_ENDPOINT_DIR_MASK)
+		     == USB_DIR_IN)
+		    && ((ep_desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
+		    	== USB_ENDPOINT_XFER_INT)) {
+			hw->rx_int_endpoint_desc = ep_desc;
+
+
 		}
 	}
-	else
-	{
-		DBG_ERR("could not find interrupt in endpoint");
+
+	if (!hw->rx_int_endpoint_desc) {
+		DBG_ERR("could not find rx interrupt in endpoint");
 		retval = -ENODEV;
 		goto error;
 	}
 
+	hw->rx_int_in_pipe = usb_rcvintpipe(dev,
+					    hw->rx_int_endpoint_desc->bEndpointAddress);
+
+	int_end_packet_size = le16_to_cpu(hw->rx_int_endpoint_desc->wMaxPacketSize);
+	DBG_INFO("rx interrupt endpoint packet size: %d", int_end_packet_size);
+
+	hw->rx_int_buffer = kmalloc(int_end_packet_size, GFP_KERNEL);
+	if (!hw->rx_int_buffer) {
+		DBG_ERR("could not allocate rx_int_buffer");
+		retval = -ENOMEM;
+		goto error;
+	}
+
+
+	atomic_set(&hw->logger_state, 0);
 
 	hw->dev = dev; /* save device */
-	hw->ctrl_paksize = dev->descriptor.bMaxPacketSize0; /* control size */
-	hw->packet_size = int_end_packet_size;
+	hw->ctrl_packet_size = dev->descriptor.bMaxPacketSize0; /* control size */
 
 	/* create the control pipes needed for register access */
 	hw->ctrl_in_pipe = usb_rcvctrlpipe(hw->dev, 0);
@@ -1954,9 +1555,7 @@ static void kl_disconnect(struct usb_interface *intf)
 {
 	/* called when unplugging a USB device. */
 	struct kl_usb *hw;
-	struct kl_usb *next;
 	int minor;
-	int cnt = 0;
 
 	mutex_lock(&disconnect_mutex); /* Not interruptible */
 
@@ -1965,20 +1564,11 @@ static void kl_disconnect(struct usb_interface *intf)
 
 	release_hw(hw);
 
-//	list_for_each_entry_safe(hw, next, &KLlist, list)
-//		cnt++;
-//	if (!cnt)
-//		klusb_cnt = 0;
-
-	klusb_cnt = 0;
-
 	/* TODO is this not already done in release_hw() ??? */
 //	usb_set_intfdata(intf, NULL);
 
 
-
 //	down(&hw->sem); /* Not interruptible */
-
 
 	/* Give back our minor. */
 	usb_deregister_dev(intf, &kl_class);

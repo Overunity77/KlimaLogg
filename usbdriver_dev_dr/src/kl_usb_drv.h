@@ -10,32 +10,17 @@
 #define __KL_USB_DRV_H__
 
 
+
 /* RF Frequency */
-#define KL_FREQUENCY_EU		868300000	/* 868.3 MHz */
-#define KL_FREQ_VAL		910478540	/* (KL_FREQUENCY_EU / 16000000.0 * 16777216.0) */
+#define KL_FREQUENCY_EU			868300000	/* 868.3 MHz */
+#define KL_FREQ_VAL			910478540	/* (KL_FREQUENCY_EU / 16000000.0 * 16777216.0) */
 
-/* fifo registers */
-#define KLUSB_NUM_FIFOS	3	/* maximum number of fifos */
-#define KLUSB_INT_RX	0	/* index of the INT IN interrupt fifo */
-#define KLUSB_B1_TX		0	/* index for B1 transmit bulk/int */
-#define KLUSB_B1_RX		1	/* index for B1 receive bulk/int */
-#define KLUSB_B2_TX		2
-#define KLUSB_B2_RX		3
-#define KLUSB_D_TX		4
-#define KLUSB_D_RX		5
-#define KLUSB_PCM_TX		6
-#define KLUSB_PCM_RX		7
 
-#define ISO_BUFFER_SIZE		128
-#define USB_FIFO_BUFFER_SIZE	128
+#define USB_INT				0
+#define USB_HID_FEATURE_REPORT		0x03
 
-#define USB_INT		0
-#define USB_BULK	1
-#define USB_ISOC	2
-
-#define USB_HID_FEATURE_REPORT	0x03
-
-#define KL_USB_CTRL_TIMEOUT	5 	/* 5ms timeout writing/reading regs */
+#define KL_USB_CTRL_TIMEOUT		5 	/* 5ms timeout writing/reading regs */
+#define KL_USB_CTRL_BUFSIZE 		64
 
 /* KlimaLogg pro Message Type Array Index */
 #define KL_GET_FRAME			 0
@@ -143,22 +128,6 @@
 #define AX5051REGISTER_RXMISC		0x7D
 
 
-/* AX5051 register access by Control-URSs */
-#define write_reg_atomic(a, b, c)					\
-	usb_control_msg((a)->dev, (a)->ctrl_out_pipe, 0, 0x40, (c), (b), \
-			0, 0, HFC_CTRL_TIMEOUT)
-#define read_reg_atomic(a, b, c)					\
-	usb_control_msg((a)->dev, (a)->ctrl_in_pipe, 1, 0xC0, 0, (b), (c), \
-			1, HFC_CTRL_TIMEOUT)
-
-#define KL_CTRL_BUFSIZE 16
-#define KL_USB_CTRL_BUFSIZE 64
-
-struct ctrl_buf {
-	__u8 ax5051_reg;	/* register number */
-	__u8 reg_val;		/* value to be written (or read) */
-};
-
 struct usb_ctrl_buf {
 	struct usb_ctrlrequest	ctrlrequest;
 	int			pipe;
@@ -166,14 +135,11 @@ struct usb_ctrl_buf {
 	__u16			buflen;
 };
 
-
 struct usb_read_config_flash {
 	__u16 addr;
 	__u16 buflen;
 	__u8  *readBuf;
 };
-
-
 
 struct usb_rf_setup_buffers {
 	__u8 *buf_execute;
@@ -366,126 +332,37 @@ symbolic(struct klusb_symbolic_list list[], const int num)
 	return "<unknown USB Error>";
 }
 
-
-struct kl_usb;
-struct usb_fifo;
-
-/* structure defining input+output fifos (interrupt/bulk mode) */
-//struct iso_urb {
-//	struct urb *urb;
-//	__u8 buffer[ISO_BUFFER_SIZE];	/* buffer rx/tx USB URB data */
-//	struct usb_fifo *owner_fifo;	/* pointer to owner fifo */
-//	__u8 indx; /* Fifos's ISO double buffer 0 or 1 ? */
-//#ifdef ISO_FRAME_START_DEBUG
-//	int start_frames[ISO_FRAME_START_RING_COUNT];
-//	__u8 iso_frm_strt_pos; /* index in start_frame[] */
-//#endif
-//};
-
-struct usb_fifo {
-	int fifonum;		/* fifo index attached to this structure */
-	int active;		/* fifo is currently active */
-	struct kl_usb *hw;	/* pointer to main structure */
-	int pipe;		/* address of endpoint */
-	__u8 usb_packet_maxlen;	/* maximum length for usb transfer */
-	unsigned int max_size;	/* maximum size of receive/send packet */
-	__u8 intervall;		/* interrupt interval */
-	struct urb *urb;	/* transfer structure for usb routines */
-	__u8 buffer[USB_FIFO_BUFFER_SIZE]; /* buffer USB INT OUT URB data */
-	int bit_line;		/* how much bits are in the fifo? */
-
-	__u8 usb_transfer_mode; /* switched between ISO and INT */
-//	struct iso_urb	iso[2]; /* two urbs to have one always
-//				   one pending */
-
-//	struct dchannel *dch;	/* link to hfcsusb_t->dch */
-//	struct bchannel *bch;	/* link to hfcsusb_t->bch */
-//	struct dchannel *ech;	/* link to hfcsusb_t->ech, TODO: E-CHANNEL */
-	int last_urblen;	/* remember length of last packet */
-	__u8 stop_gracefull;	/* stops URB retransmission */
-};
-
-
 struct kl_usb {
-	struct list_head	list;
-//	struct dchannel		dch;
-//	struct bchannel		bch[2];
-//	struct dchannel		ech; /* TODO : wait for struct echannel ;) */
-
 	struct usb_device	*dev;		/* our device */
 	struct usb_interface	*intf;		/* used interface */
-//	int			if_used;	/* used interface number */
-//	int			alt_used;	/* used alternate config */
-//	int			cfg_used;	/* configuration index used */
-//	int			vend_idx;	/* index in hfcsusb_idtab */
-	int			packet_size;
-//	int			iso_packet_size;
-	struct usb_fifo		fifos[KLUSB_NUM_FIFOS];
 
-	struct semaphore sem; /* Locks this structure */
+	/* usb rx interrupt handling */
+	struct usb_endpoint_descriptor  *rx_int_endpoint_desc;
+	struct urb		*rx_int_urb;
+	int			rx_int_in_pipe;
+	char			*rx_int_buffer;
+	int			rx_int_running;
+
+	struct semaphore	sem; /* Locks this structure */
+	atomic_t		logger_state;
 
 	/* control pipe background handling */
-//	struct ctrl_buf		ctrl_buff[KL_CTRL_BUFSIZE]; // TODO remove
 	struct usb_ctrl_buf	usb_ctrl_buff[KL_USB_CTRL_BUFSIZE];
 	int			ctrl_in_idx, ctrl_out_idx, ctrl_cnt;
 	struct urb		*ctrl_urb;
 	struct usb_ctrlrequest	ctrl_write;
 	struct usb_ctrlrequest	ctrl_read;
-	int			ctrl_paksize;
+	int			ctrl_packet_size;
 	int			ctrl_in_pipe, ctrl_out_pipe;
 	spinlock_t		ctrl_lock; /* lock for ctrl */
-	spinlock_t		lock;
 
-	unsigned int		transceiver_id;
 	struct usb_rf_setup_buffers rf_setup_buffers;
-//	__u8			threshold_mask;
-//	__u8			led_state;
 
-//	__u8			protocol;
-	int			nt_timer;
-	int			open;
-	__u8			timers;
-	__u8			initdone;
-//	char			name[MISDN_MAX_IDLEN];
-
-	unsigned char minor;
-	char serial_number[8];
-	int open_count; /* Open count for this port */
+	unsigned char 		minor;
+	int			open_count;
+	char 			serial_number[8];
+	unsigned int		transceiver_id;
 
 };
 
-
-struct usb_kl
-{
-	/* One structure for each connected device */
-	struct usb_device *udev;
-	struct usb_interface *interface;
-	unsigned char minor;
-	char serial_number[8];
-
-	int open_count; /* Open count for this port */
-	struct semaphore sem; /* Locks this structure */
-	spinlock_t cmd_spinlock; /* locks dev->command */
-
-	char *int_in_buffer;
-	struct usb_endpoint_descriptor *int_in_endpoint;
-	struct urb *int_in_urb;
-	int int_in_running;
-
-	char *ctrl_buffer; /* 8 byte buffer for ctrl msg */
-	struct urb *ctrl_urb;
-	struct usb_ctrlrequest *ctrl_dr; /* Setup packet information */
-	int correction_required;
-
-
-	char *ctrl_read_buffer;
-	char *ctrl_read_buffer2;
-	struct urb *ctrl_read_urb;
-	struct urb *ctrl_read_urb2;
-	struct usb_ctrlrequest *ctrl_read_dr;
-	struct usb_ctrlrequest *ctrl_read_dr2;
-	unsigned int ctrl_read_transfer_count; /* bytes transfered */
-
-	__u8 command;/* Last issued command */
-};
 #endif /* __KL_USB_DRV_H__ */
