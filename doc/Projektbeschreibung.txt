@@ -106,3 +106,68 @@ Aktueller Stand:
 
 Nächste Schritte:
 - Auslesen der Temperatur/Luftfeuchtigkeitsdaten und zur Verfügung stellen für den User Space
+
+
+
+
+
+
+
+
+Sehr geehrter Herr Seewer
+
+Seit dem letzten Statusupdate vom Projektreview 1 vom 07. September 2015 konnten wir 
+folgenden Status erreichen: 
+
+Erledigte Arbeiten/Features
+- MASCOT Diagramm für das System bestehend aus Treiber und Applikation gemacht
+- USB Treiber probe/disconnect/open/read Funktionen fertiggestellt
+- USB Treiber Modul bei Start-Up des BeagleBoneBlack in den Kernel laden
+- Qt Applikation mit Darstellung der Daten mittel QCustomPlot Version 1.3.1 
+- Qt Applikation und Anbindung der SQLite Datenbank gemacht
+- Qt Applikation und Read aus dem USB Driver integriert
+- Qt Applikation wird bei Start Up des BeagleBoneBlack auch gestartet
+
+Probleme
+- Da das BeagleBoneBlack über keine gepufferte Systemzeit verfügt,
+  müssen wir hier noch eine Umgehung suchen. 
+
+Aktuelles
+- Die Ergebnisse und Artefakte werden wir bis zur Präsentation am
+  30.09.2015 konsolidieren und dokumentieren, sowie die Präsentation
+  für die 30 Minuten der Abschlusspräsentation vorbereiten.
+
+
+
+________________________________________
+Von: Seewer Philippe
+Gesendet: Samstag, 19. September 2015 00:09
+An: Aebi Lorenz; Binder Christian; Grundmann Michel; Junker Thomas; Martig Ralph; Müller Roland; Nocelli Umberto; Ocaña Cedric; Pattier Damien; Pfäffli Andreas Simon; Piller Nadia; Reimann Daniel; Roder Simon; Scherrer Stefan; Suhner Urs; Urfer Manuel
+Cc: Lanz Rolf
+Betreff: Ausfall Review2, An/Abwesenheit in den naechsten Wochen
+
+Liebe Klasse
+
+Wie Sie schon aus dem Subject schliessen koennen muss ich leider auch
+das Review 2 ausfallen lassen. Dies daher, dass sich meine
+gesundheitliche Situation nicht gebessert hat und ich die naechsten
+Wochen in der Insel verbringen muss.
+
+
+Um nicht den Faden zu verlieren: Darf ich jede Gruppe bitten mir
+spaetestens bis Montag Abend einen Statusbericht per E-Mail zu schicken?
+Inhalt in etwa erledigte Arbeiten/Features, Probleme, aktuelles.
+
+
+Ich habe immer noch die Hoffnung, wenigstens am Praesentationsabend vor
+Ort sein zu duerfen. Falls dies doch nicht klappt, wird Rolf Lanz
+uebernehmen.
+
+
+Vielen Dank und bitte entschuldigen Sie
+Philippe Seewer
+
+
+
+
+

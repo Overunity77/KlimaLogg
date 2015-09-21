@@ -426,3 +426,59 @@ drivers/usb/misc/cytherm.c:	/* read temperature */
 Siehe auch 
 http://lwn.net/Articles/375945/
 student@granit:~/kernel/linux/drivers/hid/usbhid$ ll
+
+
+1444955160|23.6||20.0|23.0||||||52.0||42.0|57.0|||||
+1444955220|23.6||20.0|23.0||||||52.0||42.0|57.0|||||
+1444955280|23.6||20.0|23.0||||||52.0||42.0|57.0|||||
+1444955340|23.6||20.0|23.0||||||52.0||42.0|57.0|||||
+1444955400|23.6||20.0|23.0||||||52.0||42.0|57.0|||||
+1448924400|23.4||20.2|23.0||||||53.0||40.0|56.0|||||
+sqlite> exit
+   ...> ;
+Error: near "exit": syntax error
+sqlite> .exit
+root@BBB-BFH-Cape:/usr/local/bin/database# ls -lrta
+total 1284
+drwxrwxrwx 3 root root    4096 Sep 14 09:12 ..
+-rw-r--r-- 1 root root 1304576 Sep 20 08:47 KlimaLoggPro.sdb
+drwxr-xr-x 2 root root    4096 Sep 20 08:47 .
+
+
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date
+Son Sep 20 11:24:26 CEST 2015
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date -d "2010-10-02" "+%s"
+1285970400
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date -d "2015-10-14" "+%s"
+1444773600
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date -d "2015-09-20" "+%s"
+1442700000
+
+
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date -d '@1448924400'
+Die Dez  1 00:00:00 CET 2015
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date -d '@1444955400'
+Fre Okt 16 02:30:00 CEST 2015
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date -d '@1444869360'
+Don Okt 15 02:36:00 CEST 2015
+
+student@granit:~/cas-ebx/integrationsprojekt/KlimaLogg$ date '+%s'
+1442768843
+
+
+RESPONSE_GET_CURRENT wird selbständig alle 1 Minute gesendet
+
+Sep 20 20:27:55 BBB-BFH-Cape kernel: [ 5541.617055] RESPONSE_GET_CURRENT
+Sep 20 20:28:54 BBB-BFH-Cape kernel: [ 5600.734795] RESPONSE_GET_CURRENT
+Sep 20 20:29:54 BBB-BFH-Cape kernel: [ 5660.753288] RESPONSE_GET_CURRENT
+Sep 20 20:30:55 BBB-BFH-Cape kernel: [ 5721.559503] RESPONSE_GET_CURRENT
+Sep 20 20:32:54 BBB-BFH-Cape kernel: [ 5840.613392] RESPONSE_GET_CURRENT
+
+/sys/bus/usb/devices/1-1:1.0
+root@BBB-BFH-Cape:/sys/bus/usb/devices/1-1:1.0# ls -l klindex
+-rwx------ 1 root root 4096 Apr 21 06:19 klindex
+
+
+
+173 82 0 
+0 74 172
