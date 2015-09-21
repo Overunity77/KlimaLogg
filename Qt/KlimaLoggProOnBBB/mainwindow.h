@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "kldatabase.h"
+#include "workerthread.h"
 
 namespace Ui {
 class MainWindow;
@@ -18,8 +19,8 @@ public:
 
 
 private slots:
-    void TimerEvent();
-    void ReadUSBFrame();
+    //void TimerEvent();
+    void HandleErrNo(int error);
     void makePlot();
     void OnDrawPlot();
     void selectShortTimespan();
@@ -37,7 +38,8 @@ private:
     QTimer *m_AcquisitionTimer;
     QMessageBox *m_MSGBox;
     FILE *fd = NULL;
-
+    //WorkerThread *m_worker;
+    Controller *m_controller;
 };
 
 #endif // MAINWINDOW_H
