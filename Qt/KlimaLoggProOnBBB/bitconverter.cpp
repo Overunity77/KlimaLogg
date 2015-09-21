@@ -221,6 +221,22 @@ ResponseType BitConverter::GetResponseType(char *data, int size)
     return (ResponseType) data[6] ;
 }
 
+long BitConverter::GetThisIndex(char* usbframe)
+{
+    long thisIndex =
+            (((((usbframe[13] << 8) | usbframe[14]) << 8)
+            | usbframe[15]) - 0x070000) / 32;
+    return thisIndex;
+}
+
+long BitConverter::GetLatestIndex(char* usbframe)
+{
+    long  latestIndex =
+            (((((usbframe[10] << 8) | usbframe[11]) << 8) |
+            usbframe[12]) - 0x070000) / 32;
+    return latestIndex;
+}
+
 
 Record BitConverter::GetSensorValuesFromHistoryData(char* frame, int index)
 {
@@ -229,7 +245,7 @@ Record BitConverter::GetSensorValuesFromHistoryData(char* frame, int index)
 	//get pointer for a single HistoryDataSet
 	char* data = frame + offset_index[index];
 
-	if (data[27] == 0xEE)
+    if ((unsigned char)data[27] == 0xEE)
 	{
 		//it's AlarmData -> not et supported
 		Record rec;
@@ -251,9 +267,7 @@ Record BitConverter::GetSensorValuesFromHistoryData(char* frame, int index)
 		int offset_h = offset_h_map[i];
 		int offset_t = offset_t_map[i];
 		double value = 0;
-        bool isOdd = true ? i % 2 == 1 : false ;
-    //     qDebug() <<"i ist =" << i << "ist das ungerade ?" << isOdd;
-        record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(data[offset_t] , data[offset_t+1], isOdd, &value);
+        record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(data[offset_t] , data[offset_t+1], true, &value);
 		record.SensorDatas[i].Temperature = value;
 		record.SensorDatas[i].HumValid = BitConverter::ConvertHumidity(data[offset_h], &value);
 		record.SensorDatas[i].Humidity = value;

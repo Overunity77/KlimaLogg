@@ -14,6 +14,8 @@ public:
     static bool ConvertHistoryTimestamp(char *data, long *value);
     static bool ConvertCurrentTimestamp(char *data, bool startOnHighNibble, long *value);
     static ResponseType GetResponseType(char *data, int size);
+    static long GetThisIndex(char* frame);
+    static long GetLatestIndex(char* frame);
     static Record GetSensorValuesFromHistoryData(char* frame, int index);
     static Record GetSensorValuesFromCurrentData(char* frame);
 

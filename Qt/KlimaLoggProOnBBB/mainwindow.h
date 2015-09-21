@@ -21,10 +21,12 @@ private slots:
     void TimerEvent();
     void ReadUSBFrame();
     void makePlot();
-    void DrawPlot();
+    void OnDrawPlot();
     void selectShortTimespan();
     void selectMediumTimespan();
     void selectLongTimespan();
+signals:
+    void DrawPlot();
 
 private:
 
@@ -33,7 +35,7 @@ private:
     KLDatabase* m_kldatabase;
     QThread *m_AcquisitionThread;
     QTimer *m_AcquisitionTimer;
-
+    QMessageBox *m_MSGBox;
     FILE *fd = NULL;
 
 };

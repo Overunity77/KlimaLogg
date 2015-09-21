@@ -20,6 +20,8 @@ public:
     ~KLDatabase();
 
     void StoreRecord(Record data);
+    void SetTimeIntervall(TimeIntervall intervall);
+    TimeIntervall GetTimeIntervall();
     int getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4);
     void updateLastRetrievedIndex(long index);
 private slots:
@@ -29,6 +31,7 @@ private:
     QSqlDatabase* db;
     //    QSqlQueryModel* plainModel;
     QSqlQuery* myQuery;
+    TimeIntervall m_TimeDiff;
     KLDatabase() { };
 };
 
