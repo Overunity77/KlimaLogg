@@ -119,10 +119,18 @@ void MainWindow::makePlot()
     QCPGraph *graph3 = ui->customPlot->addGraph();
     QCPGraph *graph4 = ui->customPlot->addGraph();
 
-    graph1->setPen(QPen(Qt::red));
-    graph2->setPen(QPen(Qt::blue));
-    graph3->setPen(QPen(Qt::green));
-    graph4->setPen(QPen(Qt::yellow));
+   graph1->setPen(QPen(QColor(172, 172, 0), 3)); //QPen(Qt::yellow));                 //(QPen(QColor(120, 120, 120), 2));
+    graph2->setPen(QPen(QColor(0, 172, 172), 3)); //(QPen(Qt::darkBlue));
+    graph3->setPen(QPen(QColor(255, 0, 0), 3)); //(QPen(Qt::red));
+    graph4->setPen(QPen(QColor(0, 0, 255), 3)); //(QPen(Qt::blue));
+
+    graph1->setName("Innen Temperatur");
+    graph2->setName("Innen Luftfeuchtigkeit");
+    graph3->setName("Aussen Temperatur");
+    graph4->setName("Aussen Luftfeuchtigkeit");
+
+    ui->customPlot->legend->setVisible(true);
+
 
     graph1->setLineStyle(QCPGraph::lsLine);
     graph2->setLineStyle(QCPGraph::lsLine);
@@ -167,17 +175,18 @@ void MainWindow::makePlot()
     plotGradient.setStart(0, 0);
     plotGradient.setFinalStop(0, 350);
     plotGradient.setColorAt(0, QColor(80, 80, 80));
-    plotGradient.setColorAt(1, QColor(50, 50, 50));
+    plotGradient.setColorAt(1, QColor(80, 80, 80));
     ui->customPlot->setBackground(plotGradient);
     QLinearGradient axisRectGradient;
     axisRectGradient.setStart(0, 0);
     axisRectGradient.setFinalStop(0, 350);
-    axisRectGradient.setColorAt(0, QColor(80, 80, 80));
+    axisRectGradient.setColorAt(0, QColor(30, 30, 30));
     axisRectGradient.setColorAt(1, QColor(30, 30, 30));
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
     ui->customPlot->yAxis->setRange(10, 70);
     ui->customPlot->xAxis->setLabel("Zeit");
     ui->customPlot->yAxis->setLabel("Temperatur");
+    ui->customPlot->yAxis2->setLabel("Luftfeuchtigkeit");
 }
 
 void MainWindow::selectShortTimespan()
@@ -201,3 +210,5 @@ void MainWindow::selectLongTimespan()
     m_kldatabase->SetTimeIntervall(TimeIntervall::LONG);
     emit DrawPlot();
 }
+
+
