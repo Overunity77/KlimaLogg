@@ -17,8 +17,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     m_kldatabase = new KLDatabase(this);
 
+    FILE *fd = fopen(SENSOR,"wb");
+    if(!fd)
+    {
+        qDebug() << "could not open" << SENSOR;
+    }else
+    {
+        //write last read index to the driver
+        int index = m_kldatabase->getLastRetrievedIndex();
+        index = 1234; //static for testing
+        fwrite(&index,sizeof(int),1,fd);
+        fclose(fd);
+    }
     m_controller = new Controller(m_kldatabase);
-
     m_controller->operate("startThread");
 
     connect(m_controller,SIGNAL(resultReady()),this,SLOT(OnDrawPlot()));

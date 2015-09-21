@@ -11,34 +11,6 @@
 #include "kldatabase.h"
 #include "bitconverter.h"
 
-//class WorkerThread : public QThread
-//{
-//public:
-//    WorkerThread(KLDatabase *database);
-
-//    ~WorkerThread();
-
-//    Q_OBJECT
-//    void run() Q_DECL_OVERRIDE
-//    {
-//        TimerEvent();
-//        //m_AcquisitionTimer->moveToThread(this);
-//        m_AcquisitionTimer->start();
-//    }
-//    bool ReadUSBFrame();
-
-//public slots:
-//    void TimerEvent();
-
-//signals:
-//    void resultReady();
-//    void readErrno(int error);
-
-//private:
-//    QTimer *m_AcquisitionTimer;
-//    KLDatabase *m_kldatabase;
-//};
-
 
 class Worker : public QObject
 {

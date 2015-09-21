@@ -18,14 +18,7 @@ KLDatabase::KLDatabase(QWidget *parent)
                                          "to build it.\n\n"
                                          "Click Cancel to exit."), QMessageBox::Cancel);
     }
-
-    // 900 sec = 15 min
-    // 86'400 sec = 24 hours
-    // 604'800 sec = 7 days
     myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp3, humidity3 from measurement where datetime >=(1442788380 - 86400) and datetime <= 1442788380 order by datetime asc", QSqlDatabase::database("KlimaLoggDb"));
-
-    //    plainModel = new QSqlQueryModel();
-    //    plainModel->setQuery("select * from archive", QSqlDatabase::database("KlimaLoggDb"));
 }
 
 KLDatabase::~KLDatabase()
@@ -76,6 +69,19 @@ void KLDatabase::updateLastRetrievedIndex(long index)
         qDebug() << "lastRetrievedIndex updated";
     }
 
+}
+
+int KLDatabase::getLastRetrievedIndex()
+{
+    myQuery->prepare("SELECT VALUE from parameter");
+
+    if (! myQuery->exec() ) {
+        qDebug() << myQuery->lastError();
+    } else {
+        myQuery->first();
+        QSqlField value = myQuery->record().field("VALUE");
+        return value.value().toInt();
+    }
 }
 
 
