@@ -1,6 +1,8 @@
 #ifndef DEFINITIONS
 #define DEFINITIONS
 
+
+#define SENSOR "/dev/kl0"
 struct SensorData
 {
     double Temperature;
@@ -26,6 +28,12 @@ enum ResponseType
     RESPONE_REQUEST = 0x50
 };
 
+enum TimeIntervall
+{
+    SHORT = 900,    //15 min
+    MEDIUM = 86400, // 24 hours
+    LONG = 604800     //7 days
+};
 
 #endif // DEFINITIONS
 
