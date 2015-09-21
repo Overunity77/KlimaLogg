@@ -22,28 +22,15 @@
 #define KL_USB_CTRL_TIMEOUT		5 	/* 5ms timeout writing/reading regs */
 #define KL_USB_CTRL_BUFSIZE 		64
 
-/* KlimaLogg pro Message Type Array Index */
-#define KL_GET_FRAME			 0
-#define KL_SET_RX			 1
-#define KL_SET_TX			 2
-#define KL_SET_FRAME			 3
-#define KL_SET_STATE			 4
-#define KL_SET_PREAMBLE_PATTERN		 5
-#define KL_EXECUTE			 6
-#define KL_READ_CONFIG_FLASH_IN		 7
-#define KL_READ_CONFIG_FLASH_OUT	 8
-#define KL_GET_STATE			 9
-#define KL_WRITE_REG			10
-
-
-#define KL_MSG_GET_FRAME		0x00	// GET_FRAME
-#define KL_LEN_GET_FRAME		0x111	// (Length: 273)
+/* KlimaLogg pro Message Types */
 #define KL_MSG_SET_RX			0xd0	// SET_RX
 #define KL_LEN_SET_RX			0x15	// (Length:  21)
 #define KL_MSG_SET_TX			0xd1	// SET_TX
 #define KL_LEN_SET_TX			0x15	// (Length:  21)
 #define KL_MSG_SET_FRAME		0xd5	// SET_FRAME
 #define KL_LEN_SET_FRAME		0x111	// (Length: 273)
+#define KL_MSG_GET_FRAME		0xd6	// GET_FRAME
+#define KL_LEN_GET_FRAME		0x111	// (Length: 273)
 #define KL_MSG_SET_STATE		0xd7	// SET_STATE
 #define KL_LEN_SET_STATE		0x15	// (Length:  21)
 #define KL_MSG_SET_PREAMBLE_PATTERN	0xd8	// SET_PREAMBLE_PATTERN
