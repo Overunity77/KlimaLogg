@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         //write last read index to the driver
         int index = m_kldatabase->getLastRetrievedIndex();
+        qDebug() << "LastRetrievedIndex from database: " << index;
         index = 1234; //static for testing
         fwrite(&index,sizeof(int),1,fd);
         fclose(fd);
@@ -119,10 +120,10 @@ void MainWindow::makePlot()
     QCPGraph *graph3 = ui->customPlot->addGraph();
     QCPGraph *graph4 = ui->customPlot->addGraph();
 
-   graph1->setPen(QPen(QColor(172, 172, 0), 3)); //QPen(Qt::yellow));                 //(QPen(QColor(120, 120, 120), 2));
-    graph2->setPen(QPen(QColor(0, 172, 172), 3)); //(QPen(Qt::darkBlue));
-    graph3->setPen(QPen(QColor(255, 0, 0), 3)); //(QPen(Qt::red));
-    graph4->setPen(QPen(QColor(0, 0, 255), 3)); //(QPen(Qt::blue));
+    graph1->setPen(QPen(QColor(172, 172, 0), 3));
+    graph2->setPen(QPen(QColor(0, 172, 172), 3));
+    graph3->setPen(QPen(QColor(255, 0, 0), 3));
+    graph4->setPen(QPen(QColor(0, 0, 255), 3));
 
     graph1->setName("Innen Temperatur");
     graph2->setName("Innen Luftfeuchtigkeit");
@@ -130,7 +131,6 @@ void MainWindow::makePlot()
     graph4->setName("Aussen Luftfeuchtigkeit");
 
     ui->customPlot->legend->setVisible(true);
-
 
     graph1->setLineStyle(QCPGraph::lsLine);
     graph2->setLineStyle(QCPGraph::lsLine);
@@ -157,6 +157,7 @@ void MainWindow::makePlot()
     ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yyyy hh:mm");
     ui->customPlot->xAxis->setAutoTickStep(false);
+//    ui->customPlot->xAxis->setTickStep(6);
 
     ui->customPlot->yAxis->setAutoTickStep(false);
     ui->customPlot->yAxis->setTickStep(5);
@@ -186,7 +187,10 @@ void MainWindow::makePlot()
     ui->customPlot->yAxis->setRange(10, 70);
     ui->customPlot->xAxis->setLabel("Zeit");
     ui->customPlot->yAxis->setLabel("Temperatur");
-    ui->customPlot->yAxis2->setLabel("Luftfeuchtigkeit");
+
+//    ui->customPlot->yAxis2->setVisible(true);
+//    ui->customPlot->yAxis2->setRange(0, 100);
+//    ui->customPlot->yAxis2->setLabel("Luftfeuchtigkeit");
 }
 
 void MainWindow::selectShortTimespan()
@@ -210,5 +214,3 @@ void MainWindow::selectLongTimespan()
     m_kldatabase->SetTimeIntervall(TimeIntervall::LONG);
     emit DrawPlot();
 }
-
-

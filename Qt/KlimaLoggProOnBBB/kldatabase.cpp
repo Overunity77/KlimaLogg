@@ -73,7 +73,7 @@ void KLDatabase::updateLastRetrievedIndex(long index)
 
 int KLDatabase::getLastRetrievedIndex()
 {
-    myQuery->prepare("SELECT VALUE from parameter");
+    myQuery->prepare("SELECT VALUE from parameter WHERE KEY='lastRetrievedIndex'");
 
     if (! myQuery->exec() ) {
         qDebug() << myQuery->lastError();
