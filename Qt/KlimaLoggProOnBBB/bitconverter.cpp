@@ -15,32 +15,32 @@ BitConverter::BitConverter()
 {
 }
 
-bool BitConverter::ConvertTemperature(char data1, char data2,  bool startOnHiNibble, double *value)
+bool BitConverter::ConvertTemperature(char data1, char data2, bool highByteFull, double *value)
 {
-    int tempOffset = 40;
-    int dezi, one, ten = 0;
-    if (startOnHiNibble) // [x*1] [x*0,1] [-] [x*10]
-    {
-        dezi = (data2 & 0xF0) >> 4;
-        one = (data1 & 0x0F);
-        ten = (data1 & 0xF0) >> 4;
-    }
-    else // [x*0,1] [-] [x*10] [x]
-    {
-        dezi = (data2 & 0x0F);
-        one = (data2 & 0xF0)  >> 4;
-        ten = (data1 & 0x0F);
-    }
+	int tempOffset = 40;
+	int dezi, one, ten = 0;
+	if (highByteFull) // [x*1] [x*0,1] [-] [x*10]
+	{
+		dezi = (data2 & 0x0F);
+		one = (data2 & 0xF0) >> 4;
+		ten = (data1 & 0x0F);
+	}
+	else // [x*0,1] [-] [x*10] [x]
+	{
+		dezi = (data2 & 0xF0) >> 4;
+		one = (data1 & 0x0F);
+		ten = (data1 & 0xF0) >> 4;
+	}
 
 	//check overflow
-    if (CheckOverflow(dezi) || CheckOverflow(one) || CheckOverflow(ten))
+	if (CheckOverflow(dezi) || CheckOverflow(one) || CheckOverflow(ten))
 	{
 		(*value) = 0;
 		return false;
 	}
 	else
 	{
-        (*value) = ((ten * 10 + one + dezi * 0.1) - tempOffset);
+		(*value) = ((ten * 10 + one + dezi * 0.1) - tempOffset);
 		return true;
 	}
 }
@@ -261,7 +261,7 @@ Record BitConverter::GetSensorValuesFromHistoryData(char* frame, int index)
 		int offset_h = offset_h_map[i];
 		int offset_t = offset_t_map[i];
 		double value = 0;
-        record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(data[offset_t] , data[offset_t+1], true, &value);
+        record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(data[offset_t], data[offset_t + 1], i % 2 == 0 , &value);
 		record.SensorDatas[i].Temperature = value;
 		record.SensorDatas[i].HumValid = BitConverter::ConvertHumidity(data[offset_h], &value);
 		record.SensorDatas[i].Humidity = value;
@@ -299,7 +299,7 @@ Record BitConverter::GetSensorValuesFromCurrentData(char* frame)
         int offset_h = start_h + i * sizeOFSensorData;
         int offset_t = start_t + i * sizeOFSensorData;
         double value = 0;
-        record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(frame[offset_t] , frame[offset_t+1], false, &value);
+		record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(frame[offset_t], frame[offset_t + 1], true, &value);
         record.SensorDatas[i].Temperature = value;
         qDebug() << "Temperature for "<< i << " is " <<  value;
         record.SensorDatas[i].HumValid = BitConverter::ConvertHumidity(frame[offset_h], &value);
