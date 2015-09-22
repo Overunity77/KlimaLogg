@@ -709,6 +709,12 @@ static int setup_klusb(struct kl_usb *hw)
 	hw->ctrl_urb->complete = (usb_complete_t)ctrl_complete;
 	hw->ctrl_urb->context = hw;
 
+	/* set default history record number to begin with reading */
+	hw->history_record_nr = 0;
+
+	/* set default Logger ID */
+	hw->logger_id = LOGGER_1;
+
 	retval = initTranseiver(hw);
 	return retval;
 }
@@ -915,16 +921,7 @@ exit:
 #define ACTION_SEND_CONFIG   0x20
 #define ACTION_SEND_TIME   0x60
 
-#define LOGGER_1   0
-#define LOGGER_2   1
-#define LOGGER_3   2
-#define LOGGER_4   3
-#define LOGGER_5   4
-#define LOGGER_6   5
-#define LOGGER_7   6
-#define LOGGER_8   7
-#define LOGGER_9   8
-#define LOGGER_10   9
+
 
 /* defined in dezi Grad Celsius */
 #define TEMPERATURE_OFFSET 400
@@ -933,33 +930,29 @@ exit:
 
 static atomic_t bytes_available = ATOMIC_INIT(0);
 
-int klimaloggRecord = 30000;
 
 #define KL_MAX_RECORD 	51200
 #define KL_COMM_INT	8
 
 int nextSleepMs = 5;
+bool config_changed = false;
 
-int history_record_nr = 0;
-
-bool config_changed = true;
-
-static void kl_buildACKFrame(int deviceID, unsigned char action, int cs, unsigned char* framebuf)
+static void kl_buildACKFrame(struct kl_usb *hw, int deviceID, unsigned char action, int cs, unsigned char* framebuf)
 {
 	int history_addr;
 
-	if((history_record_nr < 0) || (history_record_nr >= KL_MAX_RECORD))
+	if((hw->history_record_nr < 0) || (hw->history_record_nr >= KL_MAX_RECORD))
 	{
 		history_addr = 0xffffff;
 	}
 	else
 	{
-		history_addr = 32 * history_record_nr + 0x070000;
+		history_addr = 32 * hw->history_record_nr + 0x070000;
 	}
 
 	framebuf[0]  = (deviceID >> 8) & 0xff;
 	framebuf[1]  = (deviceID >> 0) & 0xff;
-	framebuf[2]  = LOGGER_1;
+	framebuf[2]  = hw->logger_id;
 	framebuf[3]  = action & 0x0f;
 	framebuf[4]  = (cs >> 8) & 0xff;
 	framebuf[5]  = (cs >> 8) & 0xff;
@@ -978,7 +971,7 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 {
 	/* read syscall */
 
-	int tryGetStateCounter = 0;
+	int tryGetStateCounter;
 
 
 	size_t to_copy, not_copied;
@@ -1013,9 +1006,11 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 
 	int state;
 
+	DBG_INFO("*** read called (count=%ld) ***",count);
+
 
 	if (!retBuf || !data || !rawdata || !setFramebuf || !setTXbuf || !resultBuf) {
-		printk("no memory\n");
+		DBG_ERR("no memory\n");
 		count = -ENOMEM;
 		goto read_out;
 	}
@@ -1027,19 +1022,19 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	hw = (struct kl_usb *)instanz->private_data;
 
 	if (!hw) {
-		printk("hw is NULL!\n");
+		DBG_ERR("hw is NULL!");
 		count = -ENODEV;
 		goto read_out;
 	}
 
-	printk("usb_test: read (count=%ld)\n",count);
-	mutex_lock(&disconnect_mutex);	/* Jetzt nicht disconnecten... */
 
+	mutex_lock(&disconnect_mutex);	/* Jetzt nicht disconnecten... */
 
 	//firstSleep
 	msleep(75);
 
 getState:
+	tryGetStateCounter = 0;
 
 	// try for about 1 second to get connection state == 0x16
 	while(tryGetStateCounter < 100)
@@ -1056,14 +1051,14 @@ getState:
 				    KL_USB_CTRL_TIMEOUT);
 
 		if (ret < 0) {
-			printk("Error read Nr: %d\n", ret);
+			DBG_ERR("Error read Nr: %d", ret);
 			count = -EIO;
 			goto read_out;
 		}
 
 		// read logger state
-		state = atomic_read(&hw->logger_state);
-		DBG_INFO("INT state: 0x%x GetState: 0x%x tryGetStateCounter: %d", state, data[1], tryGetStateCounter);
+//		state = atomic_read(&hw->logger_state);
+//		DBG_INFO("INT state: 0x%x GetState: 0x%x tryGetStateCounter: %d", state, data[1], tryGetStateCounter);
 
 		if(data[1] != 0x16){
 			tryGetStateCounter++;
@@ -1076,13 +1071,8 @@ getState:
 	}
 
 
-//
-//	kl_debug_data(__FUNCTION__, 10, data);
-
-
-//	if (state == 0x16) {
 	if (data[1] == 0x16) {
-		DBG_INFO("getFrame()");
+		DBG_INFO("getFrame() - tryGetStateCounter: %2d", tryGetStateCounter);
 
 		/* getFrame in kl.py */
 		ret =
@@ -1096,13 +1086,13 @@ getState:
 				    KL_LEN_GET_FRAME,
 				    KL_USB_CTRL_TIMEOUT);
 		if (ret < 0) {
-			printk("Error in getFrame Nr: %d\n", ret);
+			DBG_ERR("Error in getFrame Nr: %d", ret);
 			count = -EIO;
 			goto read_out;
 		}
 
 
-		kl_debug_data(__FUNCTION__, 0x111, rawdata);
+//		kl_debug_data(__FUNCTION__, 0x111, rawdata);
 
 		// generateResponse in kl.py
 		framelen	= (rawdata[1] << 8 | rawdata[2]) & 0x1ff;
@@ -1128,10 +1118,10 @@ getState:
 
 				// handleConfig in kl.py
 				cs = rawdata[127] | (rawdata[126] << 8);
-				DBG_INFO("handleGetConfig: cs = %02x", cs);
+//				DBG_INFO("handleGetConfig: cs = 0x%04x", cs);
 
 				// buildACKFrame in kl.py
-				kl_buildACKFrame(bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
+				kl_buildACKFrame(hw, bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
 
 				// setFrame in kl.py
 				setFramebuf[0] = KL_MSG_SET_FRAME;
@@ -1183,14 +1173,14 @@ getState:
 
 				// handleCurrentData in kl.py
 				cs = rawdata[9] | (rawdata[8] << 8);
-				DBG_INFO("handleCurrentData: cs = %02x", cs);
+//				DBG_INFO("handleCurrentData: cs = 0x%04x", cs);
 
 
 				// on first read
 				if(config_changed)
 				{
 					// buildACKFrame in kl.py
-					kl_buildACKFrame(bufferID, ACTION_GET_CONFIG, cs, frameAckBuf);
+					kl_buildACKFrame(hw, bufferID, ACTION_GET_CONFIG, cs, frameAckBuf);
 
 					// setFrame in kl.py
 					setFramebuf[0] = KL_MSG_SET_FRAME;
@@ -1207,7 +1197,7 @@ getState:
 				else
 				{
 					// buildACKFrame in kl.py
-					kl_buildACKFrame(bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
+					kl_buildACKFrame(hw, bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
 
 					// setFrame in kl.py
 					setFramebuf[0] = KL_MSG_SET_FRAME;
@@ -1254,8 +1244,6 @@ getState:
 				goto getState;
 
 
-				//ssleep(1);
-
 //				to_copy = 0x111;
 //				not_copied = copy_to_user(buffer, rawdata, to_copy);
 //				count = to_copy - not_copied;
@@ -1267,11 +1255,9 @@ getState:
 			{
 				DBG_INFO("RESPONSE_GET_HISTORY");
 
-				//len 0xe5
-
 				// handleCurrentData in kl.py
 				cs = rawdata[9] | (rawdata[8] << 8);
-				DBG_INFO("handleHistoryData: cs = %02x", cs);
+//				DBG_INFO("handleHistoryData: cs = 0x%04x", cs);
 
 				// bytes_to_addr
 				// index_to_addr
@@ -1281,19 +1267,21 @@ getState:
 				thisIndex =
 				    (((((rawdata[13] << 8) | rawdata[14]) << 8)
 				      | rawdata[15]) - 0x070000) / 32;
-				DBG_INFO("latestIndex: %d", latestIndex);
-				DBG_INFO("thisIndex  : %d", thisIndex);
+				DBG_INFO("latestIndex      : 0x%06x (%5d)", latestIndex, latestIndex);
+				DBG_INFO("thisIndex        : 0x%06x (%5d)", thisIndex, thisIndex);
 
 
-				klimaloggRecord = klimaloggRecord + 6;
-				haddr = 32 * (klimaloggRecord) + 0x070000;
-				DBG_INFO("haddr      : 0x%x", haddr);
-				DBG_INFO("klimaloggRecord (postInc) = %d", klimaloggRecord);
-
-				history_record_nr = history_record_nr + 6;
+				hw->history_record_nr += 6;
 
 				// buildACKFrame in kl.py
-				kl_buildACKFrame(bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
+				kl_buildACKFrame(hw, bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
+
+
+				DBG_INFO("history_record_nr: 0x%06x (%5d)", hw->history_record_nr, hw->history_record_nr);
+				DBG_INFO("history_addr     : 0x%06x", (frameAckBuf[8]  << 16) |
+								      (frameAckBuf[9]  <<  8) |
+								      (frameAckBuf[10] <<  0));
+
 
 				// setFrame in kl.py
 				setFramebuf[0] = KL_MSG_SET_FRAME;
@@ -1335,8 +1323,7 @@ getState:
 					DBG_ERR("Error in setTX Nr: %d", ret);
 				}
 
-				//ssleep(1);
-				nextSleepMs = 10;
+				nextSleepMs = 5;
 
 				to_copy = 0x111;
 				not_copied = copy_to_user(buffer, rawdata, to_copy);
@@ -1348,7 +1335,7 @@ getState:
 			}
 			else if (respType == RESPONSE_REQUEST)	// length: 0x7d (125)
 			{
-				DBG_INFO("RESPONSE_REQUEST (0x%x", rawdata[6]);
+				DBG_INFO("RESPONSE_REQUEST (0x%x)", rawdata[6]);
 			}
 			else
 			{
@@ -1363,7 +1350,6 @@ getState:
 
 
 
-//	ssleep(1);
 //
 //	to_copy = min((size_t) atomic_read(&bytes_available), count);
 //	not_copied = copy_to_user(buffer, resultBuf, to_copy);

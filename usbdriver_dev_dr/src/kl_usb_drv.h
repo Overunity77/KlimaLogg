@@ -10,6 +10,17 @@
 #define __KL_USB_DRV_H__
 
 
+/* Logger ID's */
+#define LOGGER_1   0
+#define LOGGER_2   1
+#define LOGGER_3   2
+#define LOGGER_4   3
+#define LOGGER_5   4
+#define LOGGER_6   5
+#define LOGGER_7   6
+#define LOGGER_8   7
+#define LOGGER_9   8
+#define LOGGER_10  9
 
 /* RF Frequency */
 #define KL_FREQUENCY_EU			868300000	/* 868.3 MHz */
@@ -349,6 +360,8 @@ struct kl_usb {
 	int			open_count;
 	char 			serial_number[8];
 	unsigned int		transceiver_id;
+	unsigned char           logger_id;	/* LOGGER_1 .. LOGGER_10 */
+	int 			history_record_nr;
 
 };
 
