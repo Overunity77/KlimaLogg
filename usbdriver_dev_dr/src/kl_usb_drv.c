@@ -475,7 +475,7 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	hw->rf_setup_buffers.buf_execute[0] = 0xd9;
+	hw->rf_setup_buffers.buf_execute[0] = KL_MSG_EXECUTE;
 	hw->rf_setup_buffers.buf_execute[1] = 0x05;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_EXECUTE,
@@ -495,7 +495,7 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	hw->rf_setup_buffers.buf_preamble_first[0] = 0xd8;
+	hw->rf_setup_buffers.buf_preamble_first[0] = KL_MSG_SET_PREAMBLE_PATTERN;
 	hw->rf_setup_buffers.buf_preamble_first[1] = 0xaa;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_PREAMBLE_PATTERN,
@@ -515,7 +515,7 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	hw->rf_setup_buffers.buf_setstate_first[0] = 0xd7;
+	hw->rf_setup_buffers.buf_setstate_first[0] = KL_MSG_SET_STATE;
 	hw->rf_setup_buffers.buf_setstate_first[1] = 0x00;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_STATE,
@@ -537,7 +537,7 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	hw->rf_setup_buffers.buf_setRx_first[0] = 0xd0;
+	hw->rf_setup_buffers.buf_setRx_first[0] = KL_MSG_SET_RX;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_RX,
 		       KL_LEN_SET_RX,
@@ -556,7 +556,7 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	hw->rf_setup_buffers.buf_preamble_second[0] = 0xd8;
+	hw->rf_setup_buffers.buf_preamble_second[0] = KL_MSG_SET_PREAMBLE_PATTERN;
 	hw->rf_setup_buffers.buf_preamble_second[1] = 0xaa;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_PREAMBLE_PATTERN,
@@ -576,7 +576,7 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	hw->rf_setup_buffers.buf_setstate_second[0] = 0xd7;
+	hw->rf_setup_buffers.buf_setstate_second[0] = KL_MSG_SET_STATE;
 	hw->rf_setup_buffers.buf_setstate_second[1] = 0x1e;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_STATE,
@@ -598,7 +598,7 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	hw->rf_setup_buffers.buf_setRx_second[0] = 0xd0;
+	hw->rf_setup_buffers.buf_setRx_second[0] = KL_MSG_SET_RX;
 	ret = write_usb_ctrl(hw,
 		       KL_MSG_SET_RX,
 		       KL_LEN_SET_RX,
@@ -736,7 +736,7 @@ static int setup_klusb(struct kl_usb *hw)
 	hw->ctrl_urb->context = hw;
 
 	/* set default history record number to begin with reading */
-	hw->history_record_nr = 0;
+	hw->history_record_nr = 694;
 
 	/* set default Logger ID */
 	hw->logger_id = LOGGER_1;
@@ -963,7 +963,7 @@ static atomic_t bytes_available = ATOMIC_INIT(0);
 int nextSleepMs = 5;
 bool config_changed = false;
 
-static void kl_buildACKFrame(struct kl_usb *hw, int deviceID, unsigned char action, int cs, unsigned char* framebuf)
+static void kl_buildACKFrame(struct kl_usb *hw, int deviceID, int checksum, unsigned char action, unsigned char *framebuf)
 {
 	int history_addr;
 
@@ -980,15 +980,90 @@ static void kl_buildACKFrame(struct kl_usb *hw, int deviceID, unsigned char acti
 	framebuf[1]  = (deviceID >> 0) & 0xff;
 	framebuf[2]  = hw->logger_id;
 	framebuf[3]  = action & 0x0f;
-	framebuf[4]  = (cs >> 8) & 0xff;
-	framebuf[5]  = (cs >> 8) & 0xff;
+	framebuf[4]  = (checksum >> 8) & 0xff;
+	framebuf[5]  = (checksum >> 8) & 0xff;
 	framebuf[6]  = 0x80;	// TODO: not known what this means
 	framebuf[7]  = KL_COMM_INT & 0xff;
 	framebuf[8]  = (history_addr >> 16) & 0xff;
 	framebuf[9]  = (history_addr >>  8) & 0xff;
 	framebuf[10] = (history_addr >>  0) & 0xff;
 
+//	DBG_INFO("history_addr     : 0x%06x", (framebuf[8]  << 16) |
+//					      (framebuf[9]  <<  8) |
+//					      (framebuf[10] <<  0));
+
 }
+
+static int kl_msg_setFrame(struct kl_usb *hw, int deviceID, int checksum, unsigned char action)
+{
+	int i, ret;
+	unsigned char *frameAckBuf;
+	unsigned char *setFramebuf;
+
+	frameAckBuf = kcalloc(11, 1, GFP_KERNEL);
+	if(!frameAckBuf) {
+		return -ENOMEM;
+	}
+
+	setFramebuf = kcalloc(KL_LEN_SET_FRAME, 1, GFP_KERNEL);
+	if(!frameAckBuf) {
+		kfree(frameAckBuf);
+		return -ENOMEM;
+	}
+
+	/* buildACKFrame in kl.py */
+	kl_buildACKFrame(hw, deviceID, checksum, action, frameAckBuf);
+
+	setFramebuf[0] = KL_MSG_SET_FRAME;
+	setFramebuf[1] = 0x00;
+	setFramebuf[2] = 11;	// message length (starting with next byte)
+	for(i = 0; i < 11; i++)
+	{
+		setFramebuf[i+3] = frameAckBuf[i];
+	}
+
+	/* if successful, returns the number of bytes transferred */
+	ret = usb_control_msg(hw->dev,
+			      usb_sndctrlpipe(hw->dev, 0),
+			      USB_REQ_SET_CONFIGURATION,
+			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
+			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_FRAME,
+			      0,
+			      setFramebuf,
+			      KL_LEN_SET_FRAME,
+			      KL_USB_CTRL_TIMEOUT);
+
+	kfree(frameAckBuf);
+	kfree(setFramebuf);
+	return ret;
+}
+
+static int kl_msg_setTX(struct kl_usb *hw)
+{
+	int ret;
+	unsigned char *setTXbuf = kcalloc(KL_LEN_SET_TX, 1, GFP_KERNEL);
+
+	if(!setTXbuf) {
+		return -ENOMEM;
+	}
+
+	setTXbuf[0] = KL_MSG_SET_TX;
+
+	/* if successful, returns the number of bytes transferred */
+	ret = usb_control_msg(hw->dev,
+			      usb_sndctrlpipe(hw->dev, 0),
+			      USB_REQ_SET_CONFIGURATION,
+			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
+			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_TX,
+			      0,
+			      setTXbuf,
+			      KL_LEN_SET_TX,
+			      KL_USB_CTRL_TIMEOUT);
+
+	kfree(setTXbuf);
+	return ret;
+}
+
 
 
 /* Entspricht getState aus kl.py */
@@ -1021,9 +1096,9 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	unsigned char *data = kcalloc(10, 1, GFP_KERNEL);
 
 	unsigned char *rawdata = kcalloc(0x111, 1, GFP_KERNEL);
-	unsigned char *setFramebuf = kcalloc(0x111, 1, GFP_KERNEL);
-	unsigned char *frameAckBuf = kcalloc(0x0b, 1, GFP_KERNEL);
-	unsigned char *setTXbuf = kcalloc(0x15, 1, GFP_KERNEL);
+//	unsigned char *setFramebuf = kcalloc(0x111, 1, GFP_KERNEL);
+//	unsigned char *frameAckBuf = kcalloc(0x0b, 1, GFP_KERNEL);
+//	unsigned char *setTXbuf = kcalloc(0x15, 1, GFP_KERNEL);
 
 	unsigned char *resultBuf = kcalloc(128, 1, GFP_KERNEL);
 
@@ -1035,7 +1110,7 @@ static ssize_t kl_read(struct file *instanz, char *buffer,
 	DBG_INFO("*** read called (count=%ld) ***",count);
 
 
-	if (!retBuf || !data || !rawdata || !setFramebuf || !setTXbuf || !resultBuf) {
+	if (!retBuf || !data || !rawdata || !resultBuf) {
 		DBG_ERR("no memory\n");
 		count = -ENOMEM;
 		goto read_out;
@@ -1065,6 +1140,9 @@ getState:
 	// try for about 1 second to get connection state == 0x16
 	while(tryGetStateCounter < 100)
 	{
+		/* getState in kl.py */
+
+		/* if successful, returns the number of bytes transferred */
 		ret =
 		    usb_control_msg(hw->dev,
 				    usb_rcvctrlpipe(hw->dev, 0),
@@ -1101,6 +1179,8 @@ getState:
 		DBG_INFO("getFrame() - tryGetStateCounter: %2d", tryGetStateCounter);
 
 		/* getFrame in kl.py */
+
+		/* if successful, returns the number of bytes transferred */
 		ret =
 		    usb_control_msg(hw->dev,
 				    usb_rcvctrlpipe(hw->dev, 0),
@@ -1142,49 +1222,22 @@ getState:
 			{
 				DBG_INFO("RESPONSE_GET_CONFIG");
 
-				// handleConfig in kl.py
+				/* handleConfig in kl.py */
 				cs = rawdata[127] | (rawdata[126] << 8);
 //				DBG_INFO("handleGetConfig: cs = 0x%04x", cs);
 
-				// buildACKFrame in kl.py
-				kl_buildACKFrame(hw, bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
+				/* setFrame in kl.py */
+				ret = kl_msg_setFrame(hw, bufferID, cs, ACTION_GET_HISTORY);
 
-				// setFrame in kl.py
-				setFramebuf[0] = KL_MSG_SET_FRAME;
-				setFramebuf[1] = 0x00;
-				setFramebuf[2] = 11;	// message length (starting with next byte)
-				for(i = 0; i < 11; i++)
-				{
-					setFramebuf[i+3] = frameAckBuf[i];
-				}
-
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
-						    (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_FRAME,
-						    0,
-						    setFramebuf,
-						    KL_LEN_SET_FRAME,
-						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
 					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
 					goto read_out;
 				}
 
-				//  setTX in kl.py
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
-						    (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_TX,
-						    0,
-						    setTXbuf,
-						    KL_LEN_SET_TX,
-						    KL_USB_CTRL_TIMEOUT);
+				/*  setTX in kl.py */
+				ret = kl_msg_setTX(hw);
+
 				if (ret < 0) {
 					DBG_ERR("setTx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
@@ -1200,7 +1253,7 @@ getState:
 			{
 				DBG_INFO("RESPONSE_GET_CURRENT");
 
-				// handleCurrentData in kl.py
+				/* handleCurrentData in kl.py */
 				cs = rawdata[9] | (rawdata[8] << 8);
 //				DBG_INFO("handleCurrentData: cs = 0x%04x", cs);
 
@@ -1208,16 +1261,14 @@ getState:
 				// on first read
 				if(config_changed)
 				{
-					// buildACKFrame in kl.py
-					kl_buildACKFrame(hw, bufferID, ACTION_GET_CONFIG, cs, frameAckBuf);
 
-					// setFrame in kl.py
-					setFramebuf[0] = KL_MSG_SET_FRAME;
-					setFramebuf[1] = 0x00;
-					setFramebuf[2] = 11;	// message length (starting with next byte)
-					for(i = 0; i < 11; i++)
-					{
-						setFramebuf[i+3] = frameAckBuf[i];
+					/* setFrame in kl.py */
+					ret = kl_msg_setFrame(hw, bufferID, cs, ACTION_GET_CONFIG);
+
+					if (ret < 0) {
+						DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+						count = -EIO;
+						goto read_out;
 					}
 
 					nextSleepMs = 10;
@@ -1225,48 +1276,21 @@ getState:
 				}
 				else
 				{
-					// buildACKFrame in kl.py
-					kl_buildACKFrame(hw, bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
+					/* setFrame in kl.py */
+					ret = kl_msg_setFrame(hw, bufferID, cs, ACTION_GET_HISTORY);
 
-					// setFrame in kl.py
-					setFramebuf[0] = KL_MSG_SET_FRAME;
-					setFramebuf[1] = 0x00;
-					setFramebuf[2] = 11;	// message length (starting with next byte)
-					for(i = 0; i < 11; i++)
-					{
-						setFramebuf[i+3] = frameAckBuf[i];
+					if (ret < 0) {
+						DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+						count = -EIO;
+						goto read_out;
 					}
+
 					nextSleepMs = 10;
 				}
 
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
-						    (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_FRAME,
-						    0,
-						    setFramebuf,
-						    KL_LEN_SET_FRAME,
-						    KL_USB_CTRL_TIMEOUT);
-				if (ret < 0) {
-					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
-					count = -EIO;
-					goto read_out;
-				}
+				/* setTX in kl.py */
+				ret = kl_msg_setTX(hw);
 
-
-				//  setTX in kl.py
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
-						    (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_TX,
-						    0,
-						    setTXbuf,
-						    KL_LEN_SET_TX,
-						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
 					DBG_ERR("setTX() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
@@ -1287,7 +1311,7 @@ getState:
 			{
 				DBG_INFO("RESPONSE_GET_HISTORY");
 
-				// handleCurrentData in kl.py
+				/* handleHistoryData in kl.py */
 				cs = rawdata[9] | (rawdata[8] << 8);
 //				DBG_INFO("handleHistoryData: cs = 0x%04x", cs);
 
@@ -1299,58 +1323,26 @@ getState:
 				thisIndex =
 				    (((((rawdata[13] << 8) | rawdata[14]) << 8)
 				      | rawdata[15]) - 0x070000) / 32;
-				DBG_INFO("latestIndex      : 0x%06x (%5d)", latestIndex, latestIndex);
-				DBG_INFO("thisIndex        : 0x%06x (%5d)", thisIndex, thisIndex);
-
 
 				hw->history_record_nr += 6;
 
-				// buildACKFrame in kl.py
-				kl_buildACKFrame(hw, bufferID, ACTION_GET_HISTORY, cs, frameAckBuf);
-
-
+				DBG_INFO("latestIndex      : 0x%06x (%5d)", latestIndex, latestIndex);
+				DBG_INFO("thisIndex        : 0x%06x (%5d)", thisIndex, thisIndex);
 				DBG_INFO("history_record_nr: 0x%06x (%5d)", hw->history_record_nr, hw->history_record_nr);
-				DBG_INFO("history_addr     : 0x%06x", (frameAckBuf[8]  << 16) |
-								      (frameAckBuf[9]  <<  8) |
-								      (frameAckBuf[10] <<  0));
 
 
-				// setFrame in kl.py
-				setFramebuf[0] = KL_MSG_SET_FRAME;
-				setFramebuf[1] = 0x00;
-				setFramebuf[2] = 11;	// message length (starting with next byte)
-				for(i = 0; i < 11; i++)
-				{
-					setFramebuf[i+3] = frameAckBuf[i];
-				}
+				/* setFrame in kl.py */
+				ret = kl_msg_setFrame(hw, bufferID, cs, ACTION_GET_HISTORY);
 
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
-						    (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_FRAME,
-						    0,
-						    setFramebuf,
-						    KL_LEN_SET_FRAME,
-						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
 					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
 					goto read_out;
 				}
 
-				//  setTX in kl.py
-				ret =
-				    usb_control_msg(hw->dev,
-						    usb_sndctrlpipe(hw->dev, 0),
-						    USB_REQ_SET_CONFIGURATION,
-						    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
-						    (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_TX,
-						    0,
-						    setTXbuf,
-						    KL_LEN_SET_TX,
-						    KL_USB_CTRL_TIMEOUT);
+				/* setTX in kl.py */
+				ret = kl_msg_setTX(hw);
+
 				if (ret < 0) {
 					DBG_ERR("setTX() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
@@ -1397,9 +1389,6 @@ getState:
 read_out:
 	mutex_unlock(&disconnect_mutex);	//TODO mutex destroy?
 	kfree(resultBuf);
-	kfree(setTXbuf);
-	kfree(setFramebuf);
-	kfree(frameAckBuf);
 	kfree(rawdata);
 	kfree(data);
 	kfree(retBuf);
