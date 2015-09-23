@@ -138,7 +138,7 @@ static void ctrl_start_transfer(struct kl_usb *hw)
 
 		ret = usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
 		if (ret)
-			DBG_ERR("failed to submit usb urb (%d)", ret);
+			DBG_ERR("failed to submit usb urb: %s (%d)", symbolic(urb_errlist, ret), ret);
 	}
 	else
 	{
@@ -224,7 +224,6 @@ static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data
 static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 {
 	struct usb_ctrl_buf *buf;
-	int ret = 0;
 
 	reg->buf = kcalloc(KL_LEN_WRITE_REG, 1, GFP_KERNEL); 	/* reg->buf will be de-allocated when the urb completes */
 
@@ -329,7 +328,7 @@ static void rx_int_complete(struct urb *urb)
 	int retval = 0;
 
 	if (urb->status) {
-		DBG_INFO("urb->status: %s (%d)", symbolic(urb_errlist, urb->status), urb->status);
+		DBG_WARN("urb->status: %s (%d)", symbolic(urb_errlist, urb->status), urb->status);
 		if (urb->status == -ENOENT ||
 		    urb->status == -ECONNRESET ||
 		    urb->status == -ESHUTDOWN) {
@@ -413,7 +412,7 @@ static int start_rx_int_transfer(struct kl_usb *hw)
 	retval = usb_submit_urb(hw->rx_int_urb, GFP_KERNEL);
 
 	if (retval) {
-		DBG_ERR("submitting rx interrupt urb failed (%d)", retval);
+		DBG_ERR("submitting rx interrupt urb failed: %s (%d)", symbolic(urb_errlist, retval), retval);
 		hw->rx_int_running = 0;
 		kfree(hw->rx_int_urb); // TODO check for release on driver exit
 		return retval;
@@ -438,17 +437,18 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 	DBG_INFO("write buffer:");
 	kl_debug_data(__FUNCTION__, KL_LEN_READ_CONFIG_FLASH_OUT, writebuf);
 
-
+	/* if successful, returns the number of bytes transferred */
 	ret = usb_control_msg(hw->dev, hw->ctrl_out_pipe, USB_REQ_SET_CONFIGURATION,
 			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
 			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_READ_CONFIG_FLASH_OUT,
 			      0, writebuf, KL_LEN_READ_CONFIG_FLASH_OUT, KL_USB_CTRL_TIMEOUT
 			     );
 	if (ret < 0) {
-		DBG_ERR("Could not prepare to read config flash");
+		DBG_ERR("could not prepare to read config flash: %s (%d)", symbolic(urb_errlist, ret), ret);
 		return ret;
 	}
 
+	/* if successful, returns the number of bytes transferred */
 	ret = usb_control_msg(hw->dev, hw->ctrl_out_pipe, USB_REQ_CLEAR_FEATURE,
 			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
 			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_READ_CONFIG_FLASH_IN,
@@ -456,11 +456,11 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 			     );
 
 	if (ret < 0) {
-		DBG_ERR("Could not read from config flash");
+		DBG_ERR("Could not read from config flash: %s (%d)", symbolic(urb_errlist, ret), ret);
 		return ret;
 	}
 
-	return ret;
+	return 0;
 }
 
 static int doRfSetup(struct kl_usb *hw)
@@ -469,8 +469,11 @@ static int doRfSetup(struct kl_usb *hw)
 
 	/* execute(5) */
 	hw->rf_setup_buffers.buf_execute = kcalloc(KL_LEN_EXECUTE, 1, GFP_KERNEL);
-	if (!hw->rf_setup_buffers.buf_execute)
-		return -ENOMEM;
+	if (!hw->rf_setup_buffers.buf_execute) {
+		ret = -ENOMEM;
+		DBG_ERR("execute(5) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
+	}
 
 	hw->rf_setup_buffers.buf_execute[0] = 0xd9;
 	hw->rf_setup_buffers.buf_execute[1] = 0x05;
@@ -480,14 +483,17 @@ static int doRfSetup(struct kl_usb *hw)
 		       hw->rf_setup_buffers.buf_execute);
 
 	if (ret < 0) {
-		printk("Error execute(5): %d\n", ret);
-		return ret;
+		DBG_ERR("execute(5) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
 	}
 
 	/* setPreamblePattern(0xaa) */
 	hw->rf_setup_buffers.buf_preamble_first = kcalloc(KL_LEN_SET_PREAMBLE_PATTERN, 1, GFP_KERNEL);
-	if (!hw->rf_setup_buffers.buf_preamble_first)
-		return -ENOMEM;
+	if (!hw->rf_setup_buffers.buf_preamble_first) {
+		ret = -ENOMEM;
+		DBG_ERR("first setPreamblePattern(0xaa) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
+	}
 
 	hw->rf_setup_buffers.buf_preamble_first[0] = 0xd8;
 	hw->rf_setup_buffers.buf_preamble_first[1] = 0xaa;
@@ -497,14 +503,17 @@ static int doRfSetup(struct kl_usb *hw)
 		       hw->rf_setup_buffers.buf_preamble_first);
 
 	if (ret < 0) {
-		printk("Error setPreamblePattern(0xaa): %d\n", ret);
-		return ret;
+		DBG_ERR("first setPreamblePattern(0xaa) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
 	}
 
 	/* setState(0) */
 	hw->rf_setup_buffers.buf_setstate_first = kcalloc(KL_LEN_SET_STATE, 1, GFP_KERNEL);
-	if (!hw->rf_setup_buffers.buf_setstate_first)
-		return -ENOMEM;
+	if (!hw->rf_setup_buffers.buf_setstate_first) {
+		ret = -ENOMEM;
+		DBG_ERR("first setState(0) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
+	}
 
 	hw->rf_setup_buffers.buf_setstate_first[0] = 0xd7;
 	hw->rf_setup_buffers.buf_setstate_first[1] = 0x00;
@@ -514,17 +523,19 @@ static int doRfSetup(struct kl_usb *hw)
 		       hw->rf_setup_buffers.buf_setstate_first);
 
 	if (ret < 0) {
-		printk("Error setState(0): %d\n", ret);
-		return ret;
+		DBG_ERR("first setState(0) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
 	}
 
-	// TODO sleep(1) ???
 	msleep(1000);
 
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_first = kcalloc(KL_LEN_SET_RX, 1, GFP_KERNEL);
-	if (!hw->rf_setup_buffers.buf_setRx_first)
-		return -ENOMEM;
+	if (!hw->rf_setup_buffers.buf_setRx_first) {
+		ret = -ENOMEM;
+		DBG_ERR("first setRx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
+	}
 
 	hw->rf_setup_buffers.buf_setRx_first[0] = 0xd0;
 	ret = write_usb_ctrl(hw,
@@ -533,14 +544,17 @@ static int doRfSetup(struct kl_usb *hw)
 		       hw->rf_setup_buffers.buf_setRx_first);
 
 	if (ret < 0) {
-		printk("Error setRx(): %d\n", ret);
-		return ret;
+		DBG_ERR("first setRx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
 	}
 
 	/* setPreamblePattern(0xaa) */
 	hw->rf_setup_buffers.buf_preamble_second = kcalloc(KL_LEN_SET_PREAMBLE_PATTERN, 1, GFP_KERNEL);
-	if (!hw->rf_setup_buffers.buf_preamble_second)
-		return -ENOMEM;
+	if (!hw->rf_setup_buffers.buf_preamble_second) {
+		ret = -ENOMEM;
+		DBG_ERR("second setPreamblePattern(0xaa) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
+	}
 
 	hw->rf_setup_buffers.buf_preamble_second[0] = 0xd8;
 	hw->rf_setup_buffers.buf_preamble_second[1] = 0xaa;
@@ -550,14 +564,17 @@ static int doRfSetup(struct kl_usb *hw)
 		       hw->rf_setup_buffers.buf_preamble_second);
 
 	if (ret < 0) {
-		printk("Error setPreamblePattern(0xaa): %d\n", ret);
-		return ret;
+		DBG_ERR("second setPreamblePattern(0xaa) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
 	}
 
 	/* setState(0x1e) */
 	hw->rf_setup_buffers.buf_setstate_second = kcalloc(KL_LEN_SET_STATE, 1, GFP_KERNEL);
-	if (!hw->rf_setup_buffers.buf_setstate_second)
-		return -ENOMEM;
+	if (!hw->rf_setup_buffers.buf_setstate_second) {
+		ret = -ENOMEM;
+		DBG_ERR("second setState(0x1e) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
+	}
 
 	hw->rf_setup_buffers.buf_setstate_second[0] = 0xd7;
 	hw->rf_setup_buffers.buf_setstate_second[1] = 0x1e;
@@ -567,17 +584,19 @@ static int doRfSetup(struct kl_usb *hw)
 		       hw->rf_setup_buffers.buf_setstate_second);
 
 	if (ret < 0) {
-		printk("Error setState(0x1e): %d\n", ret);
-		return ret;
+		DBG_ERR("second setState(0x1e) failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
 	}
 
-	// TODO sleep(1) ???
 	msleep(1000);
 
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_second = kcalloc(KL_LEN_SET_RX, 1, GFP_KERNEL);
-	if (!hw->rf_setup_buffers.buf_setRx_second)
-		return -ENOMEM;
+	if (!hw->rf_setup_buffers.buf_setRx_second) {
+		ret = -ENOMEM;
+		DBG_ERR("second setRx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
+	}
 
 	hw->rf_setup_buffers.buf_setRx_second[0] = 0xd0;
 	ret = write_usb_ctrl(hw,
@@ -586,11 +605,12 @@ static int doRfSetup(struct kl_usb *hw)
 		       hw->rf_setup_buffers.buf_setRx_second);
 
 	if (ret < 0) {
-		printk("Error setRx(): %d\n", ret);
-		return ret;
+		DBG_ERR("second setRx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		goto out;
 	}
 
-	return 0;
+out:
+	return ret;
 }
 
 static void setRegisterValue(__u8 addr, int value)
@@ -625,7 +645,10 @@ static int initTranseiver(struct kl_usb *hw)
 	freqCorrection.readBuf = readbuf;
 
 	ret = readConfigFlash(hw, &freqCorrection);
-
+	if(ret) {
+		DBG_ERR("read frequency correction failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		return ret;
+	}
 	DBG_INFO("freqCorrection read buffer:");
 	kl_debug_data(__FUNCTION__, freqCorrection.buflen, freqCorrection.readBuf);
 
@@ -636,14 +659,14 @@ static int initTranseiver(struct kl_usb *hw)
 	corVal <<= 8;
 	corVal |= freqCorrection.readBuf[7];
 
-	DBG_INFO("frequency correction: %u (0x%x)", corVal, corVal);
+	DBG_INFO("frequency correction: %u (0x%08x)", corVal, corVal);
 
 	freqVal = KL_FREQ_VAL + corVal;
 
 	if (!(freqVal % 2))
 		freqVal += 1;
 
-	DBG_INFO("adjusted frequency: %u (0x%x)", freqVal, freqVal);
+	DBG_INFO("adjusted frequency: %u (0x%08x)", freqVal, freqVal);
 
 
 	/* save adjusted frequency in ax5051 register data */
@@ -658,13 +681,16 @@ static int initTranseiver(struct kl_usb *hw)
 	transceiverId.readBuf = readbuf;
 
 	ret = readConfigFlash(hw, &transceiverId);
-
+	if(ret) {
+		DBG_ERR("read transceiver identifier failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		return ret;
+	}
 	DBG_INFO("transceiverId read buffer:");
 	kl_debug_data(__FUNCTION__, transceiverId.buflen, transceiverId.readBuf);
 
 	hw->transceiver_id = (transceiverId.readBuf[9] << 8) + transceiverId.readBuf[10];
 
-	DBG_INFO("transceiver identifier: %u (0x%x)", hw->transceiver_id, hw->transceiver_id);
+	DBG_INFO("transceiver identifier: %u (0x%04x)", hw->transceiver_id, hw->transceiver_id);
 
 	/* write ax5051 registers */
 	countReg = sizeof(ax5051_reglist) / sizeof(ax5051_reglist[0]);
@@ -676,14 +702,14 @@ static int initTranseiver(struct kl_usb *hw)
 			// kl_debug_data(__FUNCTION__, 5, ax5051_reglist[i].buf);
 			ret = write_reg(hw, &ax5051_reglist[i]);
 			if (ret) {
-				DBG_ERR("write_reg failed!");
+				DBG_ERR("write_reg(addr: 0x%02hhx, value: 0x%02x) failed: %s (%d)",
+					ax5051_reglist[i].addr,
+					ax5051_reglist[i].value,
+					symbolic(urb_errlist, ret), ret);
 				return ret;
 			}
-
-			// msleep(10);
 			// kl_debug_data(__FUNCTION__, 5, ax5051_reglist[i].buf);
 		}
-
 	}
 
 	/* do RF Setup */
@@ -1051,7 +1077,7 @@ getState:
 				    KL_USB_CTRL_TIMEOUT);
 
 		if (ret < 0) {
-			DBG_ERR("Error read Nr: %d", ret);
+			DBG_ERR("getState() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 			count = -EIO;
 			goto read_out;
 		}
@@ -1086,7 +1112,7 @@ getState:
 				    KL_LEN_GET_FRAME,
 				    KL_USB_CTRL_TIMEOUT);
 		if (ret < 0) {
-			DBG_ERR("Error in getFrame Nr: %d", ret);
+			DBG_ERR("getFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 			count = -EIO;
 			goto read_out;
 		}
@@ -1143,7 +1169,9 @@ getState:
 						    KL_LEN_SET_FRAME,
 						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
-					DBG_ERR("Error in setFrame Nr: %d", ret);
+					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto read_out;
 				}
 
 				//  setTX in kl.py
@@ -1158,9 +1186,10 @@ getState:
 						    KL_LEN_SET_TX,
 						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
-					DBG_ERR("Error in setTX Nr: %d", ret);
+					DBG_ERR("setTx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto read_out;
 				}
-
 
 				nextSleepMs = 10;
 				goto getState;
@@ -1221,7 +1250,9 @@ getState:
 						    KL_LEN_SET_FRAME,
 						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
-					DBG_ERR("Error in setFrame Nr: %d", ret);
+					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto read_out;
 				}
 
 
@@ -1237,9 +1268,10 @@ getState:
 						    KL_LEN_SET_TX,
 						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
-					DBG_ERR("Error in setTX Nr: %d", ret);
+					DBG_ERR("setTX() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto read_out;
 				}
-
 
 				goto getState;
 
@@ -1303,10 +1335,10 @@ getState:
 						    KL_LEN_SET_FRAME,
 						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
-					DBG_ERR("Error in setFrame Nr: %d", ret);
+					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto read_out;
 				}
-
-
 
 				//  setTX in kl.py
 				ret =
@@ -1320,7 +1352,9 @@ getState:
 						    KL_LEN_SET_TX,
 						    KL_USB_CTRL_TIMEOUT);
 				if (ret < 0) {
-					DBG_ERR("Error in setTX Nr: %d", ret);
+					DBG_ERR("setTX() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto read_out;
 				}
 
 				nextSleepMs = 5;
@@ -1344,7 +1378,7 @@ getState:
 		}
 	} else
 	{
-		count = -200;
+		count = -200;	/* Press USB button error code */
 		goto read_out;
 	}
 
