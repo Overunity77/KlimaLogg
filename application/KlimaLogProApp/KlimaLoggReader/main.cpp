@@ -54,15 +54,15 @@ int main(int argc, char *argv[])
 
 //    usleep(75000);
 
-    int index = 2147483647;
+    //int index = 2147483647;
+    //int index = 51182;
+    int index = -1;
 
     retValue = (int) fwrite(&index, sizeof(int), 1, fd_klimalogg);
 
-    qDebug() << QString("written %1 integer to driver").arg(retValue);
+    qDebug() << QString("written %1 bytes to driver, retValue: %2").arg(sizeof(int)).arg(retValue);
 
-
-
-
+    retValue = 0;
 
 //            dataSize = file.read(buf, bufSize);
 
@@ -76,11 +76,17 @@ int main(int argc, char *argv[])
 
            retValue = (int)fread(buf, 1, 0x111, fd_klimalogg);
 
-           if(retValue <= 0)
+           if(retValue < 0)
            {
                qDebug() << QString("could not read from file (%1), errno: %2").arg(retValue).arg(errno);
                //usleep(1000000);
                //usleep(75000);
+               continue;
+           }
+           else if(retValue == 0)
+           {
+               qDebug() << QString("no new history data available (%1), errno: %2").arg(retValue).arg(errno);
+               usleep(1000000);
                continue;
            }
            else

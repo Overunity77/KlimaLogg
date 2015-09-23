@@ -426,8 +426,10 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 	__u8 writebuf[KL_LEN_READ_CONFIG_FLASH_OUT];
 	int i;
 
-	for (i = 0; i < KL_LEN_READ_CONFIG_FLASH_OUT; i++)
-		writebuf[i] = 0xcc;
+	memset(&writebuf, 0xcc, sizeof(writebuf));
+
+//	for (i = 0; i < KL_LEN_READ_CONFIG_FLASH_OUT; i++)
+//		writebuf[i] = 0xcc;
 
 	writebuf[0]  = 0xdd;
 	writebuf[1]  = 0x0a;
@@ -736,10 +738,14 @@ static int setup_klusb(struct kl_usb *hw)
 	hw->ctrl_urb->context = hw;
 
 	/* set default history record number to begin with reading */
-	hw->history_record_nr = 694;
+	hw->history_record_nr = -1;
 
 	/* set default Logger ID */
 	hw->logger_id = LOGGER_1;
+
+	hw->nextSleepMs = 5;
+	hw->config_changed = false;
+	hw->last_sent_history_record_nr = -1;
 
 	retval = initTranseiver(hw);
 	return retval;
@@ -861,7 +867,7 @@ exit:
 }
 
 static ssize_t kl_write(struct file *file, const char __user *user_buf,
-		size_t count, loff_t *ppos)
+			size_t count, loff_t *ppos)
 {
 
 	struct kl_usb *hw = NULL;
@@ -919,6 +925,15 @@ static ssize_t kl_write(struct file *file, const char __user *user_buf,
 
 	DBG_INFO("received value: %d", value);
 
+	if(value >= KL_MAX_RECORD)
+	{
+		retval = -EOVERFLOW;
+		goto unlock_exit;
+	}
+	else
+	{
+		hw->history_record_nr = value;
+	}
 
 
 unlock_exit:
@@ -928,40 +943,6 @@ exit:
 	return retval;
 }
 
-
-#define RESPONSE_DATA_WRITTEN  0x10
-#define RESPONSE_GET_CONFIG  0x20
-#define RESPONSE_GET_CURRENT  0x30
-#define RESPONSE_GET_HISTORY  0x40
-#define RESPONSE_REQUEST  0x50
-#define RESPONSE_REQ_READ_HISTORY  0x50
-#define RESPONSE_REQ_FIRST_CONFIG  0x51
-#define RESPONSE_REQ_SET_CONFIG  0x52
-#define RESPONSE_REQ_SET_TIME  0x53
-
-#define ACTION_GET_HISTORY   0x00
-#define ACTION_REQ_SET_TIME   0x01
-#define ACTION_REQ_SET_CONFIG   0x02
-#define ACTION_GET_CONFIG   0x03
-#define ACTION_GET_CURRENT   0x04
-#define ACTION_SEND_CONFIG   0x20
-#define ACTION_SEND_TIME   0x60
-
-
-
-/* defined in dezi Grad Celsius */
-#define TEMPERATURE_OFFSET 400
-
-//static DEFINE_MUTEX(ulock);
-
-static atomic_t bytes_available = ATOMIC_INIT(0);
-
-
-#define KL_MAX_RECORD 	51200
-#define KL_COMM_INT	8
-
-int nextSleepMs = 5;
-bool config_changed = false;
 
 static void kl_buildACKFrame(struct kl_usb *hw, int deviceID, int checksum, unsigned char action, unsigned char *framebuf)
 {
@@ -1065,62 +1046,59 @@ static int kl_msg_setTX(struct kl_usb *hw)
 }
 
 
+static void setNextHistoryRecordNr(struct kl_usb *hw, int receivedIndex)
+{
+	if(hw->history_record_nr < 0)
+		hw->history_record_nr = receivedIndex;
+	else
+		hw->history_record_nr += 6;
 
-/* Entspricht getState aus kl.py */
-static ssize_t kl_read(struct file *instanz, char *buffer,
-			     size_t count, loff_t * ofs)
+	if(hw->history_record_nr >= KL_MAX_RECORD)
+		hw->history_record_nr = 0;
+}
+
+static ssize_t kl_read(struct file *file, char *buffer,
+		       size_t count, loff_t * ppos)
 {
 	/* read syscall */
-
-	int tryGetStateCounter;
-
-
-	size_t to_copy, not_copied;
-
-
-	int ret;
-	int nbytes;
-	int i;
-	int framelen;
-	int bufferID;
-	int loggerID;
-	int respType;
-	int signalQuality;
-	int cs;
-	int haddr;
-	int latestIndex;
-	int thisIndex;
-
-
-	unsigned char *retBuf = kcalloc(0x131, 1, GFP_KERNEL);
-	unsigned char *data = kcalloc(10, 1, GFP_KERNEL);
-
-	unsigned char *rawdata = kcalloc(0x111, 1, GFP_KERNEL);
-//	unsigned char *setFramebuf = kcalloc(0x111, 1, GFP_KERNEL);
-//	unsigned char *frameAckBuf = kcalloc(0x0b, 1, GFP_KERNEL);
-//	unsigned char *setTXbuf = kcalloc(0x15, 1, GFP_KERNEL);
-
-	unsigned char *resultBuf = kcalloc(128, 1, GFP_KERNEL);
-
+	int 		ret;
+	int 		tryGetStateCounter;
+	int 		framelen;
+	int 		bufferID;
+	int 		loggerID;
+	int 		respType;
+	int 		signalQuality;
+	int 		cs;
+	int 		latestIndex;
+	int 		thisIndex;
+	size_t 		to_copy, not_copied;
+	unsigned char	*getStateBuf;
+	unsigned char	*rawdata;
 	struct kl_usb *hw = NULL;
-	ssize_t retval = 0;
-
-	int state;
 
 	DBG_INFO("*** read called (count=%ld) ***",count);
 
 
-	if (!retBuf || !data || !rawdata || !resultBuf) {
+	//TODO check size of user-space buffer
+
+	getStateBuf = kcalloc(KL_LEN_GET_STATE, 1, GFP_KERNEL);
+	if(!getStateBuf) {
 		DBG_ERR("no memory\n");
-		count = -ENOMEM;
-		goto read_out;
+		return -ENOMEM;
+	}
+
+	rawdata = kcalloc(KL_LEN_GET_FRAME, 1, GFP_KERNEL);
+	if (!rawdata) {
+		DBG_ERR("no memory\n");
+		kfree(getStateBuf);
+		return -ENOMEM;
 	}
 
 
 //	DBG_INFO("read command, read by \"%s\" (pid %i), size=%lu",
 //			current->comm, current->pid, (unsigned long ) count);
 
-	hw = (struct kl_usb *)instanz->private_data;
+	hw = (struct kl_usb *)file->private_data;
 
 	if (!hw) {
 		DBG_ERR("hw is NULL!");
@@ -1150,7 +1128,7 @@ getState:
 				    USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
 				    (USB_HID_FEATURE_REPORT << 8) | KL_MSG_GET_STATE,
 				    0,
-				    data,
+				    getStateBuf,
 				    KL_LEN_GET_STATE,
 				    KL_USB_CTRL_TIMEOUT);
 
@@ -1162,11 +1140,11 @@ getState:
 
 		// read logger state
 //		state = atomic_read(&hw->logger_state);
-//		DBG_INFO("INT state: 0x%x GetState: 0x%x tryGetStateCounter: %d", state, data[1], tryGetStateCounter);
+//		DBG_INFO("INT state: 0x%x GetState: 0x%x tryGetStateCounter: %d", state, getStateBuf[1], tryGetStateCounter);
 
-		if(data[1] != 0x16){
+		if(getStateBuf[1] != 0x16){
 			tryGetStateCounter++;
-			msleep(nextSleepMs);
+			msleep(hw->nextSleepMs);
 		}
 		else
 		{
@@ -1175,7 +1153,7 @@ getState:
 	}
 
 
-	if (data[1] == 0x16) {
+	if (getStateBuf[1] == 0x16) {
 		DBG_INFO("getFrame() - tryGetStateCounter: %2d", tryGetStateCounter);
 
 		/* getFrame in kl.py */
@@ -1217,6 +1195,8 @@ getState:
 			if (respType == RESPONSE_DATA_WRITTEN)		// length: 0x07 (7)
 			{
 				DBG_INFO("RESPONSE_DATA_WRITTEN");
+				hw->nextSleepMs = 10;
+				goto getState;
 			}
 			else if (respType == RESPONSE_GET_CONFIG)	// length: 0x7d (125)
 			{
@@ -1244,7 +1224,7 @@ getState:
 					goto read_out;
 				}
 
-				nextSleepMs = 10;
+				hw->nextSleepMs = 10;
 				goto getState;
 
 
@@ -1259,7 +1239,7 @@ getState:
 
 
 				// on first read
-				if(config_changed)
+				if(hw->config_changed)
 				{
 
 					/* setFrame in kl.py */
@@ -1271,8 +1251,8 @@ getState:
 						goto read_out;
 					}
 
-					nextSleepMs = 10;
-					config_changed = false;
+					hw->nextSleepMs = 10;
+					hw->config_changed = false;
 				}
 				else
 				{
@@ -1285,7 +1265,7 @@ getState:
 						goto read_out;
 					}
 
-					nextSleepMs = 10;
+					hw->nextSleepMs = 10;
 				}
 
 				/* setTX in kl.py */
@@ -1324,11 +1304,14 @@ getState:
 				    (((((rawdata[13] << 8) | rawdata[14]) << 8)
 				      | rawdata[15]) - 0x070000) / 32;
 
-				hw->history_record_nr += 6;
 
 				DBG_INFO("latestIndex      : 0x%06x (%5d)", latestIndex, latestIndex);
 				DBG_INFO("thisIndex        : 0x%06x (%5d)", thisIndex, thisIndex);
 				DBG_INFO("history_record_nr: 0x%06x (%5d)", hw->history_record_nr, hw->history_record_nr);
+
+
+				if(latestIndex != thisIndex)
+					setNextHistoryRecordNr(hw, thisIndex);
 
 
 				/* setFrame in kl.py */
@@ -1349,23 +1332,53 @@ getState:
 					goto read_out;
 				}
 
-				nextSleepMs = 5;
+				hw->nextSleepMs = 5;
 
-				to_copy = 0x111;
-				not_copied = copy_to_user(buffer, rawdata, to_copy);
-				count = to_copy - not_copied;
-
-				DBG_INFO("copied %4ld bytes to user-space", count);
-
+				if(latestIndex != thisIndex)
+				{
+					to_copy = KL_LEN_GET_FRAME;
+					not_copied = copy_to_user(buffer, rawdata, to_copy);
+					count = to_copy - not_copied;
+					if(count)
+					{
+						hw->last_sent_history_record_nr = thisIndex;
+					}
+					DBG_INFO("copied %4ld bytes to user-space", count);
+				}
+				else
+				{
+					// TODO try latestIndex
+					if(thisIndex != hw->last_sent_history_record_nr)
+					{
+						to_copy = KL_LEN_GET_FRAME;
+						not_copied = copy_to_user(buffer, rawdata, to_copy);
+						count = to_copy - not_copied;
+						if(count)
+						{
+							hw->last_sent_history_record_nr = thisIndex;
+						}
+						DBG_INFO("copied %4ld bytes to user-space", count);
+					}
+					else
+					{
+						DBG_INFO("No new history data available");
+						count = 0;	/* EOF */
+						goto read_out;
+					}
+				}
 
 			}
 			else if (respType == RESPONSE_REQUEST)	// length: 0x7d (125)
 			{
 				DBG_INFO("RESPONSE_REQUEST (0x%x)", rawdata[6]);
+				hw->nextSleepMs = 10;
+				goto getState;
 			}
 			else
 			{
 				DBG_INFO("RESPONSE: 0x%02x", respType);
+				hw->nextSleepMs = 10;
+				goto getState;
 			}
 		}
 	} else
@@ -1375,23 +1388,11 @@ getState:
 	}
 
 
-
-//
-//	to_copy = min((size_t) atomic_read(&bytes_available), count);
-//	not_copied = copy_to_user(buffer, resultBuf, to_copy);
-//	atomic_sub(to_copy - not_copied, &bytes_available);
-//	count = to_copy - not_copied;
-
-//	printk("to_copy: %d\n", (int)to_copy);
-//	printk("not_copied: %d\n", (int)not_copied);
-//	printk("Return at the end is: %lu\n", count);
-
 read_out:
 	mutex_unlock(&disconnect_mutex);	//TODO mutex destroy?
-	kfree(resultBuf);
+
 	kfree(rawdata);
-	kfree(data);
-	kfree(retBuf);
+	kfree(getStateBuf);
 	return count;
 }
 

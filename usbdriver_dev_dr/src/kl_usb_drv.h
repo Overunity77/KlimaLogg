@@ -11,16 +11,36 @@
 
 
 /* Logger ID's */
-#define LOGGER_1   0
-#define LOGGER_2   1
-#define LOGGER_3   2
-#define LOGGER_4   3
-#define LOGGER_5   4
-#define LOGGER_6   5
-#define LOGGER_7   6
-#define LOGGER_8   7
-#define LOGGER_9   8
-#define LOGGER_10  9
+#define LOGGER_1			0
+#define LOGGER_2			1
+#define LOGGER_3			2
+#define LOGGER_4			3
+#define LOGGER_5			4
+#define LOGGER_6			5
+#define LOGGER_7			6
+#define LOGGER_8			7
+#define LOGGER_9			8
+#define LOGGER_10			9
+
+/* Response types */
+#define RESPONSE_DATA_WRITTEN		0x10
+#define RESPONSE_GET_CONFIG		0x20
+#define RESPONSE_GET_CURRENT		0x30
+#define RESPONSE_GET_HISTORY		0x40
+#define RESPONSE_REQUEST		0x50
+#define RESPONSE_REQ_READ_HISTORY	0x50
+#define RESPONSE_REQ_FIRST_CONFIG	0x51
+#define RESPONSE_REQ_SET_CONFIG		0x52
+#define RESPONSE_REQ_SET_TIME		0x53
+
+/* Action types */
+#define ACTION_GET_HISTORY		0x00
+#define ACTION_REQ_SET_TIME		0x01
+#define ACTION_REQ_SET_CONFIG		0x02
+#define ACTION_GET_CONFIG		0x03
+#define ACTION_GET_CURRENT		0x04
+#define ACTION_SEND_CONFIG		0x20
+#define ACTION_SEND_TIME		0x60
 
 /* RF Frequency */
 #define KL_FREQUENCY_EU			868300000	/* 868.3 MHz */
@@ -30,6 +50,8 @@
 #define USB_INT				0
 #define USB_HID_FEATURE_REPORT		0x03
 
+#define KL_MAX_RECORD			51200
+#define KL_COMM_INT			8
 #define KL_USB_CTRL_TIMEOUT		5 	/* 5ms timeout writing/reading regs */
 #define KL_USB_CTRL_BUFSIZE 		64
 
@@ -362,6 +384,9 @@ struct kl_usb {
 	unsigned int		transceiver_id;
 	unsigned char           logger_id;	/* LOGGER_1 .. LOGGER_10 */
 	int 			history_record_nr;
+	int			last_sent_history_record_nr;
+	int			nextSleepMs;
+	bool			config_changed;
 
 };
 
