@@ -99,6 +99,7 @@
 									<listOptionValue builtIn="false" value="/lib/modules/3.16.0-46-generic/build/include/uapi"/>
 									<listOptionValue builtIn="false" value="/lib/modules/3.16.0-46-generic/build/include/uapi/linux/usb"/>
 									<listOptionValue builtIn="false" value="/lib/modules/3.16.0-46-generic/build/include/uapi/asm-generic"/>
+									<listOptionValue builtIn="false" value="/usr/src/linux-headers-3.16.0-46/arch/ia64/include"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1017915727" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__KERNEL__=1"/>

@@ -1,3 +1,4 @@
 TEMPLATE = subdirs
 SUBDIRS += KlimaLoggBitConverter \
-    UnitTest
+    UnitTest \
+    KlimaLoggReader
