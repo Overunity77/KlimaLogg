@@ -327,6 +327,12 @@ static void rx_int_complete(struct urb *urb)
 	struct kl_usb *hw = (struct kl_usb *) urb->context;
 	int retval = 0;
 
+	if(!hw) {
+		DBG_ERR("hw is null");
+		DBG_INFO("urb->status: %s (%d)", symbolic(urb_errlist, urb->status), urb->status);
+		return;
+	}
+
 	if (urb->status) {
 		DBG_WARN("urb->status: %s (%d)", symbolic(urb_errlist, urb->status), urb->status);
 		if (urb->status == -ENOENT ||
@@ -339,7 +345,10 @@ static void rx_int_complete(struct urb *urb)
 		}
 	}
 
-	atomic_set(&hw->logger_state, hw->rx_int_buffer[1]);
+
+
+
+//	atomic_set(&hw->logger_state, hw->rx_int_buffer[1]);
 
 	/* USB data log for RX INT in */
 //	DBG_INFO("RX INT length(%d)", urb->actual_length);
@@ -348,7 +357,7 @@ static void rx_int_complete(struct urb *urb)
 resubmit:
 	/* Resubmit if we're still running. */
 	if (hw->rx_int_running && hw->dev) {
-		retval = usb_submit_urb(hw->rx_int_urb, GFP_ATOMIC);
+		retval = usb_submit_urb(hw->rx_int_urb, GFP_ATOMIC); // TODO crashes on ARM target
 		if (retval) {
 			DBG_ERR("resubmitting urb failed: %s (%d)", symbolic(urb_errlist, retval), retval);
 			hw->rx_int_running = 0;
@@ -424,7 +433,7 @@ static int start_rx_int_transfer(struct kl_usb *hw)
 static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *config) {
 	int ret = 0;
 	__u8 writebuf[KL_LEN_READ_CONFIG_FLASH_OUT];
-	int i;
+//	int i;
 
 	memset(&writebuf, 0xcc, sizeof(writebuf));
 
@@ -728,9 +737,9 @@ static int setup_klusb(struct kl_usb *hw)
 	DBG_INFO("%s",__func__);
 
 	// start usb rx interrupt endpoint
-	retval = start_rx_int_transfer(hw);
-	if(retval)
-		return retval;
+//	retval = start_rx_int_transfer(hw);
+//	if(retval)
+//		return retval;
 
 	/* init the background machinery for control requests */
 	hw->ctrl_urb->dev = hw->dev;
@@ -1076,7 +1085,7 @@ static ssize_t kl_read(struct file *file, char *buffer,
 	unsigned char	*rawdata;
 	struct kl_usb *hw = NULL;
 
-	DBG_INFO("*** read called (count=%ld) ***",count);
+	DBG_INFO("*** read called (count=%u) ***", (unsigned int)count);
 
 
 	//TODO check size of user-space buffer
@@ -1343,7 +1352,7 @@ getState:
 					{
 						hw->last_sent_history_record_nr = thisIndex;
 					}
-					DBG_INFO("copied %4ld bytes to user-space", count);
+					DBG_INFO("copied %4u bytes to user-space", (unsigned int)count);
 				}
 				else
 				{
@@ -1357,7 +1366,7 @@ getState:
 						{
 							hw->last_sent_history_record_nr = thisIndex;
 						}
-						DBG_INFO("copied %4ld bytes to user-space", count);
+						DBG_INFO("copied %4u bytes to user-space", (unsigned int)count);
 					}
 					else
 					{
@@ -1462,15 +1471,24 @@ static int kl_probe(struct usb_interface *intf,
 
 	/* Set up interrupt endpoint information. */
 	for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
+
 		ep_desc = &iface_desc->endpoint[i].desc;
 
-		if (((ep_desc->bEndpointAddress & USB_ENDPOINT_DIR_MASK)
-		     == USB_DIR_IN)
-		    && ((ep_desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
-		    	== USB_ENDPOINT_XFER_INT)) {
+		DBG_INFO("examining endpoint (interface nr: %hhd, endpoint address: 0x%hhx, attributes: 0x%hhx)",
+			 iface_desc->desc.bInterfaceNumber,
+			 ep_desc->bEndpointAddress,
+			 ep_desc->bmAttributes);
+
+		// don't use:
+		//   if ( ((ep_desc->bEndpointAddress & USB_ENDPOINT_DIR_MASK)  == USB_DIR_IN)
+		//
+		// USB_ENDPOINT_DIR_MASK is defined as 0x81 on the ARM target which is against the USB standard!!!
+
+		if ( ((ep_desc->bEndpointAddress & 0x80)  == USB_DIR_IN)
+		     &&
+		     ((ep_desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK) == USB_ENDPOINT_XFER_INT))
+		{
 			hw->rx_int_endpoint_desc = ep_desc;
-
-
 		}
 	}
 
@@ -1494,7 +1512,7 @@ static int kl_probe(struct usb_interface *intf,
 	}
 
 
-	atomic_set(&hw->logger_state, 0);
+//	atomic_set(&hw->logger_state, 0);
 
 	hw->dev = dev; /* save device */
 	hw->ctrl_packet_size = dev->descriptor.bMaxPacketSize0; /* control size */
