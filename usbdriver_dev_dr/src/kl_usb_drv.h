@@ -52,7 +52,7 @@
 
 #define KL_MAX_RECORD			51200
 #define KL_COMM_INT			8
-#define KL_USB_CTRL_TIMEOUT		5 * HZ 	/* 20ms timeout writing/reading regs */
+#define KL_USB_CTRL_TIMEOUT		5 	/* 5ms timeout writing/reading regs */
 #define KL_USB_CTRL_BUFSIZE 		64
 
 /* KlimaLogg pro Message Types */

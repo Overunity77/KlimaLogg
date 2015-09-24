@@ -102,6 +102,8 @@ static DEFINE_MUTEX(disconnect_mutex);
 /* forward declaration */
 static struct usb_driver kl_driver;
 
+/* function prototypes */
+static int setup_instance(struct kl_usb *hw);
 
 static inline void kl_debug_data(const char *function, int size,
 		const unsigned char *data)
@@ -130,11 +132,6 @@ static void ctrl_start_transfer(struct kl_usb *hw)
 		hw->ctrl_urb->setup_packet = (u_char *)&hw->usb_ctrl_buff[hw->ctrl_out_idx].ctrlrequest;
 		hw->ctrl_urb->transfer_buffer = hw->usb_ctrl_buff[hw->ctrl_out_idx].buf;
 		hw->ctrl_urb->transfer_buffer_length = hw->usb_ctrl_buff[hw->ctrl_out_idx].buflen;
-
-//		hw->ctrl_write.wIndex =
-//			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].ax5051_reg);
-//		hw->ctrl_write.wValue =
-//			cpu_to_le16(hw->ctrl_buff[hw->ctrl_out_idx].reg_val);
 
 		ret = usb_submit_urb(hw->ctrl_urb, GFP_ATOMIC);
 		if (ret)
@@ -348,7 +345,7 @@ static void rx_int_complete(struct urb *urb)
 
 
 
-//	atomic_set(&hw->logger_state, hw->rx_int_buffer[1]);
+	atomic_set(&hw->logger_state, hw->rx_int_buffer[1]);
 
 	/* USB data log for RX INT in */
 //	DBG_INFO("RX INT length(%d)", urb->actual_length);
@@ -357,7 +354,7 @@ static void rx_int_complete(struct urb *urb)
 resubmit:
 	/* Resubmit if we're still running. */
 	if (hw->rx_int_running && hw->dev) {
-		retval = usb_submit_urb(hw->rx_int_urb, GFP_ATOMIC); // TODO crashes on ARM target
+		retval = usb_submit_urb(hw->rx_int_urb, GFP_ATOMIC);
 		if (retval) {
 			DBG_ERR("resubmitting urb failed: %s (%d)", symbolic(urb_errlist, retval), retval);
 			hw->rx_int_running = 0;
@@ -432,20 +429,23 @@ static int start_rx_int_transfer(struct kl_usb *hw)
 
 static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *config) {
 	int ret = 0;
-	__u8 writebuf[KL_LEN_READ_CONFIG_FLASH_OUT];
-//	int i;
+	unsigned char *writebuf;
 
-	memset(&writebuf, 0xcc, sizeof(writebuf));
+	writebuf = kmalloc(KL_LEN_READ_CONFIG_FLASH_OUT, GFP_KERNEL);
 
-//	for (i = 0; i < KL_LEN_READ_CONFIG_FLASH_OUT; i++)
-//		writebuf[i] = 0xcc;
+	if(!writebuf) {
+		DBG_ERR("no memory");
+		return -ENOMEM;
+	}
+
+	memset(writebuf, 0xcc, KL_LEN_READ_CONFIG_FLASH_OUT);
 
 	writebuf[0]  = 0xdd;
 	writebuf[1]  = 0x0a;
 	writebuf[2]  = (config->addr >> 8) & 0xff;
 	writebuf[3]  = (config->addr >> 0) & 0xff;
 
-	DBG_INFO("write buffer:");
+	DBG_INFO("write buffer");
 	kl_debug_data(__FUNCTION__, KL_LEN_READ_CONFIG_FLASH_OUT, writebuf);
 
 	/* if successful, returns the number of bytes transferred */
@@ -456,11 +456,12 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 			     );
 	if (ret < 0) {
 		DBG_ERR("could not prepare to read config flash: %s (%d)", symbolic(urb_errlist, ret), ret);
+		kfree(writebuf);
 		return ret;
 	}
 
 	/* if successful, returns the number of bytes transferred */
-	ret = usb_control_msg(hw->dev, hw->ctrl_out_pipe, USB_REQ_CLEAR_FEATURE,
+	ret = usb_control_msg(hw->dev, hw->ctrl_in_pipe, USB_REQ_CLEAR_FEATURE,
 			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_IN,
 			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_READ_CONFIG_FLASH_IN,
 			      0, config->readBuf, config->buflen, KL_USB_CTRL_TIMEOUT
@@ -468,9 +469,11 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 
 	if (ret < 0) {
 		DBG_ERR("Could not read from config flash: %s (%d)", symbolic(urb_errlist, ret), ret);
+		kfree(writebuf);
 		return ret;
 	}
 
+	kfree(writebuf);
 	return 0;
 }
 
@@ -644,11 +647,19 @@ static int initTranseiver(struct kl_usb *hw)
 	struct usb_read_config_flash transceiverId;
 	unsigned int corVal = 0;
 	unsigned int freqVal = 0;
-	__u8 readbuf[KL_LEN_READ_CONFIG_FLASH_IN];
+	unsigned char *readbuf;
+
 	int ret;
 	int countReg, i;
 
 	DBG_INFO("%s", __func__);
+
+	readbuf = kzalloc(KL_LEN_READ_CONFIG_FLASH_IN, GFP_KERNEL);
+
+	if (!readbuf) {
+		DBG_ERR("no memory");
+		return -ENOMEM;
+	}
 
 	/* read frequency correction */
 	freqCorrection.addr = 0x1f5;
@@ -658,6 +669,7 @@ static int initTranseiver(struct kl_usb *hw)
 	ret = readConfigFlash(hw, &freqCorrection);
 	if(ret) {
 		DBG_ERR("read frequency correction failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		kfree(readbuf);
 		return ret;
 	}
 	DBG_INFO("freqCorrection read buffer:");
@@ -694,6 +706,7 @@ static int initTranseiver(struct kl_usb *hw)
 	ret = readConfigFlash(hw, &transceiverId);
 	if(ret) {
 		DBG_ERR("read transceiver identifier failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+		kfree(readbuf);
 		return ret;
 	}
 	DBG_INFO("transceiverId read buffer:");
@@ -717,6 +730,7 @@ static int initTranseiver(struct kl_usb *hw)
 					ax5051_reglist[i].addr,
 					ax5051_reglist[i].value,
 					symbolic(urb_errlist, ret), ret);
+				kfree(readbuf);
 				return ret;
 			}
 			// kl_debug_data(__FUNCTION__, 5, ax5051_reglist[i].buf);
@@ -726,6 +740,7 @@ static int initTranseiver(struct kl_usb *hw)
 	/* do RF Setup */
 	ret = doRfSetup(hw);
 
+	kfree(readbuf);
 	return ret;
 }
 
@@ -737,9 +752,9 @@ static int setup_klusb(struct kl_usb *hw)
 	DBG_INFO("%s",__func__);
 
 	// start usb rx interrupt endpoint
-//	retval = start_rx_int_transfer(hw);
-//	if(retval)
-//		return retval;
+	retval = start_rx_int_transfer(hw);
+	if(retval)
+		return retval;
 
 	/* init the background machinery for control requests */
 	hw->ctrl_urb->dev = hw->dev;
@@ -810,6 +825,12 @@ static int kl_open(struct inode *inode, struct file *file)
 		goto exit;
 	}
 
+//	if (setup_instance(hw))
+//	{
+//		DBG_ERR("setup_instance failed!");
+//		return -EIO;
+//	}
+
 	/* start rx interrupt URB. */
 	// start_rx_int_transfer(hw);
 
@@ -853,8 +874,8 @@ static int kl_release(struct inode *inode, struct file *file)
 		goto unlock_exit;
 	}
 
-//	/* rx endpoint using USB INT IN method */
-//	abort_rx_int_transfer(hw);
+	/* rx endpoint using USB INT IN method */
+	abort_rx_int_transfer(hw);
 
 	if (!hw->dev)
 	{
@@ -1512,7 +1533,7 @@ static int kl_probe(struct usb_interface *intf,
 	}
 
 
-//	atomic_set(&hw->logger_state, 0);
+	atomic_set(&hw->logger_state, 0);
 
 	hw->dev = dev; /* save device */
 	hw->ctrl_packet_size = dev->descriptor.bMaxPacketSize0; /* control size */
