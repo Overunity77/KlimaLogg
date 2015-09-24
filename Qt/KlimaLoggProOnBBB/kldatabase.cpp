@@ -8,7 +8,7 @@ KLDatabase::KLDatabase(QWidget *parent)
     db = new QSqlDatabase();
     *db = QSqlDatabase::addDatabase("QSQLITE","KlimaLoggDb");
     db->setDatabaseName(sDatabaseName);
-    m_TimeDiff = TimeIntervall::LONG;
+    m_TimeDiff = TimeIntervall::MEDIUM;
 
     if (!db->open()) {
         QMessageBox::critical(0, parent->tr("Cannot open database"),
@@ -138,10 +138,10 @@ int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<dou
             QSqlField humidity0 = myRecord.field("humidity0");
             y2[counter] = humidity0.value().toDouble();
 
-            QSqlField temp1 = myRecord.field("temp3");
+            QSqlField temp1 = myRecord.field("temp1");
             y3[counter] = temp1.value().toDouble();
 
-            QSqlField humidity1 = myRecord.field("humidity3");
+            QSqlField humidity1 = myRecord.field("humidity1");
             y4[counter] = humidity1.value().toDouble();
 
             qDebug() << "Record Nr: " << counter << "," << x1[counter] << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];
