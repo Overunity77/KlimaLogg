@@ -482,3 +482,12 @@ root@BBB-BFH-Cape:/sys/bus/usb/devices/1-1:1.0# ls -l klindex
 
 173 82 0 
 0 74 172
+
+
+sqlite> select count(*) from measurement;
+5877
+sqlite> select * from parameter;
+lastRetrievedIndex|12438
+sqlite> .exit
+
+
