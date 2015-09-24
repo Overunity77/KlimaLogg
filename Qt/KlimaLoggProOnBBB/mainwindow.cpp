@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
         //write last read index to the driver
         int index = m_kldatabase->getLastRetrievedIndex();
         qDebug() << "LastRetrievedIndex from database: " << index;
-        index = 1234; //static for testing
+//        index = 42000; //static for testing
         fwrite(&index,sizeof(int),1,fd);
         fclose(fd);
     }
@@ -110,6 +110,7 @@ void MainWindow::OnDrawPlot()
 
     //redraw
     ui->customPlot->replot();
+
 }
 
 void MainWindow::makePlot()
@@ -120,10 +121,10 @@ void MainWindow::makePlot()
     QCPGraph *graph3 = ui->customPlot->addGraph();
     QCPGraph *graph4 = ui->customPlot->addGraph();
 
-    graph1->setPen(QPen(QColor(172, 172, 0), 3));
-    graph2->setPen(QPen(QColor(0, 172, 172), 3));
-    graph3->setPen(QPen(QColor(255, 0, 0), 3));
-    graph4->setPen(QPen(QColor(0, 0, 255), 3));
+    graph1->setPen(QPen(QColor(Qt::yellow), 4));
+    graph2->setPen(QPen(QColor(0, 172, 172), 4));
+    graph3->setPen(QPen(QColor(255, 0, 0), 4));
+    graph4->setPen(QPen(QColor(0, 0, 255), 4));
 
     graph1->setName("Innen Temperatur");
     graph2->setName("Innen Luftfeuchtigkeit");
@@ -136,6 +137,9 @@ void MainWindow::makePlot()
     graph2->setLineStyle(QCPGraph::lsLine);
     graph3->setLineStyle(QCPGraph::lsLine);
     graph4->setLineStyle(QCPGraph::lsLine);
+
+    // make legend align in top left corner
+    ui->customPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft|Qt::AlignTop);
 
     // move bars above graphs and grid below bars:
     ui->customPlot->addLayer("abovemain", ui->customPlot->layer("main"),QCustomPlot::limAbove);
@@ -185,6 +189,8 @@ void MainWindow::makePlot()
     axisRectGradient.setColorAt(1, QColor(30, 30, 30));
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
     ui->customPlot->yAxis->setRange(10, 70);
+    ui->customPlot->xAxis->setLabelColor(Qt::white);
+    ui->customPlot->yAxis->setLabelColor(Qt::white);
     ui->customPlot->xAxis->setLabel("Zeit");
     ui->customPlot->yAxis->setLabel("Temperatur");
 
