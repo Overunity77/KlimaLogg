@@ -109,7 +109,7 @@ int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<dou
     QSqlField dateTime = myQuery->record().field("dateTime");
 
     int timediff = dateTime.value().toInt() - (int)m_TimeDiff;
-    myQuery->prepare("select dateTime, temp0, humidity0, temp3, humidity3 from measurement where datetime >= :timediff order by datetime asc");
+    myQuery->prepare("select dateTime, temp0, humidity0, temp1, humidity1 from measurement where datetime >= :timediff order by datetime asc");
     myQuery->bindValue(":timediff",timediff);
     if(!myQuery->exec())
     {
