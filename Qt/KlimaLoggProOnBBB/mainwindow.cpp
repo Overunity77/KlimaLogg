@@ -60,11 +60,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::HandleErrNo(int error)
 {
-    if(error == 121)
+    if(error == 200)
     {
         if(!m_MSGBox->isVisible())
         {
-            m_MSGBox->setText("Please press hte USB Button on your KlimaLoggPro");
+            m_MSGBox->setText("Please press the USB Button on your KlimaLoggPro");
             m_MSGBox->showNormal();
         }
     }
