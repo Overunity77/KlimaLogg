@@ -874,8 +874,8 @@ static int kl_release(struct inode *inode, struct file *file)
 		goto unlock_exit;
 	}
 
-	/* rx endpoint using USB INT IN method */
-	abort_rx_int_transfer(hw);
+//	/* rx endpoint using USB INT IN method */
+//	abort_rx_int_transfer(hw);
 
 	if (!hw->dev)
 	{
