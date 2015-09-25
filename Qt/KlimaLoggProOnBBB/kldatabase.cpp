@@ -1,5 +1,6 @@
 #include "kldatabase.h"
 #include <QDebug>
+#include "QDateTime"
 
 const QString KLDatabase::sDatabaseName = "/usr/local/bin/database/KlimaLoggPro.sdb";
 
@@ -98,6 +99,8 @@ TimeIntervall KLDatabase::GetTimeIntervall()
 int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
 {
     int counter = 0;
+    QDateTime timestamp;
+
     myQuery->prepare("select max(dateTime) as dateTime from measurement");
     if(!myQuery->exec())
     {
@@ -132,6 +135,8 @@ int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<dou
             QSqlField dateTime = myRecord.field("dateTime");
 
             x1[counter] = dateTime.value().toUInt();
+            timestamp.setTime_t(dateTime.value().toUInt());
+
             QSqlField temp0 = myRecord.field("temp0");
             y1[counter] = temp0.value().toDouble();
 
@@ -144,7 +149,7 @@ int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<dou
             QSqlField humidity1 = myRecord.field("humidity1");
             y4[counter] = humidity1.value().toDouble();
 
-            qDebug() << "Record Nr: " << counter << "," << x1[counter] << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];
+            qDebug() << "Record Nr: " << counter << "," << timestamp.toString(Qt::SystemLocaleShortDate) << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];
             counter++;
         }while(myQuery->next());
     }

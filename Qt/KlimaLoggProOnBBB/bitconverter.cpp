@@ -112,8 +112,8 @@ bool BitConverter::ConvertHistoryTimestamp(char *data, long *value)
 	timeinfo->tm_min = minute10 * 10 + minute1;
 	timeinfo->tm_sec = 0;
 
-    qDebug() << "Year   : " << timeinfo->tm_year;
-    qDebug() << "Month  : " << timeinfo->tm_mon;
+    qDebug() << "Year   : " << timeinfo->tm_year + 1900;
+    qDebug() << "Month  : " << timeinfo->tm_mon + 1;
     qDebug() << "Days   : " << timeinfo->tm_mday;
     qDebug() << "Hours  : " << timeinfo->tm_hour;
     qDebug() << "Minutes: " << timeinfo->tm_min;
@@ -270,9 +270,9 @@ Record BitConverter::GetSensorValuesFromHistoryData(char* frame, int index)
     qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
                 ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
     qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
+                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
     qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[3].Temperature<<"Grad, "<< record.SensorDatas[3].Humidity;
+                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
 	return record;
 }
 
@@ -309,8 +309,8 @@ Record BitConverter::GetSensorValuesFromCurrentData(char* frame)
     qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
                 ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
     qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
+                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
     qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[3].Temperature<<"Grad, "<< record.SensorDatas[3].Humidity;
+                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
     return record;
 }

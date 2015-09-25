@@ -18,7 +18,7 @@ bool Worker::ReadUSBFrame()
     {
         errno = 0;
         retValue = fread(usbframe,238,1,fd);
-        qDebug() << "(int)usbframe[6]: "<< (int)usbframe[6] << strerror(errno);
+        qDebug() << "fread retValue: "<< retValue << " errno: " << strerror(errno);
         //send error to gui, to make some user interaction
         emit readErrno(errno);
         if(retValue <= 0)
