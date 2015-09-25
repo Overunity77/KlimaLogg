@@ -14,15 +14,18 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
+#/opt/embedded/bbb/rootfs/usr/local/lib/
 
 SOURCES += main.cpp \
     ../../../Qt/KlimaLoggProOnBBB/bitconverter.cpp
 
-LIBS += -L$$OUT_PWD/../KlimaLoggBitConverter/ -lKlimaLoggBitConverter
+LIBS += -L/opt/embedded/bbb/rootfs/usr/local/lib/ -lts
+
+#LIBS += -L$$OUT_PWD/../KlimaLoggBitConverter/ -lKlimaLoggBitConverter
 
 INCLUDEPATH += $$PWD/../KlimaLoggBitConverter
 INCLUDEPATH += ../../../Qt/KlimaLoggProOnBBB
-DEPENDPATH += $$PWD/../KlimaLoggBitConverter
+#DEPENDPATH += $$PWD/../KlimaLoggBitConverter
 
 HEADERS += \
     ../../../Qt/KlimaLoggProOnBBB/bitconverter.h \

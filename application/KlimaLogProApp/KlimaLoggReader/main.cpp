@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     QDateTime timestamp;
 
     Record dataRecord;
-    QFile file("/dev/kl2");
+ //   QFile file("/dev/kl2");
     int counter = 0;
 
 
@@ -39,11 +39,11 @@ int main(int argc, char *argv[])
 
     int retValue = 0;
 
-    fd_klimalogg = fopen("/dev/kl2", "r+b");
+    fd_klimalogg = fopen("/dev/kl0", "r+b");
     //fd_klimalogg = fopen("/dev/kl1", "r+b");
 
     if (!fd_klimalogg) {
-        printf("kann /dev/kl2 nicht oeffnen\n");
+        printf("kann /dev/kl0 nicht oeffnen\n");
         return -1;
     }
 
@@ -266,8 +266,8 @@ int main(int argc, char *argv[])
 
     delete(buf);
 
-    file.close();
-
+//    file.close();
+    fclose(fd_klimalogg);
 
 
 
