@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QTimer>
 #include "kldatabase.h"
-#include "readdataworker.h"
+#include"readdataworker.h"
 
 namespace Ui {
 class MainWindow;
