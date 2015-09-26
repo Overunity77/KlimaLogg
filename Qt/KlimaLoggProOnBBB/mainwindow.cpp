@@ -7,11 +7,8 @@
 
 #include <QDebug>
 
-
 #include <errno.h>
 #include <string.h>
-
-#define TEMPERATURE_OFFSET 40
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -21,6 +18,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     m_kldatabase = new KLDatabase(this);
+
+    m_kldatabase->SetUpperLimitTemperature();
+    m_kldatabase->SetLowerLimitTemperature();
+    m_kldatabase->SetUpperLimitHumidity();
+    m_kldatabase->SetLowerLimitHumidity();
 
     m_UpdatePlotTimer = new QTimer(this);
     m_UpdatePlotTimer->setInterval(5000);
@@ -269,8 +271,8 @@ void MainWindow::makePlot()
     axisRectGradient.setColorAt(0, QColor(30, 30, 30));
     axisRectGradient.setColorAt(1, QColor(30, 30, 30));
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
-    ui->customPlot->yAxis->setRange(10, 30);
-    ui->customPlot->yAxis2->setRange(35, 75);
+    ui->customPlot->yAxis->setRange(m_kldatabase->GetLowerLimitTemperature(), m_kldatabase->GetUpperLimitTemperature());
+    ui->customPlot->yAxis2->setRange(m_kldatabase->GetLowerLimitHumidity(), m_kldatabase->GetUpperLimitHumidity());
 
     ui->customPlot->xAxis->setLabelColor(Qt::white);
     ui->customPlot->yAxis->setLabelColor(Qt::white);

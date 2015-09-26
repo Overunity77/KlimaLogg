@@ -2,7 +2,7 @@
 #include <QDebug>
 #include "QDateTime"
 
-const QString KLDatabase::sDatabaseName = "/usr/local/bin/database/KlimaLoggPro.sdb";
+const QString KLDatabase::sDatabaseName = KLIMALOGG_DATABASE;
 
 KLDatabase::KLDatabase(QWidget *parent)
 {
@@ -94,6 +94,102 @@ int KLDatabase::getLastRetrievedIndex()
         ret = value.value().toInt();
     }
     return ret;
+}
+
+
+void KLDatabase::SetUpperLimitTemperature()
+{
+    myQuery->prepare("select max(temp0) as max_temp0, max(temp1) AS max_temp1 from measurement where datetime >= :timediff");
+    myQuery->bindValue(":timediff",(int)TimeIntervall::LONG);
+    if (! myQuery->exec() ) {
+        qDebug() << myQuery->lastError();
+    } else {
+        myQuery->first();
+        QSqlField max_1 = myQuery->record().field("max_temp0");
+        QSqlField max_2 = myQuery->record().field("max_temp1");
+        if (max_1.value().toInt() >= max_2.value().toInt()) {
+            upperLimitTemperature = (((int)(max_1.value().toInt())/5)+1) * 5;
+        }
+        else {
+            upperLimitTemperature = (((int)(max_2.value().toInt())/5)+1) * 5;
+        }
+    }
+}
+
+
+void KLDatabase::SetLowerLimitTemperature()
+{
+    myQuery->prepare("select min(temp0) as min_temp0, min(temp1) AS min_temp1 from measurement where datetime >= :timediff");
+    myQuery->bindValue(":timediff",(int)TimeIntervall::LONG);
+    if (! myQuery->exec() ) {
+        qDebug() << myQuery->lastError();
+    } else {
+        myQuery->first();
+        QSqlField min_1 = myQuery->record().field("min_temp0");
+        QSqlField min_2 = myQuery->record().field("min_temp1");
+        if (min_1.value().toInt() <= min_2.value().toInt()) {
+            lowerLimitTemperature = (((int)(min_1.value().toInt())/5)-1) * 5;
+        }
+        else {
+            lowerLimitTemperature = (((int)(min_2.value().toInt())/5)-1) * 5;
+        }
+    }
+}
+
+
+void KLDatabase::SetUpperLimitHumidity()
+{
+    myQuery->prepare("select max(humidity0) as max_humidity0, max(humidity1) AS max_humidity1 from measurement where datetime >= :timediff");
+    myQuery->bindValue(":timediff",(int)TimeIntervall::LONG);
+    if (! myQuery->exec() ) {
+        qDebug() << myQuery->lastError();
+    } else {
+        myQuery->first();
+        QSqlField max_1 = myQuery->record().field("max_humidity0");
+        QSqlField max_2 = myQuery->record().field("max_humidity1");
+        if (max_1.value().toInt() >= max_2.value().toInt()) {
+            upperLimitHumidity = (((int)(max_1.value().toInt())/5)+1) * 5;
+        }
+        else {
+            upperLimitHumidity = (((int)(max_2.value().toInt())/5)+1) * 5;
+        }
+    }
+}
+
+
+void KLDatabase::SetLowerLimitHumidity()
+{
+    myQuery->prepare("select min(humidity0) as min_humidity0, min(humidity1) AS min_humidity1 from measurement where datetime >= :timediff");
+    myQuery->bindValue(":timediff",(int)TimeIntervall::LONG);
+    if (! myQuery->exec() ) {
+        qDebug() << myQuery->lastError();
+    } else {
+        myQuery->first();
+        QSqlField min_1 = myQuery->record().field("min_humidity0");
+        QSqlField min_2 = myQuery->record().field("min_humidity1");
+        if (min_1.value().toInt() <= min_2.value().toInt()) {
+            lowerLimitHumidity = (((int)(min_1.value().toInt())/5)-1) * 5;
+        }
+        else {
+            lowerLimitHumidity = (((int)(min_2.value().toInt())/5)-1) * 5;
+        }
+    }
+}
+
+int KLDatabase::GetUpperLimitTemperature(){
+    return upperLimitTemperature;
+}
+
+int KLDatabase::GetLowerLimitTemperature(){
+    return lowerLimitTemperature;
+}
+
+int KLDatabase::GetUpperLimitHumidity(){
+    return upperLimitHumidity;
+}
+
+int KLDatabase::GetLowerLimitHumidity(){
+    return lowerLimitHumidity;
 }
 
 

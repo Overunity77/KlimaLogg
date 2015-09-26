@@ -29,6 +29,16 @@ public:
 
     void SetTickSpacing (TickSpacing spacing);
     TickSpacing GetTickSpacing();
+
+    void SetUpperLimitTemperature();
+    int GetUpperLimitTemperature();
+    void SetLowerLimitTemperature();
+    int GetLowerLimitTemperature();
+    void SetUpperLimitHumidity();
+    int GetUpperLimitHumidity();
+    void SetLowerLimitHumidity();
+    int GetLowerLimitHumidity();
+
 private slots:
 
 private:
@@ -41,6 +51,11 @@ private:
     TimeIntervall m_TimeDiff;
     TickSpacing m_TickSpacing;
     QMutex m_mutex;
+
+    int upperLimitTemperature;
+    int lowerLimitTemperature;
+    int upperLimitHumidity;
+    int lowerLimitHumidity;
 
 };
 

@@ -4,6 +4,7 @@
 
 #define SENSOR "/dev/kl0"
 #define TIME_BASIS 1420066800
+#define KLIMALOGG_DATABASE "/usr/local/bin/database/KlimaLoggPro.sdb"
 
 struct SensorData
 {
