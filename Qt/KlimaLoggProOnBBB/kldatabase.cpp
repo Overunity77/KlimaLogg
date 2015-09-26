@@ -9,7 +9,8 @@ KLDatabase::KLDatabase(QWidget *parent)
     db = new QSqlDatabase();
     *db = QSqlDatabase::addDatabase("QSQLITE","KlimaLoggDb");
     db->setDatabaseName(sDatabaseName);
-    m_TimeDiff = TimeIntervall::MEDIUM;
+    m_TimeDiff = TimeIntervall::LONG;
+    m_TickSpacing = TickSpacing::DAYS;
 
     if (!db->open()) {
         QMessageBox::critical(0, parent->tr("Cannot open database"),
@@ -109,6 +110,17 @@ TimeIntervall KLDatabase::GetTimeIntervall()
 
     return m_TimeDiff;
 }
+
+void KLDatabase::SetTickSpacing (TickSpacing spacing)
+{
+    m_TickSpacing = spacing;
+}
+
+TickSpacing KLDatabase::GetTickSpacing()
+{
+    return m_TickSpacing;
+}
+
 
 int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
 {

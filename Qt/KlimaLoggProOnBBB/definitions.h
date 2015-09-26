@@ -2,7 +2,9 @@
 #define DEFINITIONS
 
 
-#define SENSOR "/dev/kl2"
+#define SENSOR "/dev/kl0"
+#define TIME_BASIS 1420066800
+
 struct SensorData
 {
     double Temperature;
@@ -33,6 +35,13 @@ enum TimeIntervall
     SHORT = 900,    //15 min
     MEDIUM = 86400, // 24 hours
     LONG = 604800     //7 days
+};
+
+enum TickSpacing
+{
+    MINUTES = 300,  // 5 min
+    HOURS = 14400,  // 4 hour
+    DAYS = 86400   // 24 hours
 };
 
 #endif // DEFINITIONS

@@ -490,4 +490,8 @@ sqlite> select * from parameter;
 lastRetrievedIndex|12438
 sqlite> .exit
 
+root@BBB-BFH-Cape:~# date -d "Jan 01 2015" '+%s'
+1420066800
+root@BBB-BFH-Cape:~# date -d "@1420066800"
+Don Jan  1 00:00:00 CET 2015
 

@@ -151,6 +151,21 @@ void MainWindow::OnDrawPlot()
     graph3->setData(x1, y3);
     graph4->setData(x1, y4);
 
+    // calculate tick below lowest x axis value and above highest x axis value
+    long minTick = ((long)((x1[0] - TIME_BASIS) / m_kldatabase->GetTickSpacing()) * m_kldatabase->GetTickSpacing()) + TIME_BASIS ;
+    long maxTick = ((long)((x1[count-1] - TIME_BASIS) /m_kldatabase->GetTickSpacing()+1) * m_kldatabase->GetTickSpacing()) + TIME_BASIS;
+
+    // generete and set ticks for x axis
+    QVector<double> xAxisTicks(0);
+    int i =0;
+    long actualTick = minTick;
+    while ( actualTick <= maxTick){
+        actualTick =  minTick + i * m_kldatabase->GetTickSpacing();
+        xAxisTicks.append(actualTick);
+        i = i + 1;
+    }
+    ui->customPlot->xAxis->setTickVector(xAxisTicks);
+
     //reconfigure axis
     ui->customPlot->xAxis->setRange(x1[0], x1[count-1]);
 
@@ -255,7 +270,7 @@ void MainWindow::makePlot()
     axisRectGradient.setColorAt(1, QColor(30, 30, 30));
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
     ui->customPlot->yAxis->setRange(10, 30);
-    ui->customPlot->yAxis2->setRange(35, 70);
+    ui->customPlot->yAxis2->setRange(35, 75);
 
     ui->customPlot->xAxis->setLabelColor(Qt::white);
     ui->customPlot->yAxis->setLabelColor(Qt::white);
@@ -265,9 +280,6 @@ void MainWindow::makePlot()
     ui->customPlot->yAxis->setLabel("Temperatur [°C]");
     ui->customPlot->yAxis2->setLabel("relative Luftfeuchtigkeit [%]");
 
-    QVector<double> xAxisTicks;
-    xAxisTicks << 1442613600 << 1442700000 << 1442786400 << 1442872800 << 1442959200 << 1443045600 << 1443132000 << 1443218400 << 1443304800;
-    ui->customPlot->xAxis->setTickVector(xAxisTicks);
     ui->customPlot->xAxis->setSubTickCount(3);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy");
 
@@ -278,21 +290,12 @@ void MainWindow::selectShortTimespan()
 {
     qDebug() << "15 Minuten";
     m_kldatabase->SetTimeIntervall(TimeIntervall::SHORT);
-    QVector<double> xAxisTicks;
-    xAxisTicks << 1443243600 << 1443243600 +300  << 1443243600 +600 << 1443243600 +900 << 1443243600  +1200<< 1443243600  +1500 << 1443243600  +1800
-               << 1443243600 +2100  << 1443243600 +2400 << 1443243600 +2700 << 1443243600 +3000 << 1443243600 +3300 << 1443243600 +3600
-               << 1443243600 +3600 << 1443243600 +300 +3600 << 1443243600 +600 +3600<< 1443243600 +900 +3600<< 1443243600  +1200+3600<< 1443243600  +1500 +3600<< 1443243600  +1800+3600
-               << 1443243600 +2100 +3600 << 1443243600 +2400 +3600<< 1443243600 +2700 +3600<< 1443243600 +3000 +3600<< 1443243600 +3300 +3600<< 1443243600 +3600+3600
-               << 1443243600 +2*3600<< 1443243600 +300 +2*3600 << 1443243600 +600 +2*3600<< 1443243600 +900 +2*3600<< 1443243600  +1200+2*3600<< 1443243600  +1500 +2*3600<< 1443243600  +1800+2*3600
-               << 1443243600 +2100+2*3600  << 1443243600 +2400 +2*3600<< 1443243600 +2700+2*3600 << 1443243600 +3000 +2*3600<< 1443243600 +3300 +2*3600<< 1443243600 +3600     +2*3600
-                  ;
-    ui->customPlot->xAxis->setTickVector(xAxisTicks);
+    m_kldatabase->SetTickSpacing(TickSpacing::MINUTES);
     ui->customPlot->xAxis->setSubTickCount(4);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy hh:mm");
 
-  //  OnDrawPlot();
-    // emit DrawPlot();
-        ui->customPlot->replot();
+    //  OnDrawPlot();
+    emit DrawPlot();
 }
 
 
@@ -300,32 +303,24 @@ void MainWindow::selectMediumTimespan()
 {
     qDebug() << "24 Stunden";
     m_kldatabase->SetTimeIntervall(TimeIntervall::MEDIUM);
-    QVector<double> xAxisTicks;
-    xAxisTicks << 1443132000 << 1443132000 +4*3600 << 1443132000 +8*3600 << 1443132000 +12*3600 << 1443132000  +16*3600<< 1443132000  +20*3600 << 1443132000  +24*3600
-               << 1443132000 +28*3600  << 1443132000 +32*3600 << 1443132000 +36*3600 << 1443132000 +40*3600 << 1443132000 +44*3600 << 1443132000 +48*3600 ;
-    ui->customPlot->xAxis->setTickVector(xAxisTicks);
+    m_kldatabase->SetTickSpacing(TickSpacing::HOURS);
     ui->customPlot->xAxis->setSubTickCount(3);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy hh:mm");
 
-//    OnDrawPlot();
-    // emit DrawPlot();
-        ui->customPlot->replot();
+    //    OnDrawPlot();
+    emit DrawPlot();
 }
 
 void MainWindow::selectLongTimespan()
 {
     qDebug() << "7 Tage";
     m_kldatabase->SetTimeIntervall(TimeIntervall::LONG);
-
-    QVector<double> xAxisTicks;
-    xAxisTicks << 1442613600 << 1442700000 << 1442786400 << 1442872800 << 1442959200 << 1443045600 << 1443132000 << 1443218400 << 1443304800;
-    ui->customPlot->xAxis->setTickVector(xAxisTicks);
+    m_kldatabase->SetTickSpacing(TickSpacing::DAYS);
     ui->customPlot->xAxis->setSubTickCount(3);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy");
 
- //   OnDrawPlot();
-    // emit DrawPlot();
-        ui->customPlot->replot();
+    //   OnDrawPlot();
+    emit DrawPlot();
 }
 
 void MainWindow::newData() {

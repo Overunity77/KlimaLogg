@@ -26,6 +26,9 @@ public:
     int getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4);
     void updateLastRetrievedIndex(long index);
     int getLastRetrievedIndex();
+
+    void SetTickSpacing (TickSpacing spacing);
+    TickSpacing GetTickSpacing();
 private slots:
 
 private:
@@ -36,6 +39,7 @@ private:
     //    QSqlQueryModel* plainModel;
     QSqlQuery* myQuery;
     TimeIntervall m_TimeDiff;
+    TickSpacing m_TickSpacing;
     QMutex m_mutex;
 
 };
