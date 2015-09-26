@@ -4,9 +4,9 @@
 #include <QDebug>
 #include <QDateTime>
 
-bool inline CheckOverflow(char data)
+bool inline CheckOverflow(unsigned char data)
 {
-	char toTest = (data & 0x0F);
+    unsigned char toTest = (data & 0x0F);
 	return toTest >= 10 && toTest != 0x0F;
 }
 
@@ -15,11 +15,11 @@ BitConverter::BitConverter()
 {
 }
 
-bool BitConverter::ConvertTemperature(char data1, char data2, bool highByteFull, double *value)
+bool BitConverter::ConvertTemperature(unsigned char data1, unsigned char data2, bool highByteFull, double *value)
 {
-	int tempOffset = 40;
-	int dezi, one, ten = 0;
-	if (highByteFull) // [x*1] [x*0,1] [-] [x*10]
+    unsigned char tempOffset = 40;
+    unsigned char dezi, one, ten = 0;
+    if (highByteFull) // [x*1] [x*0,1] [-] [x*10]
 	{
 		dezi = (data2 & 0x0F);
 		one = (data2 & 0xF0) >> 4;
@@ -45,9 +45,9 @@ bool BitConverter::ConvertTemperature(char data1, char data2, bool highByteFull,
 	}
 }
 
-bool BitConverter::ConvertHumidity(char data, double *value)
+bool BitConverter::ConvertHumidity(unsigned char data, double *value)
 {
-	int one, ten = 0;
+    unsigned char one, ten = 0;
 	one = (data & 0x0F);
 	ten = (data & 0xF0) >> 4;
 
@@ -65,11 +65,11 @@ bool BitConverter::ConvertHumidity(char data, double *value)
 }
 
 
-bool BitConverter::ConvertHistoryTimestamp(char *data, long *value)
+bool BitConverter::ConvertHistoryTimestamp(unsigned char *data, long *value)
 {
 	time_t rawTime;
 	struct tm *timeinfo;
-	int year10, year1, month10, month1, day10, day1, hours10, hours1, minute10, minute1;
+    unsigned char year10, year1, month10, month1, day10, day1, hours10, hours1, minute10, minute1;
 
 	//get raw data from datapointer
 	year10 = (data[0] & 0xF0) >> 4;
@@ -124,11 +124,11 @@ bool BitConverter::ConvertHistoryTimestamp(char *data, long *value)
 }
 
 
-bool BitConverter::ConvertCurrentTimestamp(char *data, bool startOnHighNibble, long *value)
+bool BitConverter::ConvertCurrentTimestamp(unsigned char *data, bool startOnHighNibble, long *value)
 {
 	time_t rawTime;
 	struct tm *timeinfo;
-	int year10, year1, month1, day10, day1, tim1, tim2, tim3, hours, minutes;
+    unsigned char year10, year1, month1, day10, day1, tim1, tim2, tim3, hours, minutes;
 
 	//get raw data from datapointer
 	if (startOnHighNibble)
@@ -205,41 +205,47 @@ bool BitConverter::ConvertCurrentTimestamp(char *data, bool startOnHighNibble, l
 	return true;
 }
 
-ResponseType BitConverter::GetResponseType(char *data, int size)
+ResponseType BitConverter::GetResponseType(unsigned char *data, int size)
 {
+
     if(size < 7)
     {
+        qDebug() << "BitConverter::GetResponseType() - Invalid Size";
         return INVALID;
     }
-    qDebug() << "Response is " << (int)data[6] ;
-    return (ResponseType) data[6] ;
+
+    // qDebug() << QString("Response is 0x%1").arg(data[6], 0, 16);
+
+    return (ResponseType)(data[6] & 0xf0) ;
 }
 
-long BitConverter::GetThisIndex(char* usbframe)
+int BitConverter::GetThisIndex(unsigned char* usbframe)
 {
-    long thisIndex =
+    int thisIndex =
             (((((usbframe[13] << 8) | usbframe[14]) << 8)
             | usbframe[15]) - 0x070000) / 32;
     return thisIndex;
 }
 
-long BitConverter::GetLatestIndex(char* usbframe)
+
+
+int BitConverter::GetLatestIndex(unsigned char* usbframe)
 {
-    long  latestIndex =
+    int latestIndex =
             (((((usbframe[10] << 8) | usbframe[11]) << 8) |
             usbframe[12]) - 0x070000) / 32;
     return latestIndex;
 }
 
 
-Record BitConverter::GetSensorValuesFromHistoryData(char* frame, int index)
+Record BitConverter::GetSensorValuesFromHistoryData(unsigned char* frame, int index)
 {
-	int offset_index[6] = { 156,128,100,72,44,16 };
+    int offset_index[6] = { 156,128,100,72,44,16 };
 
 	//get pointer for a single HistoryDataSet
-	char* data = frame + offset_index[index];
+    unsigned char* data = frame + offset_index[index];
 
-    if ((unsigned char)data[27] == 0xEE)
+    if (data[27] == 0xEE)
 	{
 		//it's AlarmData -> not et supported
 		Record rec;
@@ -278,7 +284,7 @@ Record BitConverter::GetSensorValuesFromHistoryData(char* frame, int index)
 
 
 
-Record BitConverter::GetSensorValuesFromCurrentData(char* frame)
+Record BitConverter::GetSensorValuesFromCurrentData(unsigned char *frame)
 {
     int sizeOFSensorData = 24;
     int start_h = 20;

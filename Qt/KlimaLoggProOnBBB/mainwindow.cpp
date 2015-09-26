@@ -2,9 +2,12 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "readdataworker.h"
 #include "bitconverter.h"
 
 #include <QDebug>
+
+
 #include <errno.h>
 #include <string.h>
 
@@ -14,27 +17,45 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    qDebug() << "MainWindow(): " << QThread::currentThreadId();
+
     ui->setupUi(this);
     m_kldatabase = new KLDatabase(this);
+
+    m_UpdatePlotTimer = new QTimer(this);
+    m_UpdatePlotTimer->setInterval(5000);
+
 
     FILE *fd = fopen(SENSOR,"wb");
     if(!fd)
     {
         qDebug() << "could not open" << SENSOR;
+
     }else
     {
         //write last read index to the driver
         int index = m_kldatabase->getLastRetrievedIndex();
-        qDebug() << "LastRetrievedIndex from database: " << index;
-//        index = 42000; //static for testing
+        qDebug() << "Writing LastRetrievedIndex from database to Driver: " << index;
         fwrite(&index,sizeof(int),1,fd);
         fclose(fd);
-    }
-    m_controller = new Controller(m_kldatabase);
-    m_controller->operate("startThread");
 
-    connect(m_controller,SIGNAL(resultReady()),this,SLOT(OnDrawPlot()));
-    connect(m_controller,SIGNAL(readErrno(int)),this,SLOT(HandleErrNo(int)));
+    }
+
+    m_AcquisitionThread = new QThread(this);
+    m_reader = new ReadDataWorker(m_kldatabase);
+
+    m_reader->moveToThread(m_AcquisitionThread);
+
+
+    QObject::connect(m_AcquisitionThread, SIGNAL(started()), m_reader, SLOT(process()) );
+    QObject::connect(m_AcquisitionThread, SIGNAL(finished()), m_reader, SLOT(deleteLater()) );
+    QObject::connect(m_AcquisitionThread, SIGNAL(finished()), m_AcquisitionThread, SLOT(deleteLater()));
+
+    QObject::connect(m_reader, SIGNAL(newData()), this, SLOT(newData()) );
+    QObject::connect(m_reader, SIGNAL(readErrno(int)), this, SLOT(HandleErrNo(int)) );
+
+    QObject::connect(m_UpdatePlotTimer, SIGNAL(timeout()), this, SLOT(OnDrawPlot()));
+
     connect(ui->pushButton_1, SIGNAL(clicked()), this, SLOT(selectLongTimespan()));
     connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(selectMediumTimespan()));
     connect(ui->pushButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()));
@@ -46,16 +67,38 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //initialize plot
     makePlot();
-    OnDrawPlot();
+//    OnDrawPlot();
+
+
+    m_AcquisitionThread->start();
+    m_UpdatePlotTimer->start();
 }
 
 
 
 MainWindow::~MainWindow()
 {
+    qDebug() << "MainWindow Destructor";
+
+    m_UpdatePlotTimer->stop();
+    delete m_UpdatePlotTimer;
     delete m_kldatabase;
     delete ui;
     delete m_MSGBox;
+}
+
+void MainWindow::closeEvent(QCloseEvent * bar)
+{
+    qDebug() << "MainWindow::closeEvent(QCloseEvent * bar)";
+
+    QObject::disconnect(m_reader, SIGNAL(readErrno(int)), this, SLOT(HandleErrNo(int)) );
+
+    m_reader->shutdown();
+
+    m_AcquisitionThread->quit();
+    m_AcquisitionThread->wait(2000);
+
+    bar->accept();
 }
 
 void MainWindow::HandleErrNo(int error)
@@ -86,9 +129,14 @@ void MainWindow::HandleErrNo(int error)
 //
 void MainWindow::OnDrawPlot()
 {
+    qDebug() << "MainWindow::OnDrawPlot()" << QThread::currentThreadId();
+
     QVector<double> x1(140000), y1(140000), y2(140000), y3(140000), y4(140000);
 
     int count = m_kldatabase->getValues(x1, y1, y2, y3, y4);
+
+    if(count == 0)
+        return;
 
     //update UI
     // get created graphs
@@ -219,4 +267,8 @@ void MainWindow::selectLongTimespan()
     qDebug() << "7 Tage";
     m_kldatabase->SetTimeIntervall(TimeIntervall::LONG);
     emit DrawPlot();
+}
+
+void MainWindow::newData() {
+    qDebug() << "MainWindow::newData()" << QThread::currentThreadId();
 }

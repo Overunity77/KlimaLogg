@@ -18,15 +18,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
         qcustomplot.cpp \
         kldatabase.cpp \
-    bitconverter.cpp \
-    workerthread.cpp
+        bitconverter.cpp \
+        readdataworker.cpp
 
 HEADERS  += mainwindow.h \
         qcustomplot.h \
         kldatabase.h \
-    bitconverter.h \
-    definitions.h \
-    workerthread.h
+        bitconverter.h \
+        definitions.h \
+    readdataworker.h
 
 FORMS    += mainwindow.ui
 

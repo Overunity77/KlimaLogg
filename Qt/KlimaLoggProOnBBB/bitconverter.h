@@ -9,15 +9,15 @@ class BitConverter
 
 public:
     BitConverter();
-    static bool ConvertTemperature(char data1, char data2, bool startOnHiNibble, double *value);
-    static bool ConvertHumidity(char data, double *value);
-    static bool ConvertHistoryTimestamp(char *data, long *value);
-    static bool ConvertCurrentTimestamp(char *data, bool startOnHighNibble, long *value);
-    static ResponseType GetResponseType(char *data, int size);
-    static long GetThisIndex(char* frame);
-    static long GetLatestIndex(char* frame);
-    static Record GetSensorValuesFromHistoryData(char* frame, int index);
-    static Record GetSensorValuesFromCurrentData(char* frame);
+    static bool ConvertTemperature(unsigned char data1, unsigned char data2, bool startOnHiNibble, double *value);
+    static bool ConvertHumidity(unsigned char data, double *value);
+    static bool ConvertHistoryTimestamp(unsigned char *data, long *value);
+    static bool ConvertCurrentTimestamp(unsigned char *data, bool startOnHighNibble, long *value);
+    static ResponseType GetResponseType(unsigned char *data, int size);
+    static int GetThisIndex(unsigned char* frame);
+    static int GetLatestIndex(unsigned char* frame);
+    static Record GetSensorValuesFromHistoryData(unsigned char* frame, int index);
+    static Record GetSensorValuesFromCurrentData(unsigned char* frame);
 
 
     //static void ConvertUSBFrame(char* data, long *timestamp, SesnorData *values);

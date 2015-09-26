@@ -31,6 +31,8 @@ KLDatabase::~KLDatabase()
 
 void KLDatabase::StoreRecord(Record data)
 {
+    QMutexLocker locker(&m_mutex);
+
     qDebug() << "Start StoreRecord()";
     QVariant null = QVariant();
 
@@ -60,6 +62,8 @@ void KLDatabase::StoreRecord(Record data)
 
 void KLDatabase::updateLastRetrievedIndex(long index)
 {
+    QMutexLocker locker(&m_mutex);
+
     myQuery->prepare("UPDATE PARAMETER SET VALUE= :index WHERE KEY='lastRetrievedIndex'");
 
     myQuery->bindValue(":index", (qlonglong)index);
@@ -74,30 +78,42 @@ void KLDatabase::updateLastRetrievedIndex(long index)
 
 int KLDatabase::getLastRetrievedIndex()
 {
+    QMutexLocker locker(&m_mutex);
+
+    int ret;
+
     myQuery->prepare("SELECT VALUE from parameter WHERE KEY='lastRetrievedIndex'");
 
     if (! myQuery->exec() ) {
         qDebug() << myQuery->lastError();
+        ret = -1;
     } else {
         myQuery->first();
         QSqlField value = myQuery->record().field("VALUE");
-        return value.value().toInt();
+        ret = value.value().toInt();
     }
+    return ret;
 }
 
 
 void KLDatabase::SetTimeIntervall(TimeIntervall value)
 {
+    QMutexLocker locker(&m_mutex);
+
     m_TimeDiff = value;
 }
 
 TimeIntervall KLDatabase::GetTimeIntervall()
 {
+    QMutexLocker locker(&m_mutex);
+
     return m_TimeDiff;
 }
 
 int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
 {
+    QMutexLocker locker(&m_mutex);
+
     int counter = 0;
     QDateTime timestamp;
 

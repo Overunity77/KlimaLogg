@@ -2,7 +2,7 @@
 #define DEFINITIONS
 
 
-#define SENSOR "/dev/kl0"
+#define SENSOR "/dev/kl2"
 struct SensorData
 {
     double Temperature;

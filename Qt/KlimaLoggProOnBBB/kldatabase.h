@@ -10,6 +10,7 @@
 #include <QSqlField>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QMutexLocker>
 
 #include "definitions.h"
 
@@ -28,12 +29,15 @@ public:
 private slots:
 
 private:
+    KLDatabase() {}
+
     static const QString sDatabaseName;
     QSqlDatabase* db;
     //    QSqlQueryModel* plainModel;
     QSqlQuery* myQuery;
     TimeIntervall m_TimeDiff;
-    KLDatabase() { };
+    QMutex m_mutex;
+
 };
 
 #endif // KLDATABASE_H

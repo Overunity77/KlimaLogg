@@ -2,8 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QThread>
+#include <QTimer>
 #include "kldatabase.h"
-#include "workerthread.h"
+#include "readdataworker.h"
 
 namespace Ui {
 class MainWindow;
@@ -19,27 +21,38 @@ public:
 
 
 private slots:
-    //void TimerEvent();
     void HandleErrNo(int error);
-    void makePlot();
-    void OnDrawPlot();
+
     void selectShortTimespan();
     void selectMediumTimespan();
     void selectLongTimespan();
+
+    void OnDrawPlot();
+
+    void newData();
+
 signals:
     void DrawPlot();
+    void shutdownReader();
+
+protected:
+    void closeEvent(QCloseEvent * bar) Q_DECL_OVERRIDE;
 
 private:
+    void makePlot();
 
 
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;
+
+
     QThread *m_AcquisitionThread;
-    QTimer *m_AcquisitionTimer;
+    ReadDataWorker *m_reader;
+
+    QTimer *m_UpdatePlotTimer;
+
     QMessageBox *m_MSGBox;
-    FILE *fd = NULL;
-    //WorkerThread *m_worker;
-    Controller *m_controller;
+
 };
 
 #endif // MAINWINDOW_H
