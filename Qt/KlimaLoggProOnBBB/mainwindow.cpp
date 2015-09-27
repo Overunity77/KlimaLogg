@@ -10,11 +10,19 @@
 #include <errno.h>
 #include <string.h>
 
+#define INIT_DATA_SIZE  10100
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     qDebug() << "MainWindow(): " << QThread::currentThreadId();
+
+    x1 = new QVector<double>(INIT_DATA_SIZE);
+    y1 = new QVector<double>(INIT_DATA_SIZE);
+    y2 = new QVector<double>(INIT_DATA_SIZE);
+    y3 = new QVector<double>(INIT_DATA_SIZE);
+    y4 = new QVector<double>(INIT_DATA_SIZE);
 
     ui->setupUi(this);
     m_kldatabase = new KLDatabase(this);
@@ -36,8 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }else
     {
         //write last read index to the driver
-        //int index = m_kldatabase->getLastRetrievedIndex();
-        int index = 1000;
+        int index = m_kldatabase->getLastRetrievedIndex();
 
         qDebug() << "Writing LastRetrievedIndex from database to Driver: " << index;
         fwrite(&index,sizeof(int),1,fd);
@@ -93,6 +100,11 @@ MainWindow::~MainWindow()
     delete m_kldatabase;
     delete ui;
     delete m_MSGBox;
+    delete x1;
+    delete y1;
+    delete y2;
+    delete y3;
+    delete y4;
 }
 
 void MainWindow::closeEvent(QCloseEvent * bar)
@@ -145,7 +157,12 @@ void MainWindow::OnDrawPlot()
 {
     qDebug() << "MainWindow::OnDrawPlot()" << QThread::currentThreadId();
 
-    QVector<double> x1(140000), y1(140000), y2(140000), y3(140000), y4(140000);
+    int nrOfValues = m_kldatabase->getNrOfValues();
+    x1->resize(nrOfValues);
+    y1->resize(nrOfValues);
+    y2->resize(nrOfValues);
+    y3->resize(nrOfValues);
+    y4->resize(nrOfValues);
 
     int count = m_kldatabase->getValues(x1, y1, y2, y3, y4);
 
@@ -160,14 +177,14 @@ void MainWindow::OnDrawPlot()
     QCPGraph *graph4 = ui->customPlot->graph(3);
 
     //.. and update the values
-    graph1->setData(x1, y1);
-    graph2->setData(x1, y2);
-    graph3->setData(x1, y3);
-    graph4->setData(x1, y4);
+    graph1->setData(*x1, *y1);
+    graph2->setData(*x1, *y2);
+    graph3->setData(*x1, *y3);
+    graph4->setData(*x1, *y4);
 
     // calculate tick below lowest x axis value and above highest x axis value
-    long minTick = ((long)((x1[0] - TIME_BASIS) / m_kldatabase->GetTickSpacing()) * m_kldatabase->GetTickSpacing()) + TIME_BASIS ;
-    long maxTick = ((long)((x1[count-1] - TIME_BASIS) /m_kldatabase->GetTickSpacing()+1) * m_kldatabase->GetTickSpacing()) + TIME_BASIS;
+    long minTick = ((long)(((*x1)[0] - TIME_BASIS) / m_kldatabase->GetTickSpacing()) * m_kldatabase->GetTickSpacing()) + TIME_BASIS ;
+    long maxTick = ((long)(((*x1)[count-1] - TIME_BASIS) /m_kldatabase->GetTickSpacing()+1) * m_kldatabase->GetTickSpacing()) + TIME_BASIS;
 
     // generete and set ticks for x axis
     QVector<double> xAxisTicks(0);
@@ -181,7 +198,7 @@ void MainWindow::OnDrawPlot()
     ui->customPlot->xAxis->setTickVector(xAxisTicks);
 
     //reconfigure axis
-    ui->customPlot->xAxis->setRange(x1[0], x1[count-1]);
+    ui->customPlot->xAxis->setRange((*x1)[0], (*x1)[count-1]);
 
     //redraw
     ui->customPlot->replot();

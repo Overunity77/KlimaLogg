@@ -54,6 +54,8 @@ private:
 
     QMessageBox *m_MSGBox;
 
+    QVector<double> *x1, *y1, *y2, *y3, *y4;
+
 };
 
 #endif // MAINWINDOW_H

@@ -24,7 +24,8 @@ public:
     void StoreRecord(Record data);
     void SetTimeIntervall(TimeIntervall intervall);
     TimeIntervall GetTimeIntervall();
-    int getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4);
+    int getNrOfValues();
+    int getValues(QVector<double> *x1 , QVector<double> *y1, QVector<double> *y2, QVector<double> *y3 , QVector<double> *y4);
     void updateLastRetrievedIndex(long index);
     int getLastRetrievedIndex();
 

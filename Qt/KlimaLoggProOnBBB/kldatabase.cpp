@@ -330,7 +330,22 @@ TickSpacing KLDatabase::GetTickSpacing()
     return m_TickSpacing;
 }
 
-int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
+int KLDatabase::getNrOfValues()
+{
+    int counter = 0;
+    long timediff = m_data->last().Timestamp - (long)m_TimeDiff;
+
+    QMap<long, Record>::iterator it = m_data->find(timediff);
+
+    while (it != m_data->end()) {
+        counter++;
+        ++it;
+    }
+    qDebug() << "KLDatabase::getNrOfValues() - return " << counter << " values";
+    return counter;
+}
+
+int KLDatabase::getValues(QVector<double> *x1 , QVector<double> *y1, QVector<double> *y2, QVector<double> *y3 , QVector<double> *y4)
 {
 //    QMutexLocker locker(&m_mutex);
     QDateTime timestamp;
@@ -342,15 +357,15 @@ int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<dou
 
     while (it != m_data->end()) {
 
-        x1[counter] = it->Timestamp;
+        (*x1)[counter] = it->Timestamp;
         timestamp.setTime_t(it->Timestamp);
 
-        y1[counter] = it->SensorDatas[0].Temperature;
-        y2[counter] = it->SensorDatas[0].Humidity;
-        y3[counter] = it->SensorDatas[1].Temperature;
-        y4[counter] = it->SensorDatas[1].Humidity;
+        (*y1)[counter] = it->SensorDatas[0].Temperature;
+        (*y2)[counter] = it->SensorDatas[0].Humidity;
+        (*y3)[counter] = it->SensorDatas[1].Temperature;
+        (*y4)[counter] = it->SensorDatas[1].Humidity;
 
-        // qDebug() << "Record Nr: " << counter << "," << timestamp.toString(Qt::SystemLocaleShortDate) << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];
+        // qDebug() << "Record Nr: " << counter << "," << timestamp.toString(Qt::SystemLocaleShortDate) << "," << (*y1)[counter] << "," << (*y2)[counter] << "," << (*y3)[counter] << "," << *(y4)[counter];
         counter++;
         ++it;
     }
