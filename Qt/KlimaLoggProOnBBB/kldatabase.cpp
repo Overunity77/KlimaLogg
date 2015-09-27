@@ -239,10 +239,10 @@ void KLDatabase::SetLowerLimitTemperature()
         QSqlField min_1 = myQuery->record().field("min_temp0");
         QSqlField min_2 = myQuery->record().field("min_temp1");
         if (min_1.value().toInt() <= min_2.value().toInt()) {
-            lowerLimitTemperature = (((int)(min_1.value().toInt())/5)-1) * 5;
+            lowerLimitTemperature = (((int)(min_1.value().toInt())/5)) * 5;
         }
         else {
-            lowerLimitTemperature = (((int)(min_2.value().toInt())/5)-1) * 5;
+            lowerLimitTemperature = (((int)(min_2.value().toInt())/5)) * 5;
         }
     }
 }
@@ -279,10 +279,10 @@ void KLDatabase::SetLowerLimitHumidity()
         QSqlField min_1 = myQuery->record().field("min_humidity0");
         QSqlField min_2 = myQuery->record().field("min_humidity1");
         if (min_1.value().toInt() <= min_2.value().toInt()) {
-            lowerLimitHumidity = (((int)(min_1.value().toInt())/5)-1) * 5;
+            lowerLimitHumidity = (((int)(min_1.value().toInt())/5)) * 5;
         }
         else {
-            lowerLimitHumidity = (((int)(min_2.value().toInt())/5)-1) * 5;
+            lowerLimitHumidity = (((int)(min_2.value().toInt())/5)) * 5;
         }
     }
 }
@@ -356,7 +356,7 @@ int KLDatabase::getValues(QVector<double> *x1 , QVector<double> *y1, QVector<dou
     QMap<long, Record>::iterator it = m_data->find(timediff);
 
     while (it != m_data->end()) {
-
+        qDebug()  << " counter: " << counter ;
         (*x1)[counter] = it->Timestamp;
         timestamp.setTime_t(it->Timestamp);
 
