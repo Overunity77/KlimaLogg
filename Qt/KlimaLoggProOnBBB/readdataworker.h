@@ -20,6 +20,7 @@ public slots:
 signals:
     void newData();
     void readErrno(int err);
+    void finished();
 
 private:
     KLDatabase *m_kldatabase;

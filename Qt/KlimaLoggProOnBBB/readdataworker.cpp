@@ -30,11 +30,14 @@ void ReadDataWorker::process()
     if(!fd)
     {
         qDebug() << "could not open" << SENSOR;
+        emit finished();
         return;
     }
 
     while(!m_shutdown)
     {
+        QThread::msleep(100);
+
         errno = 0;
         retValue = fread(usbframe, USB_FRAME_SIZE, 1, fd);
         qDebug() << "fread retValue: "<< retValue << " errno: " << strerror(errno);
@@ -56,7 +59,7 @@ void ReadDataWorker::process()
             int latestIndex = BitConverter::GetLatestIndex(usbframe);
             int thisIndex = BitConverter::GetThisIndex(usbframe);
             qDebug() << "latestIndex = "<<latestIndex;
-            qDebug() << "thisIndex = "<<thisIndex;
+            qDebug() << "thisIndex   = "<<thisIndex;
 
             for(int i = 0; i < 6;i++)
             {
@@ -77,6 +80,8 @@ void ReadDataWorker::process()
 
     fclose(fd);
     qDebug() << "ReadDataWorker::process() - finished";
+
+    emit finished();
 
 }
 

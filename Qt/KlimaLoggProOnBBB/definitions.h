@@ -3,6 +3,7 @@
 
 
 #define SENSOR "/dev/kl0"
+//#define SENSOR "/dev/kl2"
 #define TIME_BASIS 1420066800
 
 struct SensorData

@@ -34,7 +34,9 @@ MainWindow::MainWindow(QWidget *parent) :
     }else
     {
         //write last read index to the driver
-        int index = m_kldatabase->getLastRetrievedIndex();
+        //int index = m_kldatabase->getLastRetrievedIndex();
+        int index = 1000;
+
         qDebug() << "Writing LastRetrievedIndex from database to Driver: " << index;
         fwrite(&index,sizeof(int),1,fd);
         fclose(fd);
@@ -65,12 +67,16 @@ MainWindow::MainWindow(QWidget *parent) :
     m_MSGBox->setDefaultButton(QMessageBox::NoButton);
     m_MSGBox->setWindowTitle("information");
 
+    setButtonActive(ui->pushButton_1);
+
     //initialize plot
     makePlot();
     OnDrawPlot();
 
 
     m_AcquisitionThread->start();
+    m_AcquisitionThread->setPriority(QThread::LowPriority);
+
     m_UpdatePlotTimer->start();
 }
 
@@ -103,9 +109,14 @@ void MainWindow::closeEvent(QCloseEvent * bar)
 
 void MainWindow::HandleErrNo(int error)
 {
+    static int errCounter = 0;
+
     if(error == 200)
     {
-        if(!m_MSGBox->isVisible())
+        errCounter++;
+        if(errCounter > 1000)
+            errCounter = 3;
+        if( (!m_MSGBox->isVisible()) && (errCounter >=3))
         {
             m_MSGBox->setText("Please press the USB Button on your KlimaLoggPro");
             m_MSGBox->showNormal();
@@ -113,6 +124,7 @@ void MainWindow::HandleErrNo(int error)
     }
     else if(error == 0)
     {
+        errCounter = 0;
         if(m_MSGBox->isVisible())
         {
             m_MSGBox->close();
@@ -286,9 +298,33 @@ void MainWindow::makePlot()
     ui->customPlot->yAxis2->setVisible(true);
 }
 
+
+void MainWindow::setButtonActive(QPushButton* button)
+{
+    QColor backgroundColour;
+    backgroundColour.setNamedColor("red");
+    QPalette Pal(palette());
+    Pal.setColor(QPalette::Button, backgroundColour);
+    button->setAutoFillBackground(true);
+    button->setPalette(Pal);
+}
+
+void MainWindow::setButtonNormal(QPushButton* button)
+{
+    QPalette Pal(palette());
+    Pal.setColor(QPalette::Button, Pal.color(QPalette::Button));
+    button->setAutoFillBackground(true);
+    button->setPalette(Pal);
+}
+
 void MainWindow::selectShortTimespan()
 {
     qDebug() << "15 Minuten";
+
+    setButtonNormal(ui->pushButton_1);
+    setButtonNormal(ui->pushButton_2);
+    setButtonActive(ui->pushButton_3);
+
     m_kldatabase->SetTimeIntervall(TimeIntervall::SHORT);
     m_kldatabase->SetTickSpacing(TickSpacing::MINUTES);
     ui->customPlot->xAxis->setSubTickCount(4);
@@ -302,6 +338,11 @@ void MainWindow::selectShortTimespan()
 void MainWindow::selectMediumTimespan()
 {
     qDebug() << "24 Stunden";
+
+    setButtonNormal(ui->pushButton_1);
+    setButtonActive(ui->pushButton_2);
+    setButtonNormal(ui->pushButton_3);
+
     m_kldatabase->SetTimeIntervall(TimeIntervall::MEDIUM);
     m_kldatabase->SetTickSpacing(TickSpacing::HOURS);
     ui->customPlot->xAxis->setSubTickCount(3);
@@ -314,6 +355,11 @@ void MainWindow::selectMediumTimespan()
 void MainWindow::selectLongTimespan()
 {
     qDebug() << "7 Tage";
+
+    setButtonActive(ui->pushButton_1);
+    setButtonNormal(ui->pushButton_2);
+    setButtonNormal(ui->pushButton_3);
+
     m_kldatabase->SetTimeIntervall(TimeIntervall::LONG);
     m_kldatabase->SetTickSpacing(TickSpacing::DAYS);
     ui->customPlot->xAxis->setSubTickCount(3);

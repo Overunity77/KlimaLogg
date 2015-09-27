@@ -6,6 +6,9 @@ const QString KLDatabase::sDatabaseName = "/usr/local/bin/database/KlimaLoggPro.
 
 KLDatabase::KLDatabase(QWidget *parent)
 {
+    int size;
+
+    m_data = new QMap<long, Record>();
     db = new QSqlDatabase();
     *db = QSqlDatabase::addDatabase("QSQLITE","KlimaLoggDb");
     db->setDatabaseName(sDatabaseName);
@@ -21,6 +24,10 @@ KLDatabase::KLDatabase(QWidget *parent)
                                          "Click Cancel to exit."), QMessageBox::Cancel);
     }
     myQuery = new QSqlQuery("select dateTime, temp0, humidity0, temp3, humidity3 from measurement where datetime >=(1442788380 - 86400) and datetime <= 1442788380 order by datetime asc", QSqlDatabase::database("KlimaLoggDb"));
+
+    size = readDatabase();
+
+    qDebug() << "KLDatabase Constructor - read " << size << " records from database";
 }
 
 KLDatabase::~KLDatabase()
@@ -30,11 +37,107 @@ KLDatabase::~KLDatabase()
     delete db;
 }
 
+long KLDatabase::readDatabase(void)
+{
+    int size;
+
+    myQuery = new QSqlQuery("select dateTime,"
+                            "       temp0, humidity0,"
+                            "       temp1, humidity1,"
+                            "       temp2, humidity2,"
+                            "       temp3, humidity3,"
+                            "       temp4, humidity4,"
+                            "       temp5, humidity5,"
+                            "       temp6, humidity6,"
+                            "       temp7, humidity7,"
+                            "       temp8, humidity8 "
+                            "from measurement order by datetime asc", QSqlDatabase::database("KlimaLoggDb"));
+
+    if(!myQuery->exec())
+    {
+        qDebug() << "query execution went wrong: " << myQuery->lastError().text();
+        return -1;
+    }
+
+    //get record count
+    myQuery->last();
+    size = myQuery->at() + 1;
+
+    //iterate trough all records beginnin on the first
+    if(size > 0)
+    {
+        myQuery->first();
+        do
+        {
+            Record data;
+
+            QSqlRecord myRecord = myQuery->record();
+
+            data.Timestamp = myRecord.field("dateTime").value().toLongLong();
+            data.TimeValid = true;
+
+            data.SensorDatas[0].Humidity = myRecord.field("humidity0").value().toDouble();
+            data.SensorDatas[0].HumValid = true;
+            data.SensorDatas[0].Temperature = myRecord.field("temp0").value().toDouble();
+            data.SensorDatas[0].TempValid = true;
+
+            data.SensorDatas[1].Humidity = myRecord.field("humidity1").value().toDouble();
+            data.SensorDatas[1].HumValid = true;
+            data.SensorDatas[1].Temperature = myRecord.field("temp1").value().toDouble();
+            data.SensorDatas[1].TempValid = true;
+
+            data.SensorDatas[2].Humidity = myRecord.field("humidity2").value().toDouble();
+            data.SensorDatas[2].HumValid = true;
+            data.SensorDatas[2].Temperature = myRecord.field("temp2").value().toDouble();
+            data.SensorDatas[2].TempValid = true;
+
+            data.SensorDatas[3].Humidity = myRecord.field("humidity3").value().toDouble();
+            data.SensorDatas[3].HumValid = true;
+            data.SensorDatas[3].Temperature = myRecord.field("temp3").value().toDouble();
+            data.SensorDatas[3].TempValid = true;
+
+            data.SensorDatas[4].Humidity = myRecord.field("humidity4").value().toDouble();
+            data.SensorDatas[4].HumValid = true;
+            data.SensorDatas[4].Temperature = myRecord.field("temp4").value().toDouble();
+            data.SensorDatas[4].TempValid = true;
+
+            data.SensorDatas[5].Humidity = myRecord.field("humidity5").value().toDouble();
+            data.SensorDatas[5].HumValid = true;
+            data.SensorDatas[5].Temperature = myRecord.field("temp5").value().toDouble();
+            data.SensorDatas[5].TempValid = true;
+
+            data.SensorDatas[6].Humidity = myRecord.field("humidity6").value().toDouble();
+            data.SensorDatas[6].HumValid = true;
+            data.SensorDatas[6].Temperature = myRecord.field("temp6").value().toDouble();
+            data.SensorDatas[6].TempValid = true;
+
+            data.SensorDatas[7].Humidity = myRecord.field("humidity7").value().toDouble();
+            data.SensorDatas[7].HumValid = true;
+            data.SensorDatas[7].Temperature = myRecord.field("temp7").value().toDouble();
+            data.SensorDatas[7].TempValid = true;
+
+            data.SensorDatas[8].Humidity = myRecord.field("humidity8").value().toDouble();
+            data.SensorDatas[8].HumValid = true;
+            data.SensorDatas[8].Temperature = myRecord.field("temp8").value().toDouble();
+            data.SensorDatas[8].TempValid = true;
+
+            // store to in-memory map
+            m_data->insert(data.Timestamp, data);
+
+        }while(myQuery->next());
+    }
+
+    return m_data->size();
+}
+
+
 void KLDatabase::StoreRecord(Record data)
 {
-    QMutexLocker locker(&m_mutex);
+    QDateTime timestamp;
+    timestamp.setTime_t(data.Timestamp);
 
-    qDebug() << "Start StoreRecord()";
+
+    qDebug() << "Start StoreRecord() - Timestamp: " << data.Timestamp << "-->" << timestamp.toString(Qt::SystemLocaleShortDate);
     QVariant null = QVariant();
 
 
@@ -59,11 +162,19 @@ void KLDatabase::StoreRecord(Record data)
         qDebug() << "after exec() of INSERT: OK";
     }
 
+//    QMutexLocker locker(&m_mutex);
+    // store to in-memory map
+    if(!m_data->contains(data.Timestamp))
+    {
+        m_data->insert(data.Timestamp, data);
+    }
+
+
 }
 
 void KLDatabase::updateLastRetrievedIndex(long index)
 {
-    QMutexLocker locker(&m_mutex);
+//    QMutexLocker locker(&m_mutex);
 
     myQuery->prepare("UPDATE PARAMETER SET VALUE= :index WHERE KEY='lastRetrievedIndex'");
 
@@ -79,7 +190,7 @@ void KLDatabase::updateLastRetrievedIndex(long index)
 
 int KLDatabase::getLastRetrievedIndex()
 {
-    QMutexLocker locker(&m_mutex);
+//    QMutexLocker locker(&m_mutex);
 
     int ret;
 
@@ -99,88 +210,56 @@ int KLDatabase::getLastRetrievedIndex()
 
 void KLDatabase::SetTimeIntervall(TimeIntervall value)
 {
-    QMutexLocker locker(&m_mutex);
+//    QMutexLocker locker(&m_mutex);
 
     m_TimeDiff = value;
 }
 
 TimeIntervall KLDatabase::GetTimeIntervall()
 {
-    QMutexLocker locker(&m_mutex);
+//    QMutexLocker locker(&m_mutex);
 
     return m_TimeDiff;
 }
 
 void KLDatabase::SetTickSpacing (TickSpacing spacing)
 {
+//    QMutexLocker locker(&m_mutex);
     m_TickSpacing = spacing;
 }
 
 TickSpacing KLDatabase::GetTickSpacing()
 {
+//    QMutexLocker locker(&m_mutex);
     return m_TickSpacing;
 }
 
-
 int KLDatabase::getValues(QVector<double>& x1 , QVector<double>& y1, QVector<double>& y2, QVector<double>& y3 , QVector<double>& y4)
 {
-    QMutexLocker locker(&m_mutex);
-
-    int counter = 0;
+//    QMutexLocker locker(&m_mutex);
     QDateTime timestamp;
 
-    myQuery->prepare("select max(dateTime) as dateTime from measurement");
-    if(!myQuery->exec())
-    {
-        qDebug() << "query execution went wrong";
-        return 0;
+    int counter = 0;
+    long timediff = m_data->last().Timestamp - (long)m_TimeDiff;
+
+    QMap<long, Record>::iterator it = m_data->find(timediff);
+
+    while (it != m_data->end()) {
+
+        x1[counter] = it->Timestamp;
+        timestamp.setTime_t(it->Timestamp);
+
+        y1[counter] = it->SensorDatas[0].Temperature;
+        y2[counter] = it->SensorDatas[0].Humidity;
+        y3[counter] = it->SensorDatas[1].Temperature;
+        y4[counter] = it->SensorDatas[1].Humidity;
+
+        // qDebug() << "Record Nr: " << counter << "," << timestamp.toString(Qt::SystemLocaleShortDate) << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];
+        counter++;
+        ++it;
     }
-    myQuery->first();
-
-    QSqlField dateTime = myQuery->record().field("dateTime");
-
-    int timediff = dateTime.value().toInt() - (int)m_TimeDiff;
-    myQuery->prepare("select dateTime, temp0, humidity0, temp1, humidity1 from measurement where datetime >= :timediff order by datetime asc");
-    myQuery->bindValue(":timediff",timediff);
-    if(!myQuery->exec())
-    {
-        qDebug() << "query execution went wrong";
-        return 0;
-    }
-
-    //get record count
-    myQuery->last();
-    int size = myQuery->at() + 1;
-
-    //iterate trough all records beginnin on the first
-    if(size > 0)
-    {
-        myQuery->first();
-        do
-        {
-            QSqlRecord myRecord = myQuery->record();
-
-            QSqlField dateTime = myRecord.field("dateTime");
-
-            x1[counter] = dateTime.value().toUInt();
-            timestamp.setTime_t(dateTime.value().toUInt());
-
-            QSqlField temp0 = myRecord.field("temp0");
-            y1[counter] = temp0.value().toDouble();
-
-            QSqlField humidity0 = myRecord.field("humidity0");
-            y2[counter] = humidity0.value().toDouble();
-
-            QSqlField temp1 = myRecord.field("temp1");
-            y3[counter] = temp1.value().toDouble();
-
-            QSqlField humidity1 = myRecord.field("humidity1");
-            y4[counter] = humidity1.value().toDouble();
-
-            qDebug() << "Record Nr: " << counter << "," << timestamp.toString(Qt::SystemLocaleShortDate) << "," << y1[counter] << "," << y2[counter] << "," << y3[counter] << "," << y4[counter];
-            counter++;
-        }while(myQuery->next());
-    }
-    return size;
-
+    qDebug() << "KLDatabase::getValues() - return " << counter << " values";
+    return counter;
 }
+
+

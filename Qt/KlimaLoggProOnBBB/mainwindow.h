@@ -40,7 +40,8 @@ protected:
 
 private:
     void makePlot();
-
+    void setButtonActive(QPushButton* button);
+    void setButtonNormal(QPushButton* button);
 
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;

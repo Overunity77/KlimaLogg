@@ -112,11 +112,11 @@ bool BitConverter::ConvertHistoryTimestamp(unsigned char *data, long *value)
 	timeinfo->tm_min = minute10 * 10 + minute1;
 	timeinfo->tm_sec = 0;
 
-    qDebug() << "Year   : " << timeinfo->tm_year + 1900;
-    qDebug() << "Month  : " << timeinfo->tm_mon + 1;
-    qDebug() << "Days   : " << timeinfo->tm_mday;
-    qDebug() << "Hours  : " << timeinfo->tm_hour;
-    qDebug() << "Minutes: " << timeinfo->tm_min;
+//    qDebug() << "Year   : " << timeinfo->tm_year + 1900;
+//    qDebug() << "Month  : " << timeinfo->tm_mon + 1;
+//    qDebug() << "Days   : " << timeinfo->tm_mday;
+//    qDebug() << "Hours  : " << timeinfo->tm_hour;
+//    qDebug() << "Minutes: " << timeinfo->tm_min;
 
     //convert time to unix timestamp
     (*value) = mktime(timeinfo);
@@ -273,12 +273,12 @@ Record BitConverter::GetSensorValuesFromHistoryData(unsigned char* frame, int in
 		record.SensorDatas[i].Humidity = value;
 	}
 
-    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
-    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
-    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
+//    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
+//                ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
+//    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
+//                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
+//    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
+//                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
 	return record;
 }
 
@@ -307,16 +307,16 @@ Record BitConverter::GetSensorValuesFromCurrentData(unsigned char *frame)
         double value = 0;
 		record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(frame[offset_t], frame[offset_t + 1], true, &value);
         record.SensorDatas[i].Temperature = value;
-        qDebug() << "Temperature for "<< i << " is " <<  value;
+//        qDebug() << "Temperature for "<< i << " is " <<  value;
         record.SensorDatas[i].HumValid = BitConverter::ConvertHumidity(frame[offset_h], &value);
         record.SensorDatas[i].Humidity = value;
-        qDebug() << "Humidity for "<< i << " is " <<  value;
+//        qDebug() << "Humidity for "<< i << " is " <<  value;
     }
-    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
-    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
-    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
+//    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
+//                ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
+//    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
+//                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
+//    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
+//                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
     return record;
 }
