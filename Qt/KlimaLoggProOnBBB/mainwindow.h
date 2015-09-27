@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
+#include <QMessageBox>
 #include "kldatabase.h"
 #include"readdataworker.h"
 
@@ -19,6 +20,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    bool startAquisition();
 
 private slots:
     void HandleErrNo(int error);
@@ -30,6 +32,7 @@ private slots:
     void OnDrawPlot();
 
     void newData();
+    void onMenuExit();
 
 signals:
     void DrawPlot();
@@ -42,6 +45,9 @@ private:
     void makePlot();
     void setButtonActive(QPushButton* button);
     void setButtonNormal(QPushButton* button);
+
+    double getMaxValue(QVector<double> *data);
+    double getMinValue(QVector<double> *data);
 
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;

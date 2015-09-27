@@ -12,6 +12,11 @@ int main(int argc, char *argv[])
 
     w.show();
 
+    if(!w.startAquisition())
+    {
+            return 1;
+    }
+
     return a.exec();
 }
 

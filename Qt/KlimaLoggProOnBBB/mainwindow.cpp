@@ -7,6 +7,7 @@
 
 #include <QDebug>
 
+
 #include <errno.h>
 #include <string.h>
 
@@ -27,30 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     m_kldatabase = new KLDatabase(this);
 
-    m_kldatabase->SetUpperLimitTemperature();
-    m_kldatabase->SetLowerLimitTemperature();
-    m_kldatabase->SetUpperLimitHumidity();
-    m_kldatabase->SetLowerLimitHumidity();
-
     m_UpdatePlotTimer = new QTimer(this);
     m_UpdatePlotTimer->setInterval(5000);
 
-
-    FILE *fd = fopen(SENSOR,"wb");
-    if(!fd)
-    {
-        qDebug() << "could not open" << SENSOR;
-
-    }else
-    {
-        //write last read index to the driver
-        int index = m_kldatabase->getLastRetrievedIndex();
-
-        qDebug() << "Writing LastRetrievedIndex from database to Driver: " << index;
-        fwrite(&index,sizeof(int),1,fd);
-        fclose(fd);
-
-    }
 
     m_AcquisitionThread = new QThread(this);
     m_reader = new ReadDataWorker(m_kldatabase);
@@ -65,28 +45,24 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(m_reader, SIGNAL(newData()), this, SLOT(newData()) );
     QObject::connect(m_reader, SIGNAL(readErrno(int)), this, SLOT(HandleErrNo(int)) );
 
-    QObject::connect(m_UpdatePlotTimer, SIGNAL(timeout()), this, SLOT(OnDrawPlot()));
+    QObject::connect(m_UpdatePlotTimer, SIGNAL(timeout()), this, SLOT(OnDrawPlot()) );
 
-    connect(ui->pushButton_1, SIGNAL(clicked()), this, SLOT(selectLongTimespan()));
-    connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(selectMediumTimespan()));
-    connect(ui->pushButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()));
-    connect(this,SIGNAL(DrawPlot()),this,SLOT(OnDrawPlot()));
+    QObject::connect(ui->pushButton_1, SIGNAL(clicked()), this, SLOT(selectLongTimespan()) );
+    QObject::connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(selectMediumTimespan()) );
+    QObject::connect(ui->pushButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()) );
+    QObject::connect(this,SIGNAL(DrawPlot()),this,SLOT(OnDrawPlot()) );
+
+    QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(onMenuExit()) );
 
     m_MSGBox = new QMessageBox(this);
     m_MSGBox->setDefaultButton(QMessageBox::NoButton);
-    m_MSGBox->setWindowTitle("information");
+    m_MSGBox->setWindowTitle("Information");
 
     setButtonActive(ui->pushButton_1);
 
-    //initialize plot
+    // initialize plot
     makePlot();
-    OnDrawPlot();
 
-
-    m_AcquisitionThread->start();
-    m_AcquisitionThread->setPriority(QThread::LowPriority);
-
-    m_UpdatePlotTimer->start();
 }
 
 
@@ -107,6 +83,44 @@ MainWindow::~MainWindow()
     delete y4;
 }
 
+bool MainWindow::startAquisition()
+{
+    FILE *fd = fopen(SENSOR,"wb");
+    if(!fd)
+    {
+        qDebug() << "could not open" << SENSOR;
+
+        QMessageBox::critical(0,
+                              tr("Could not open %1").arg(SENSOR),
+                              tr("Unable to establish a connection.\n"
+                                 "to the KlimaLogg Pro USB Transceiver.\n\n"
+                                 "Click Cancel to exit."),
+                              QMessageBox::Cancel);
+
+        close();
+        return false;
+    }
+    else
+    {
+        //write last read index to the driver
+        int index = m_kldatabase->getLastRetrievedIndex();
+
+        qDebug() << "Writing LastRetrievedIndex from database to Driver: " << index;
+        fwrite(&index,sizeof(int),1,fd);
+        fclose(fd);
+
+        // start reading form KlimaLogg Pro
+        m_AcquisitionThread->start();
+        m_AcquisitionThread->setPriority(QThread::LowPriority);
+
+        OnDrawPlot();
+
+        m_UpdatePlotTimer->start();
+    }
+    return true;
+
+}
+
 void MainWindow::closeEvent(QCloseEvent * bar)
 {
     qDebug() << "MainWindow::closeEvent(QCloseEvent * bar)";
@@ -115,11 +129,15 @@ void MainWindow::closeEvent(QCloseEvent * bar)
 
     m_reader->shutdown();
 
-    m_AcquisitionThread->quit();
-    m_AcquisitionThread->wait(2000);
+    if(m_AcquisitionThread->isRunning())
+    {
+        m_AcquisitionThread->quit();
+        m_AcquisitionThread->wait(2000);
+    }
 
     bar->accept();
 }
+
 
 void MainWindow::HandleErrNo(int error)
 {
@@ -169,6 +187,25 @@ void MainWindow::OnDrawPlot()
     if(count == 0)
         return;
 
+    double y1Min = getMinValue(y1);
+    double y1Max = getMaxValue(y1);
+    double y2Min = getMinValue(y2);
+    double y2Max = getMaxValue(y2);
+    double y3Min = getMinValue(y3);
+    double y3Max = getMaxValue(y3);
+    double y4Min = getMinValue(y4);
+    double y4Max = getMaxValue(y4);
+
+    double minTemperature = y1Min <= y3Min ? y1Min : y3Min;
+    double maxTemperature = y1Max >= y3Max ? y1Max : y3Max;
+    double minHumidity    = y2Min <= y4Min ? y2Min : y4Min;
+    double maxHumidity    = y2Max >= y4Max ? y2Max : y4Max;
+
+    minTemperature = (minTemperature / 5.0 - 1.0) * 5.0;
+    maxTemperature = (maxTemperature / 5.0 + 1.0) * 5.0;
+    minHumidity    = (minHumidity / 5.0 - 1.0) * 5.0;
+    maxHumidity    = (maxHumidity / 5.0 + 1.0) * 5.0;
+
     //update UI
     // get created graphs
     QCPGraph *graph1 = ui->customPlot->graph(0);
@@ -199,6 +236,9 @@ void MainWindow::OnDrawPlot()
 
     //reconfigure axis
     ui->customPlot->xAxis->setRange((*x1)[0], (*x1)[count-1]);
+
+    ui->customPlot->yAxis->setRange(minTemperature, maxTemperature);
+    ui->customPlot->yAxis2->setRange(minHumidity, maxHumidity);
 
     //redraw
     ui->customPlot->replot();
@@ -300,8 +340,6 @@ void MainWindow::makePlot()
     axisRectGradient.setColorAt(0, QColor(30, 30, 30));
     axisRectGradient.setColorAt(1, QColor(30, 30, 30));
     ui->customPlot->axisRect()->setBackground(axisRectGradient);
-    ui->customPlot->yAxis->setRange(m_kldatabase->GetLowerLimitTemperature(), m_kldatabase->GetUpperLimitTemperature());
-    ui->customPlot->yAxis2->setRange(m_kldatabase->GetLowerLimitHumidity(), m_kldatabase->GetUpperLimitHumidity());
 
     ui->customPlot->xAxis->setLabelColor(Qt::white);
     ui->customPlot->yAxis->setLabelColor(Qt::white);
@@ -335,6 +373,41 @@ void MainWindow::setButtonNormal(QPushButton* button)
     button->setAutoFillBackground(true);
     button->setPalette(Pal);
 }
+
+double MainWindow::getMaxValue(QVector<double> *data)
+{
+    double maxValue = -1000;
+
+    QVector<double>::iterator it = data->begin();
+
+    while (it != data->end()) {
+        if(*it > maxValue)
+        {
+            maxValue = *it;
+        }
+        ++it;
+    }
+//    qDebug() << "MainWindow::getMaxValue() - maxValue: " << maxValue;
+    return maxValue;
+}
+
+double MainWindow::getMinValue(QVector<double> *data)
+{
+    double minValue = 1000;
+
+    QVector<double>::iterator it = data->begin();
+
+    while (it != data->end()) {
+        if(*it < minValue)
+        {
+            minValue = *it;
+        }
+        ++it;
+    }
+//    qDebug() << "MainWindow::getMinValue() - minValue: " << minValue;
+    return minValue;
+}
+
 
 void MainWindow::selectShortTimespan()
 {
@@ -388,6 +461,13 @@ void MainWindow::selectLongTimespan()
     emit DrawPlot();
 }
 
-void MainWindow::newData() {
+void MainWindow::newData()
+{
     qDebug() << "MainWindow::newData()" << QThread::currentThreadId();
+}
+
+void MainWindow::onMenuExit()
+{
+    close();
+    qApp->quit();
 }
