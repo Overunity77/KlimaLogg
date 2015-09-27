@@ -1,0 +1,17 @@
+# Embedded-Linux (CAS EBX-FS15)
+# Set make environment variables for the target
+# Version: 1.0
+# File:    make_env_target
+# Date:    04.10.2013
+# Author   Martin Aebersold (AOM1)
+#
+# Last Modifications: V1.0, AOM1, 04.10.2013
+# Initial release
+
+export TARGET=arm-linux
+export TARGET_ROOTFS=/opt/embedded/bbb/rootfs
+export LOCAL_INC=/opt/embedded/bbb/rootfs/usr/local/include
+export LOCAL_LIB=/opt/embedded/bbb/rootfs/usr/local/lib
+export SYSTEM_INC=/opt/embedded/bbb/rootfs/usr/include
+export SYSTEM_LIB=/opt/embedded/bbb/rootfs/usr/lib
+export EXTRA_CFLAGS=-mcpu=cortex-a8

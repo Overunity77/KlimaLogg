@@ -259,7 +259,7 @@ int KLDatabase::getValues(QVector<double> *x1 , QVector<double> *y1, QVector<dou
     QMap<long, Record>::iterator it = m_data->find(timediff);
 
     while (it != m_data->end()) {
-
+        qDebug()  << " counter: " << counter ;
         (*x1)[counter] = it->Timestamp;
         timestamp.setTime_t(it->Timestamp);
 
