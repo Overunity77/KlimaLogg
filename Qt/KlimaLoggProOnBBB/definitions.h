@@ -3,6 +3,8 @@
 
 
 #define SENSOR "/dev/kl0"
+//#define SENSOR "/dev/kl2"
+
 #define TIME_BASIS 1430431200
 #define KLIMALOGG_DATABASE "/usr/local/bin/database/KlimaLoggPro.sdb"
 

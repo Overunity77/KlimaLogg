@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QDateTime>
 #include <QMutexLocker>
+#include <QMap>
 
 #include "definitions.h"
 
@@ -44,8 +45,11 @@ private slots:
 private:
     KLDatabase() {}
 
+    long readDatabase(void);
+
     static const QString sDatabaseName;
     QSqlDatabase* db;
+    QMap<long, Record> *m_data;
     //    QSqlQueryModel* plainModel;
     QSqlQuery* myQuery;
     TimeIntervall m_TimeDiff;
