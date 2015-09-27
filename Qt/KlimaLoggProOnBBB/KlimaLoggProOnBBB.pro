@@ -30,6 +30,7 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
+BBB: {
 INCLUDEPATH += /opt/crosstools/gcc-linaro-arm-linux-gnueabihf-4.9-2014.09_linux/arm-linux-gnueabihf/libc/usr/include
 INCLUDEPATH += /opt/embedded/bbb/rootfs/usr/include
 INCLUDEPATH += /opt/embedded/bbb/rootfs/usr/local/include
@@ -40,6 +41,7 @@ LIBS += -L/opt/embedded/bbb/rootfs/usr/lib
 LIBS += -L/opt/embedded/bbb/rootfs/usr/local/lib
 
 LIBS += -L/opt/embedded/bbb/rootfs/usr/local/qt-5.3/lib -lz -lpthread -lm -lqwt -lQt5Gui -lGLES_CM -lGLESv2 -lusc
+}
 
 target.path = /usr/local/bin
 INSTALLS += target
