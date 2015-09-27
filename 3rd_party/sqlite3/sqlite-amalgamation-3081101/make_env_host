@@ -1,0 +1,18 @@
+# Embedded-Linux (CAS EBX-FS15)
+# Set make environment variables for the host
+# Version: 1.0
+# File:    make_env_host
+# Date:    04.10.2013
+# Author   Martin Aebersold (AOM1)
+#
+# Last Modifications: V1.0, AOM1, 04.10.2013
+# Initial release
+
+export TARGET=
+export TARGET_ROOTFS=
+export LOCAL_INC=/usr/local/include
+export LOCAL_LIB=/usr/local/lib
+export SYSTEM_INC=/usr/include
+export SYSTEM_LIB=/usr/lib
+export EXTRA_CFLAGS=
+
