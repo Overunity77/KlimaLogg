@@ -6,7 +6,7 @@
 #include <QTimer>
 #include <QMessageBox>
 #include "kldatabase.h"
-#include"readdataworker.h"
+#include "readdataworker.h"
 
 namespace Ui {
 class MainWindow;
@@ -49,18 +49,20 @@ private:
     double getMaxValue(QVector<double> *data);
     double getMinValue(QVector<double> *data);
 
+    void SetTimeInterval(TimeInterval value);
+    TimeInterval GetTimeInterval();
+    void SetTickSpacing (TickSpacing spacing);
+    TickSpacing GetTickSpacing();
+
     Ui::MainWindow *ui;
     KLDatabase* m_kldatabase;
-
-
     QThread *m_AcquisitionThread;
     ReadDataWorker *m_reader;
-
     QTimer *m_UpdatePlotTimer;
-
     QMessageBox *m_MSGBox;
-
     QVector<double> *x1, *y1, *y2, *y3, *y4;
+    TimeInterval m_TimeInterval;
+    TickSpacing m_TickSpacing;
 
 };
 

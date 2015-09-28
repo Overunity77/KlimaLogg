@@ -33,7 +33,7 @@ enum ResponseType
     RESPONE_REQUEST = 0x50
 };
 
-enum TimeIntervall
+enum TimeInterval
 {
     SHORT = 900,    //15 min
     MEDIUM = 86400, // 24 hours

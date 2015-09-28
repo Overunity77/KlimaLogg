@@ -58,6 +58,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_MSGBox->setDefaultButton(QMessageBox::NoButton);
     m_MSGBox->setWindowTitle("Information");
 
+    m_TimeInterval = TimeInterval::LONG;
+    m_TickSpacing = TickSpacing::DAYS;
+
     setButtonActive(ui->pushButton_1);
 
     // initialize plot
@@ -85,7 +88,7 @@ MainWindow::~MainWindow()
 
 bool MainWindow::startAquisition()
 {
-    FILE *fd = fopen(SENSOR,"wb");
+    FILE *fd = fopen(SENSOR,"r+b");
     if(!fd)
     {
         qDebug() << "could not open" << SENSOR;
@@ -102,6 +105,10 @@ bool MainWindow::startAquisition()
     }
     else
     {
+        int size = m_kldatabase->readDatabase();
+
+        qDebug() << "KLDatabase Constructor - read " << size << " records from database";
+
         //write last read index to the driver
         int index = m_kldatabase->getLastRetrievedIndex();
 
@@ -175,14 +182,14 @@ void MainWindow::OnDrawPlot()
 {
     qDebug() << "MainWindow::OnDrawPlot()" << QThread::currentThreadId();
 
-    int nrOfValues = m_kldatabase->getNrOfValues();
+    int nrOfValues = m_kldatabase->getNrOfValues(GetTimeInterval());
     x1->resize(nrOfValues);
     y1->resize(nrOfValues);
     y2->resize(nrOfValues);
     y3->resize(nrOfValues);
     y4->resize(nrOfValues);
 
-    int count = m_kldatabase->getValues(x1, y1, y2, y3, y4);
+    int count = m_kldatabase->getValues(GetTimeInterval(), x1, y1, y2, y3, y4);
 
     if(count == 0)
         return;
@@ -220,15 +227,15 @@ void MainWindow::OnDrawPlot()
     graph4->setData(*x1, *y4);
 
     // calculate tick below lowest x axis value and above highest x axis value
-    long minTick = ((long)(((*x1)[0] - TIME_BASIS) / m_kldatabase->GetTickSpacing()) * m_kldatabase->GetTickSpacing()) + TIME_BASIS ;
-    long maxTick = ((long)(((*x1)[count-1] - TIME_BASIS) /m_kldatabase->GetTickSpacing()+1) * m_kldatabase->GetTickSpacing()) + TIME_BASIS;
+    long minTick = ((long)(((*x1)[0] - TIME_BASIS) / GetTickSpacing()) * GetTickSpacing()) + TIME_BASIS ;
+    long maxTick = ((long)(((*x1)[count-1] - TIME_BASIS) / GetTickSpacing() + 1 ) * GetTickSpacing()) + TIME_BASIS;
 
     // generete and set ticks for x axis
     QVector<double> xAxisTicks(0);
     int i =0;
     long actualTick = minTick;
     while ( actualTick <= maxTick){
-        actualTick =  minTick + i * m_kldatabase->GetTickSpacing();
+        actualTick =  minTick + i * GetTickSpacing();
         xAxisTicks.append(actualTick);
         i = i + 1;
     }
@@ -408,6 +415,25 @@ double MainWindow::getMinValue(QVector<double> *data)
     return minValue;
 }
 
+void MainWindow::SetTimeInterval(TimeInterval value)
+{
+    m_TimeInterval = value;
+}
+
+TimeInterval MainWindow::GetTimeInterval()
+{
+    return m_TimeInterval;
+}
+
+void MainWindow::SetTickSpacing (TickSpacing spacing)
+{
+    m_TickSpacing = spacing;
+}
+
+TickSpacing MainWindow::GetTickSpacing()
+{
+    return m_TickSpacing;
+}
 
 void MainWindow::selectShortTimespan()
 {
@@ -417,12 +443,11 @@ void MainWindow::selectShortTimespan()
     setButtonNormal(ui->pushButton_2);
     setButtonActive(ui->pushButton_3);
 
-    m_kldatabase->SetTimeIntervall(TimeIntervall::SHORT);
-    m_kldatabase->SetTickSpacing(TickSpacing::MINUTES);
+    SetTimeInterval(TimeInterval::SHORT);
+    SetTickSpacing(TickSpacing::MINUTES);
     ui->customPlot->xAxis->setSubTickCount(4);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy hh:mm");
 
-    //  OnDrawPlot();
     emit DrawPlot();
 }
 
@@ -435,12 +460,11 @@ void MainWindow::selectMediumTimespan()
     setButtonActive(ui->pushButton_2);
     setButtonNormal(ui->pushButton_3);
 
-    m_kldatabase->SetTimeIntervall(TimeIntervall::MEDIUM);
-    m_kldatabase->SetTickSpacing(TickSpacing::HOURS);
+    SetTimeInterval(TimeInterval::MEDIUM);
+    SetTickSpacing(TickSpacing::HOURS);
     ui->customPlot->xAxis->setSubTickCount(3);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy hh:mm");
 
-    //    OnDrawPlot();
     emit DrawPlot();
 }
 
@@ -452,12 +476,11 @@ void MainWindow::selectLongTimespan()
     setButtonNormal(ui->pushButton_2);
     setButtonNormal(ui->pushButton_3);
 
-    m_kldatabase->SetTimeIntervall(TimeIntervall::LONG);
-    m_kldatabase->SetTickSpacing(TickSpacing::DAYS);
+    SetTimeInterval(TimeInterval::LONG);
+    SetTickSpacing(TickSpacing::DAYS);
     ui->customPlot->xAxis->setSubTickCount(3);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy");
 
-    //   OnDrawPlot();
     emit DrawPlot();
 }
 

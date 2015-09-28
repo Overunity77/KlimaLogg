@@ -1,20 +1,19 @@
 #include "kldatabase.h"
+
 #include <QDebug>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QSqlError>
 
 const QString KLDatabase::sDatabaseName = KLIMALOGG_DATABASE;
 
 KLDatabase::KLDatabase(QWidget *parent)
 {
-    int size;
 
     m_data = new QMap<long, Record>();
     db = new QSqlDatabase();
     *db = QSqlDatabase::addDatabase("QSQLITE","KlimaLoggDb");
     db->setDatabaseName(sDatabaseName);
-    m_TimeDiff = TimeIntervall::LONG;
-    m_TickSpacing = TickSpacing::DAYS;
 
     if (!db->open()) {
         QMessageBox::critical(0, parent->tr("Cannot open database"),
@@ -25,9 +24,6 @@ KLDatabase::KLDatabase(QWidget *parent)
                                          "Click Cancel to exit."), QMessageBox::Cancel);
     }
 
-    size = readDatabase();
-
-    qDebug() << "KLDatabase Constructor - read " << size << " records from database";
 }
 
 KLDatabase::~KLDatabase()
@@ -140,6 +136,7 @@ void KLDatabase::StoreRecord(Record data)
     qDebug() << "Start StoreRecord() - Timestamp: " << data.Timestamp << "-->" << timestamp.toString(Qt::SystemLocaleShortDate);
     QVariant null = QVariant();
 
+    QMutexLocker locker(&m_mutex);
 
     myQuery->prepare("INSERT INTO measurement (dateTime,temp0,humidity0,temp1,humidity1,temp2,humidity2,temp3,humidity3"
                      ",temp4,humidity4,temp5,humidity5,temp6,humidity6,temp7,humidity7,temp8,humidity8)"
@@ -162,19 +159,17 @@ void KLDatabase::StoreRecord(Record data)
         qDebug() << "after exec() of INSERT: OK";
     }
 
-//    QMutexLocker locker(&m_mutex);
+
     // store to in-memory map
     if(!m_data->contains(data.Timestamp))
     {
         m_data->insert(data.Timestamp, data);
     }
-
-
 }
 
 void KLDatabase::updateLastRetrievedIndex(long index)
 {
-//    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_mutex);
 
     myQuery->prepare("UPDATE PARAMETER SET VALUE= :index WHERE KEY='lastRetrievedIndex'");
 
@@ -185,12 +180,11 @@ void KLDatabase::updateLastRetrievedIndex(long index)
     } else {
         qDebug() << "lastRetrievedIndex updated";
     }
-
 }
 
 int KLDatabase::getLastRetrievedIndex()
 {
-//    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_mutex);
 
     int ret;
 
@@ -207,36 +201,14 @@ int KLDatabase::getLastRetrievedIndex()
     return ret;
 }
 
-void KLDatabase::SetTimeIntervall(TimeIntervall value)
-{
-//    QMutexLocker locker(&m_mutex);
 
-    m_TimeDiff = value;
-}
-
-TimeIntervall KLDatabase::GetTimeIntervall()
-{
-//    QMutexLocker locker(&m_mutex);
-
-    return m_TimeDiff;
-}
-
-void KLDatabase::SetTickSpacing (TickSpacing spacing)
-{
-//    QMutexLocker locker(&m_mutex);
-    m_TickSpacing = spacing;
-}
-
-TickSpacing KLDatabase::GetTickSpacing()
-{
-//    QMutexLocker locker(&m_mutex);
-    return m_TickSpacing;
-}
-
-int KLDatabase::getNrOfValues()
+int KLDatabase::getNrOfValues(TimeInterval timeInterval)
 {
     int counter = 0;
-    long timediff = m_data->last().Timestamp - (long)m_TimeDiff;
+
+    QMutexLocker locker(&m_mutex);
+
+    long timediff = m_data->last().Timestamp - (long)timeInterval;
 
     QMap<long, Record>::iterator it = m_data->find(timediff);
 
@@ -248,18 +220,19 @@ int KLDatabase::getNrOfValues()
     return counter;
 }
 
-int KLDatabase::getValues(QVector<double> *x1 , QVector<double> *y1, QVector<double> *y2, QVector<double> *y3 , QVector<double> *y4)
+int KLDatabase::getValues(TimeInterval timeInterval, QVector<double> *x1 , QVector<double> *y1, QVector<double> *y2, QVector<double> *y3 , QVector<double> *y4)
 {
-//    QMutexLocker locker(&m_mutex);
     QDateTime timestamp;
 
+    QMutexLocker locker(&m_mutex);
+
     int counter = 0;
-    long timediff = m_data->last().Timestamp - (long)m_TimeDiff;
+    long timediff = m_data->last().Timestamp - (long)timeInterval;
 
     QMap<long, Record>::iterator it = m_data->find(timediff);
 
     while (it != m_data->end()) {
-        qDebug()  << " counter: " << counter ;
+        //qDebug()  << " counter: " << counter ;
         (*x1)[counter] = it->Timestamp;
         timestamp.setTime_t(it->Timestamp);
 
@@ -272,8 +245,7 @@ int KLDatabase::getValues(QVector<double> *x1 , QVector<double> *y1, QVector<dou
         counter++;
         ++it;
     }
-    qDebug() << "KLDatabase::getValues() - return " << counter << " values";
+     qDebug() << "KLDatabase::getValues() - return " << counter << " values";
     return counter;
 }
-
 
