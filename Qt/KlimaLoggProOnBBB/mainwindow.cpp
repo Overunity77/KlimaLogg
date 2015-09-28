@@ -28,29 +28,29 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     m_kldatabase = new KLDatabase(this);
 
-    m_UpdatePlotTimer = new QTimer(this);
-    m_UpdatePlotTimer->setInterval(5000);
+    m_updatePlotTimer = new QTimer(this);
+    m_updatePlotTimer->setInterval(5000);
 
 
-    m_AcquisitionThread = new QThread(this);
+    m_acquisitionThread = new QThread(this);
     m_reader = new ReadDataWorker(m_kldatabase);
 
-    m_reader->moveToThread(m_AcquisitionThread);
+    m_reader->moveToThread(m_acquisitionThread);
 
 
-    QObject::connect(m_AcquisitionThread, SIGNAL(started()), m_reader, SLOT(process()) );
-    QObject::connect(m_AcquisitionThread, SIGNAL(finished()), m_reader, SLOT(deleteLater()) );
-    QObject::connect(m_AcquisitionThread, SIGNAL(finished()), m_AcquisitionThread, SLOT(deleteLater()));
+    QObject::connect(m_acquisitionThread, SIGNAL(started()), m_reader, SLOT(process()) );
+    QObject::connect(m_acquisitionThread, SIGNAL(finished()), m_reader, SLOT(deleteLater()) );
+    QObject::connect(m_acquisitionThread, SIGNAL(finished()), m_acquisitionThread, SLOT(deleteLater()));
 
     QObject::connect(m_reader, SIGNAL(newData()), this, SLOT(newData()) );
-    QObject::connect(m_reader, SIGNAL(readErrno(int)), this, SLOT(HandleErrNo(int)) );
+    QObject::connect(m_reader, SIGNAL(readErrno(int)), this, SLOT(handleErrNo(int)) );
 
-    QObject::connect(m_UpdatePlotTimer, SIGNAL(timeout()), this, SLOT(OnDrawPlot()) );
+    QObject::connect(m_updatePlotTimer, SIGNAL(timeout()), this, SLOT(onDrawPlot()) );
 
     QObject::connect(ui->pushButton_1, SIGNAL(clicked()), this, SLOT(selectLongTimespan()) );
     QObject::connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(selectMediumTimespan()) );
     QObject::connect(ui->pushButton_3, SIGNAL(clicked()), this, SLOT(selectShortTimespan()) );
-    QObject::connect(this,SIGNAL(DrawPlot()),this,SLOT(OnDrawPlot()) );
+    QObject::connect(this,SIGNAL(drawPlot()),this,SLOT(onDrawPlot()) );
 
     QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(onMenuExit()) );
 
@@ -58,8 +58,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_MSGBox->setDefaultButton(QMessageBox::NoButton);
     m_MSGBox->setWindowTitle("Information");
 
-    m_TimeInterval = TimeInterval::LONG;
-    m_TickSpacing = TickSpacing::DAYS;
+    m_timeInterval = TimeInterval::LONG;
+    m_tickSpacing = TickSpacing::DAYS;
 
     setButtonActive(ui->pushButton_1);
 
@@ -74,8 +74,8 @@ MainWindow::~MainWindow()
 {
     qDebug() << "MainWindow Destructor";
 
-    m_UpdatePlotTimer->stop();
-    delete m_UpdatePlotTimer;
+    m_updatePlotTimer->stop();
+    delete m_updatePlotTimer;
     delete m_kldatabase;
     delete ui;
     delete m_MSGBox;
@@ -117,12 +117,12 @@ bool MainWindow::startAquisition()
         fclose(fd);
 
         // start reading form KlimaLogg Pro
-        m_AcquisitionThread->start();
-        m_AcquisitionThread->setPriority(QThread::LowPriority);
+        m_acquisitionThread->start();
+        m_acquisitionThread->setPriority(QThread::LowPriority);
 
-        OnDrawPlot();
+        onDrawPlot();
 
-        m_UpdatePlotTimer->start();
+        m_updatePlotTimer->start();
     }
     return true;
 
@@ -132,21 +132,21 @@ void MainWindow::closeEvent(QCloseEvent * bar)
 {
     qDebug() << "MainWindow::closeEvent(QCloseEvent * bar)";
 
-    QObject::disconnect(m_reader, SIGNAL(readErrno(int)), this, SLOT(HandleErrNo(int)) );
+    QObject::disconnect(m_reader, SIGNAL(readErrno(int)), this, SLOT(handleErrNo(int)) );
 
     m_reader->shutdown();
 
-    if(m_AcquisitionThread->isRunning())
+    if(m_acquisitionThread->isRunning())
     {
-        m_AcquisitionThread->quit();
-        m_AcquisitionThread->wait(2000);
+        m_acquisitionThread->quit();
+        m_acquisitionThread->wait(2000);
     }
 
     bar->accept();
 }
 
 
-void MainWindow::HandleErrNo(int error)
+void MainWindow::handleErrNo(int error)
 {
     static int errCounter = 0;
 
@@ -178,18 +178,18 @@ void MainWindow::HandleErrNo(int error)
 //
 //  Get new values and update plot
 //
-void MainWindow::OnDrawPlot()
+void MainWindow::onDrawPlot()
 {
     qDebug() << "MainWindow::OnDrawPlot()" << QThread::currentThreadId();
 
-    int nrOfValues = m_kldatabase->getNrOfValues(GetTimeInterval());
+    int nrOfValues = m_kldatabase->getNrOfValues(getTimeInterval());
     x1->resize(nrOfValues);
     y1->resize(nrOfValues);
     y2->resize(nrOfValues);
     y3->resize(nrOfValues);
     y4->resize(nrOfValues);
 
-    int count = m_kldatabase->getValues(GetTimeInterval(), x1, y1, y2, y3, y4);
+    int count = m_kldatabase->getValues(getTimeInterval(), x1, y1, y2, y3, y4);
 
     if(count == 0)
         return;
@@ -227,15 +227,15 @@ void MainWindow::OnDrawPlot()
     graph4->setData(*x1, *y4);
 
     // calculate tick below lowest x axis value and above highest x axis value
-    long minTick = ((long)(((*x1)[0] - TIME_BASIS) / GetTickSpacing()) * GetTickSpacing()) + TIME_BASIS ;
-    long maxTick = ((long)(((*x1)[count-1] - TIME_BASIS) / GetTickSpacing() + 1 ) * GetTickSpacing()) + TIME_BASIS;
+    long minTick = ((long)(((*x1)[0] - TIME_BASIS) / getTickSpacing()) * getTickSpacing()) + TIME_BASIS ;
+    long maxTick = ((long)(((*x1)[count-1] - TIME_BASIS) / getTickSpacing() + 1 ) * getTickSpacing()) + TIME_BASIS;
 
     // generete and set ticks for x axis
     QVector<double> xAxisTicks(0);
     int i =0;
     long actualTick = minTick;
     while ( actualTick <= maxTick){
-        actualTick =  minTick + i * GetTickSpacing();
+        actualTick =  minTick + i * getTickSpacing();
         xAxisTicks.append(actualTick);
         i = i + 1;
     }
@@ -415,24 +415,24 @@ double MainWindow::getMinValue(QVector<double> *data)
     return minValue;
 }
 
-void MainWindow::SetTimeInterval(TimeInterval value)
+void MainWindow::setTimeInterval(TimeInterval value)
 {
-    m_TimeInterval = value;
+    m_timeInterval = value;
 }
 
-TimeInterval MainWindow::GetTimeInterval()
+TimeInterval MainWindow::getTimeInterval()
 {
-    return m_TimeInterval;
+    return m_timeInterval;
 }
 
-void MainWindow::SetTickSpacing (TickSpacing spacing)
+void MainWindow::setTickSpacing (TickSpacing spacing)
 {
-    m_TickSpacing = spacing;
+    m_tickSpacing = spacing;
 }
 
-TickSpacing MainWindow::GetTickSpacing()
+TickSpacing MainWindow::getTickSpacing()
 {
-    return m_TickSpacing;
+    return m_tickSpacing;
 }
 
 void MainWindow::selectShortTimespan()
@@ -443,12 +443,12 @@ void MainWindow::selectShortTimespan()
     setButtonNormal(ui->pushButton_2);
     setButtonActive(ui->pushButton_3);
 
-    SetTimeInterval(TimeInterval::SHORT);
-    SetTickSpacing(TickSpacing::MINUTES);
+    setTimeInterval(TimeInterval::SHORT);
+    setTickSpacing(TickSpacing::MINUTES);
     ui->customPlot->xAxis->setSubTickCount(4);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy hh:mm");
 
-    emit DrawPlot();
+    emit drawPlot();
 }
 
 
@@ -460,12 +460,12 @@ void MainWindow::selectMediumTimespan()
     setButtonActive(ui->pushButton_2);
     setButtonNormal(ui->pushButton_3);
 
-    SetTimeInterval(TimeInterval::MEDIUM);
-    SetTickSpacing(TickSpacing::HOURS);
+    setTimeInterval(TimeInterval::MEDIUM);
+    setTickSpacing(TickSpacing::HOURS);
     ui->customPlot->xAxis->setSubTickCount(3);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy hh:mm");
 
-    emit DrawPlot();
+    emit drawPlot();
 }
 
 void MainWindow::selectLongTimespan()
@@ -476,12 +476,12 @@ void MainWindow::selectLongTimespan()
     setButtonNormal(ui->pushButton_2);
     setButtonNormal(ui->pushButton_3);
 
-    SetTimeInterval(TimeInterval::LONG);
-    SetTickSpacing(TickSpacing::DAYS);
+    setTimeInterval(TimeInterval::LONG);
+    setTickSpacing(TickSpacing::DAYS);
     ui->customPlot->xAxis->setSubTickCount(3);
     ui->customPlot->xAxis->setDateTimeFormat("dd.MM.yy");
 
-    emit DrawPlot();
+    emit drawPlot();
 }
 
 void MainWindow::newData()

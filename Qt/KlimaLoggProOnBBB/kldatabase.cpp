@@ -23,12 +23,10 @@ KLDatabase::KLDatabase(QWidget *parent)
                                          "to build it.\n\n"
                                          "Click Cancel to exit."), QMessageBox::Cancel);
     }
-
 }
 
 KLDatabase::~KLDatabase()
 {
-    //    delete plainModel;
     db->close();
     delete db;
 }
@@ -127,7 +125,7 @@ long KLDatabase::readDatabase(void)
 }
 
 
-void KLDatabase::StoreRecord(Record data)
+void KLDatabase::storeRecord(Record data)
 {
     QDateTime timestamp;
     timestamp.setTime_t(data.Timestamp);

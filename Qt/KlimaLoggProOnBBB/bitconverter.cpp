@@ -15,7 +15,7 @@ BitConverter::BitConverter()
 {
 }
 
-bool BitConverter::ConvertTemperature(unsigned char data1, unsigned char data2, bool highByteFull, double *value)
+bool BitConverter::convertTemperature(unsigned char data1, unsigned char data2, bool highByteFull, double *value)
 {
     unsigned char tempOffset = 40;
     unsigned char dezi, one, ten = 0;
@@ -45,7 +45,7 @@ bool BitConverter::ConvertTemperature(unsigned char data1, unsigned char data2, 
 	}
 }
 
-bool BitConverter::ConvertHumidity(unsigned char data, double *value)
+bool BitConverter::convertHumidity(unsigned char data, double *value)
 {
     unsigned char one, ten = 0;
 	one = (data & 0x0F);
@@ -65,7 +65,7 @@ bool BitConverter::ConvertHumidity(unsigned char data, double *value)
 }
 
 
-bool BitConverter::ConvertHistoryTimestamp(unsigned char *data, long *value)
+bool BitConverter::convertHistoryTimestamp(unsigned char *data, long *value)
 {
 	time_t rawTime;
 	struct tm *timeinfo;
@@ -124,7 +124,7 @@ bool BitConverter::ConvertHistoryTimestamp(unsigned char *data, long *value)
 }
 
 
-bool BitConverter::ConvertCurrentTimestamp(unsigned char *data, bool startOnHighNibble, long *value)
+bool BitConverter::convertCurrentTimestamp(unsigned char *data, bool startOnHighNibble, long *value)
 {
 	time_t rawTime;
 	struct tm *timeinfo;
@@ -205,7 +205,7 @@ bool BitConverter::ConvertCurrentTimestamp(unsigned char *data, bool startOnHigh
 	return true;
 }
 
-ResponseType BitConverter::GetResponseType(unsigned char *data, int size)
+ResponseType BitConverter::getResponseType(unsigned char *data, int size)
 {
 
     if(size < 7)
@@ -219,7 +219,7 @@ ResponseType BitConverter::GetResponseType(unsigned char *data, int size)
     return (ResponseType)(data[6] & 0xf0) ;
 }
 
-int BitConverter::GetThisIndex(unsigned char* usbframe)
+int BitConverter::getThisIndex(unsigned char *usbframe)
 {
     int thisIndex =
             (((((usbframe[13] << 8) | usbframe[14]) << 8)
@@ -229,7 +229,7 @@ int BitConverter::GetThisIndex(unsigned char* usbframe)
 
 
 
-int BitConverter::GetLatestIndex(unsigned char* usbframe)
+int BitConverter::getLatestIndex(unsigned char *usbframe)
 {
     int latestIndex =
             (((((usbframe[10] << 8) | usbframe[11]) << 8) |
@@ -238,7 +238,7 @@ int BitConverter::GetLatestIndex(unsigned char* usbframe)
 }
 
 
-Record BitConverter::GetSensorValuesFromHistoryData(unsigned char* frame, int index)
+Record BitConverter::getSensorValuesFromHistoryData(unsigned char *frame, int index)
 {
     int offset_index[6] = { 156,128,100,72,44,16 };
 
@@ -256,10 +256,9 @@ Record BitConverter::GetSensorValuesFromHistoryData(unsigned char* frame, int in
 	int offset_h_map[9] = { 8,7,6,5,4,3,2,1,0 };
 	int offset_t_map[9] = { 21,20,18,17,15,14,12,11,9 };
 
-
 	Record record;
 	long timestamp;
-	record.TimeValid = BitConverter::ConvertHistoryTimestamp(data + 23, &timestamp);
+    record.TimeValid = BitConverter::convertHistoryTimestamp(data + 23, &timestamp);
 	record.Timestamp = timestamp;
 
 	for (int i = 0; i < 9; i++)
@@ -267,24 +266,17 @@ Record BitConverter::GetSensorValuesFromHistoryData(unsigned char* frame, int in
 		int offset_h = offset_h_map[i];
 		int offset_t = offset_t_map[i];
 		double value = 0;
-        record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(data[offset_t], data[offset_t + 1], i % 2 == 0 , &value);
+        record.SensorDatas[i].TempValid = BitConverter::convertTemperature(data[offset_t], data[offset_t + 1], i % 2 == 0 , &value);
 		record.SensorDatas[i].Temperature = value;
-		record.SensorDatas[i].HumValid = BitConverter::ConvertHumidity(data[offset_h], &value);
+        record.SensorDatas[i].HumValid = BitConverter::convertHumidity(data[offset_h], &value);
 		record.SensorDatas[i].Humidity = value;
 	}
-
-//    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-//                ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
-//    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-//                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
-//    qDebug() << "GetSensorValuesFromHistoryData record is: " << record.Timestamp <<
-//                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
 	return record;
 }
 
 
 
-Record BitConverter::GetSensorValuesFromCurrentData(unsigned char *frame)
+Record BitConverter::getSensorValuesFromCurrentData(unsigned char *frame)
 {
     int sizeOFSensorData = 24;
     int start_h = 20;
@@ -305,18 +297,10 @@ Record BitConverter::GetSensorValuesFromCurrentData(unsigned char *frame)
         int offset_h = start_h + i * sizeOFSensorData;
         int offset_t = start_t + i * sizeOFSensorData;
         double value = 0;
-		record.SensorDatas[i].TempValid = BitConverter::ConvertTemperature(frame[offset_t], frame[offset_t + 1], true, &value);
+		record.SensorDatas[i].TempValid = BitConverter::convertTemperature(frame[offset_t], frame[offset_t + 1], true, &value);
         record.SensorDatas[i].Temperature = value;
-//        qDebug() << "Temperature for "<< i << " is " <<  value;
-        record.SensorDatas[i].HumValid = BitConverter::ConvertHumidity(frame[offset_h], &value);
+        record.SensorDatas[i].HumValid = BitConverter::convertHumidity(frame[offset_h], &value);
         record.SensorDatas[i].Humidity = value;
-//        qDebug() << "Humidity for "<< i << " is " <<  value;
     }
-//    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-//                ", "<< record.SensorDatas[0].Temperature<<"Grad, "<< record.SensorDatas[0].Humidity;
-//    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-//                ", "<< record.SensorDatas[1].Temperature<<"Grad, "<< record.SensorDatas[1].Humidity;
-//    qDebug() << "GetSensorValuesFromCurrentData record is: " << record.Timestamp <<
-//                ", "<< record.SensorDatas[2].Temperature<<"Grad, "<< record.SensorDatas[2].Humidity;
     return record;
 }

@@ -49,22 +49,22 @@ void ReadDataWorker::process()
             QThread::sleep(1);
             continue;
         }
-        response = BitConverter::GetResponseType(usbframe,238);
+        response = BitConverter::getResponseType(usbframe,238);
 
         if(response == RESPONSE_GET_HISTORY)
         {
 
             qDebug() << QString("RESPONSE_GET_HISTORY (0x%1)").arg(usbframe[6], 0, 16);
 
-            int latestIndex = BitConverter::GetLatestIndex(usbframe);
-            int thisIndex = BitConverter::GetThisIndex(usbframe);
+            int latestIndex = BitConverter::getLatestIndex(usbframe);
+            int thisIndex = BitConverter::getThisIndex(usbframe);
             qDebug() << "latestIndex = "<<latestIndex;
             qDebug() << "thisIndex   = "<<thisIndex;
 
             for(int i = 0; i < 6;i++)
             {
-                Record rec = BitConverter::GetSensorValuesFromHistoryData(usbframe,i);
-                m_kldatabase->StoreRecord(rec);
+                Record rec = BitConverter::getSensorValuesFromHistoryData(usbframe,i);
+                m_kldatabase->storeRecord(rec);
             }
 
             m_kldatabase->updateLastRetrievedIndex(thisIndex);
@@ -89,5 +89,4 @@ void ReadDataWorker::process()
 void ReadDataWorker::shutdown()
 {
     m_shutdown = true;
-
 }
