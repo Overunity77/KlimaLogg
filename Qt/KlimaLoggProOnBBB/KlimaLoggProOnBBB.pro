@@ -19,16 +19,22 @@ SOURCES += main.cpp\
         qcustomplot.cpp \
         kldatabase.cpp \
         bitconverter.cpp \
-        readdataworker.cpp
+        readdataworker.cpp \
+        initwidget.cpp \
+        pressusb.cpp
 
 HEADERS  += mainwindow.h \
         qcustomplot.h \
         kldatabase.h \
         bitconverter.h \
         definitions.h \
-        readdataworker.h
+        readdataworker.h \
+        initwidget.h \
+        pressusb.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    initwidget.ui \
+    pressusb.ui
 
 BBB: {
 INCLUDEPATH += /opt/crosstools/gcc-linaro-arm-linux-gnueabihf-4.9-2014.09_linux/arm-linux-gnueabihf/libc/usr/include
@@ -45,4 +51,6 @@ LIBS += -L/opt/embedded/bbb/rootfs/usr/local/qt-5.3/lib -lz -lpthread -lm -lqwt 
 
 target.path = /usr/local/bin
 INSTALLS += target
+
+RESOURCES +=
 

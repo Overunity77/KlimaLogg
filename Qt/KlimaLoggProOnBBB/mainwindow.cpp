@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    qDebug() << "MainWindow(): " << QThread::currentThreadId();
+    qDebug() << "MainWindow::MainWindow() - ThreadId: " << QThread::currentThreadId();
 
     x1 = new QVector<double>(INIT_DATA_SIZE);
     y1 = new QVector<double>(INIT_DATA_SIZE);
@@ -31,12 +31,16 @@ MainWindow::MainWindow(QWidget *parent) :
     m_updatePlotTimer = new QTimer(this);
     m_updatePlotTimer->setInterval(5000);
 
+    m_startAquisitionTimer = new QTimer(this);
+    m_startAquisitionTimer->setSingleShot(true);
+
 
     m_acquisitionThread = new QThread(this);
     m_reader = new ReadDataWorker(m_kldatabase);
 
     m_reader->moveToThread(m_acquisitionThread);
 
+    QObject::connect(m_startAquisitionTimer, SIGNAL(timeout()), this, SLOT(startAquisition()) );
 
     QObject::connect(m_acquisitionThread, SIGNAL(started()), m_reader, SLOT(process()) );
     QObject::connect(m_acquisitionThread, SIGNAL(finished()), m_reader, SLOT(deleteLater()) );
@@ -54,10 +58,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(onMenuExit()) );
 
-    m_MSGBox = new QMessageBox(this);
-    m_MSGBox->setDefaultButton(QMessageBox::NoButton);
-    m_MSGBox->setWindowTitle("Information");
-
+    m_initKl = new InitWidget(this);
+    m_initKl->show();
+    m_pressUsb = new PressUsb(this);
+    m_pressUsb->hide();
     m_timeInterval = TimeInterval::LONG;
     m_tickSpacing = TickSpacing::DAYS;
 
@@ -66,19 +70,23 @@ MainWindow::MainWindow(QWidget *parent) :
     // initialize plot
     makePlot();
 
+    m_startAquisitionTimer->start(500);
+
 }
 
 
 
 MainWindow::~MainWindow()
 {
-    qDebug() << "MainWindow Destructor";
+    qDebug() << "MainWindow::~MainWindow() - Destructor called";
 
     m_updatePlotTimer->stop();
+    delete m_pressUsb;
+    delete m_initKl;
     delete m_updatePlotTimer;
+    delete m_startAquisitionTimer;
     delete m_kldatabase;
     delete ui;
-    delete m_MSGBox;
     delete x1;
     delete y1;
     delete y2;
@@ -86,14 +94,17 @@ MainWindow::~MainWindow()
     delete y4;
 }
 
-bool MainWindow::startAquisition()
+void MainWindow::startAquisition()
 {
+
+    m_initKl->show();
     FILE *fd = fopen(SENSOR,"r+b");
     if(!fd)
     {
         qDebug() << "could not open" << SENSOR;
 
-        QMessageBox::critical(0,
+        m_initKl->hide();
+        QMessageBox::critical(this,
                               tr("Could not open %1").arg(SENSOR),
                               tr("Unable to establish a connection.\n"
                                  "to the KlimaLogg Pro USB Transceiver.\n\n"
@@ -101,18 +112,21 @@ bool MainWindow::startAquisition()
                               QMessageBox::Cancel);
 
         close();
-        return false;
+        qApp->exit(1);  // exit application with error code 1
     }
     else
     {
+        qDebug() << "MainWindow::startAquisition() - start reading database";
         int size = m_kldatabase->readDatabase();
 
-        qDebug() << "KLDatabase Constructor - read " << size << " records from database";
+        m_initKl->hide();
+
+        qDebug() << "MainWindow::startAquisition() - read " << size << " records from database";
 
         //write last read index to the driver
         int index = m_kldatabase->getLastRetrievedIndex();
 
-        qDebug() << "Writing LastRetrievedIndex from database to Driver: " << index;
+        qDebug() << "MainWindow::startAquisition() - writing LastRetrievedIndex from database to Driver: " << index;
         fwrite(&index,sizeof(int),1,fd);
         fclose(fd);
 
@@ -124,13 +138,12 @@ bool MainWindow::startAquisition()
 
         m_updatePlotTimer->start();
     }
-    return true;
 
 }
 
 void MainWindow::closeEvent(QCloseEvent * bar)
 {
-    qDebug() << "MainWindow::closeEvent(QCloseEvent * bar)";
+    //qDebug() << "MainWindow::closeEvent(QCloseEvent * bar)";
 
     QObject::disconnect(m_reader, SIGNAL(readErrno(int)), this, SLOT(handleErrNo(int)) );
 
@@ -139,7 +152,7 @@ void MainWindow::closeEvent(QCloseEvent * bar)
     if(m_acquisitionThread->isRunning())
     {
         m_acquisitionThread->quit();
-        m_acquisitionThread->wait(2000);
+        m_acquisitionThread->wait(5000); //2000
     }
 
     bar->accept();
@@ -155,18 +168,17 @@ void MainWindow::handleErrNo(int error)
         errCounter++;
         if(errCounter > 1000)
             errCounter = 3;
-        if( (!m_MSGBox->isVisible()) && (errCounter >=3))
+        if( (!m_pressUsb->isVisible()) && (errCounter >=3))
         {
-            m_MSGBox->setText("Please press the USB Button on your KlimaLoggPro");
-            m_MSGBox->showNormal();
+            m_pressUsb->show();
         }
     }
     else if(error == 0)
     {
         errCounter = 0;
-        if(m_MSGBox->isVisible())
+        if(m_pressUsb->isVisible())
         {
-            m_MSGBox->close();
+            m_pressUsb->hide();
         }
     }else
     {
@@ -180,7 +192,7 @@ void MainWindow::handleErrNo(int error)
 //
 void MainWindow::onDrawPlot()
 {
-    qDebug() << "MainWindow::OnDrawPlot()" << QThread::currentThreadId();
+    //qDebug() << "MainWindow::OnDrawPlot() - ThreadId: " << QThread::currentThreadId();
 
     int nrOfValues = m_kldatabase->getNrOfValues(getTimeInterval());
     x1->resize(nrOfValues);
@@ -264,10 +276,10 @@ void MainWindow::makePlot()
     graph3->setPen(QPen(QColor(255, 0, 0), 4));
     graph4->setPen(QPen(QColor(0, 0, 120), 4));
 
-    graph1->setName("innen Temperatur");
-    graph2->setName("innen Luftfeuchtigkeit");
-    graph3->setName("aussen Temperatur");
-    graph4->setName("aussen Luftfeuchtigkeit");
+    graph1->setName("Innen:   Temperatur");
+    graph2->setName("Innen:   Luftfeuchtigkeit");
+    graph3->setName("Aussen: Temperatur");
+    graph4->setName("Aussen: Luftfeuchtigkeit");
 
     ui->customPlot->legend->setVisible(true);
 
@@ -437,7 +449,7 @@ TickSpacing MainWindow::getTickSpacing()
 
 void MainWindow::selectShortTimespan()
 {
-    qDebug() << "15 Minuten";
+    //qDebug() << "15 Minuten";
 
     setButtonNormal(ui->pushButton_1);
     setButtonNormal(ui->pushButton_2);
@@ -454,7 +466,7 @@ void MainWindow::selectShortTimespan()
 
 void MainWindow::selectMediumTimespan()
 {
-    qDebug() << "24 Stunden";
+    //qDebug() << "24 Stunden";
 
     setButtonNormal(ui->pushButton_1);
     setButtonActive(ui->pushButton_2);
@@ -470,7 +482,7 @@ void MainWindow::selectMediumTimespan()
 
 void MainWindow::selectLongTimespan()
 {
-    qDebug() << "7 Tage";
+    //qDebug() << "7 Tage";
 
     setButtonActive(ui->pushButton_1);
     setButtonNormal(ui->pushButton_2);
@@ -486,11 +498,11 @@ void MainWindow::selectLongTimespan()
 
 void MainWindow::newData()
 {
-    qDebug() << "MainWindow::newData()" << QThread::currentThreadId();
+    //qDebug() << "MainWindow::newData() - ThreadId: " << QThread::currentThreadId();
 }
 
 void MainWindow::onMenuExit()
 {
     close();
-    qApp->quit();
+    qApp->exit(0);
 }

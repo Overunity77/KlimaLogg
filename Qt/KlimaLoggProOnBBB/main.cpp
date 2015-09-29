@@ -1,21 +1,23 @@
 #include "mainwindow.h"
 
+
 #include <QApplication>
 #include <QDebug>
+#include <QDesktopWidget>
+#include <QRect>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
 
-    qDebug() << "main: " << QThread::currentThreadId();
+    //qDebug() << "main() - ThreadId: " << QThread::currentThreadId();
+
+    QRect r = w.geometry();
+    r.moveCenter(QApplication::desktop()->availableGeometry().center());
+    w.setGeometry(r);
 
     w.show();
-
-    if(!w.startAquisition())
-    {
-            return 1;
-    }
 
     return a.exec();
 }

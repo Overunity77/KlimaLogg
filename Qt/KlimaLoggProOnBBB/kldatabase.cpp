@@ -131,7 +131,7 @@ void KLDatabase::storeRecord(Record data)
     timestamp.setTime_t(data.Timestamp);
 
 
-    qDebug() << "Start StoreRecord() - Timestamp: " << data.Timestamp << "-->" << timestamp.toString(Qt::SystemLocaleShortDate);
+    //qDebug() << "Start StoreRecord() - Timestamp: " << data.Timestamp << "-->" << timestamp.toString(Qt::SystemLocaleShortDate);
     QVariant null = QVariant();
 
     QMutexLocker locker(&m_mutex);
@@ -154,7 +154,7 @@ void KLDatabase::storeRecord(Record data)
     if (! myQuery->exec() ) {
         qDebug() << myQuery->lastError();
     } else {
-        qDebug() << "after exec() of INSERT: OK";
+        //qDebug() << "after exec() of INSERT: OK";
     }
 
 
@@ -176,7 +176,7 @@ void KLDatabase::updateLastRetrievedIndex(long index)
     if (! myQuery->exec() ) {
         qDebug() << myQuery->lastError();
     } else {
-        qDebug() << "lastRetrievedIndex updated";
+        //qDebug() << "lastRetrievedIndex updated";
     }
 }
 
@@ -214,7 +214,7 @@ int KLDatabase::getNrOfValues(TimeInterval timeInterval)
         counter++;
         ++it;
     }
-    qDebug() << "KLDatabase::getNrOfValues() - return " << counter << " values";
+    //qDebug() << "KLDatabase::getNrOfValues() - return " << counter << " values";
     return counter;
 }
 
@@ -243,7 +243,7 @@ int KLDatabase::getValues(TimeInterval timeInterval, QVector<double> *x1 , QVect
         counter++;
         ++it;
     }
-     qDebug() << "KLDatabase::getValues() - return " << counter << " values";
+    //qDebug() << "KLDatabase::getValues() - return " << counter << " values";
     return counter;
 }
 

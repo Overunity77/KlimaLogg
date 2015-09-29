@@ -15,12 +15,14 @@ ReadDataWorker::ReadDataWorker(KLDatabase *database)
 
 ReadDataWorker::~ReadDataWorker()
 {
-    qDebug() << "ReadDataWorker::~ReadDataWorker()";
+    qDebug() << "ReadDataWorker::~ReadDataWorker() - Destructor called";
 }
 
 
 void ReadDataWorker::process()
 {
+    qDebug() << "ReadDataWorker::process() - ThreadId " << QThread::currentThreadId();
+
     unsigned char *usbframe = new unsigned char[USB_FRAME_SIZE];
     int retValue = 0;
     ResponseType response = ResponseType::INVALID;
@@ -29,7 +31,7 @@ void ReadDataWorker::process()
     fd = fopen(SENSOR, "rb");
     if(!fd)
     {
-        qDebug() << "could not open" << SENSOR;
+        qDebug() << "ReadDataWorker::process() - could not open" << SENSOR;
         emit finished();
         return;
     }
@@ -40,7 +42,7 @@ void ReadDataWorker::process()
 
         errno = 0;
         retValue = fread(usbframe, USB_FRAME_SIZE, 1, fd);
-        qDebug() << "fread retValue: "<< retValue << " errno: " << strerror(errno);
+        qDebug() << "fread() - return:" << retValue << "(" << strerror(errno) << ")";
 
         //send error to gui, to make some user interaction
         emit readErrno(errno);

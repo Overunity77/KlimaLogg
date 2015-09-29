@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include "kldatabase.h"
 #include "readdataworker.h"
+#include "initwidget.h"
+#include "pressusb.h"
 
 namespace Ui {
 class MainWindow;
@@ -19,14 +21,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
-    /**
-     * @brief startAquisition
-     * starts the data acquisition thread
-     * @return
-     * true on success
-     */
-    bool startAquisition();
 
 private slots:
     /**
@@ -73,6 +67,12 @@ private slots:
      */
     void onMenuExit();
 
+    /**
+     * @brief start
+     * starts the data acquisition thread
+     */
+    void startAquisition();
+
 signals:
 
     /**
@@ -85,6 +85,7 @@ protected:
     void closeEvent(QCloseEvent * bar) Q_DECL_OVERRIDE;
 
 private:
+
     void makePlot();
     void setButtonActive(QPushButton* button);
     void setButtonNormal(QPushButton* button);
@@ -102,7 +103,9 @@ private:
     QThread *m_acquisitionThread;
     ReadDataWorker *m_reader;
     QTimer *m_updatePlotTimer;
-    QMessageBox *m_MSGBox;
+    QTimer *m_startAquisitionTimer;
+    InitWidget *m_initKl;
+    PressUsb *m_pressUsb;
     QVector<double> *x1, *y1, *y2, *y3, *y4;
     TimeInterval m_timeInterval;
     TickSpacing m_tickSpacing;
