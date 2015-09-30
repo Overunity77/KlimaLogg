@@ -1450,7 +1450,7 @@ getState:
 			else
 			{
 				DBG_INFO("RESPONSE: 0x%02x", respType);
-				hw->nextSleepMs = 5;
+				hw->nextSleepMs = 10;
 				goto getState;
 			}
 		}
