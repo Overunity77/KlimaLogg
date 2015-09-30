@@ -1115,6 +1115,36 @@ static int kl_msg_setTX(struct kl_usb *hw)
 }
 
 /*
+ * send seRTx message
+ */
+static int kl_msg_setRX(struct kl_usb *hw)
+{
+	int ret;
+	unsigned char *setRXbuf = kcalloc(KL_LEN_SET_RX, 1, GFP_KERNEL);
+
+	if(!setRXbuf) {
+		return -ENOMEM;
+	}
+
+	setRXbuf[0] = KL_MSG_SET_RX;
+
+	/* if successful, returns the number of bytes transferred */
+	ret = usb_control_msg(hw->dev,
+			      usb_sndctrlpipe(hw->dev, 0),
+			      USB_REQ_SET_CONFIGURATION,
+			      USB_TYPE_CLASS | USB_RECIP_INTERFACE | USB_DIR_OUT,
+			      (USB_HID_FEATURE_REPORT << 8) | KL_MSG_SET_TX,
+			      0,
+			      setRXbuf,
+			      KL_LEN_SET_RX,
+			      KL_USB_CTRL_TIMEOUT);
+
+	kfree(setRXbuf);
+	return ret;
+}
+
+
+/*
  * set history record number which will be requested on the next getHistory()
  */
 static void setNextHistoryRecordNr(struct kl_usb *hw, int receivedIndex)
@@ -1443,13 +1473,46 @@ getState:
 			}
 			else if (respType == RESPONSE_REQUEST)	// length: 0x7d (125)
 			{
-				DBG_INFO("RESPONSE_REQUEST (0x%x)", rawdata[6]);
-				hw->nextSleepMs = 10;
+				/* handleConfig in kl.py */
+				cs = rawdata[9] | (rawdata[8] << 8);
+//				DBG_INFO("handleGetConfig: cs = 0x%04x", cs);
+
+				/* setFrame in kl.py */
+				ret = kl_msg_setFrame(hw, bufferID, cs, ACTION_GET_HISTORY);
+
+				if (ret < 0) {
+					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto unlock_exit;
+				}
+
+				/*  setTX in kl.py */
+				ret = kl_msg_setTX(hw);
+
+				if (ret < 0) {
+					DBG_ERR("setTx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto unlock_exit;
+				}
+
+				hw->nextSleepMs = 5;
 				goto getState;
 			}
 			else
 			{
 				DBG_INFO("RESPONSE: 0x%02x", respType);
+
+				/*  setRX in kl.py */
+				ret = kl_msg_setRX(hw);
+
+				if (ret < 0) {
+					DBG_ERR("setRx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
+					count = -EIO;
+					goto unlock_exit;
+				}
+
+
+				msleep(10);
 				hw->nextSleepMs = 10;
 				goto getState;
 			}
