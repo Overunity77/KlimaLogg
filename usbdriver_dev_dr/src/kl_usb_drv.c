@@ -68,7 +68,6 @@ static DEFINE_MUTEX(disconnect_mutex);
 static struct usb_driver kl_driver;
 
 /* function prototypes */
-static int setup_instance(struct kl_usb *hw);
 static int kl_probe(struct usb_interface *intf,
 		    const struct usb_device_id *id);
 static void kl_disconnect(struct usb_interface *intf);
@@ -789,30 +788,6 @@ static int setup_klusb(struct kl_usb *hw)
 	return retval;
 }
 
-//static inline void kl_delete(struct kl_usb *hw)
-//{
-//	kl_abort_transfers(hw);
-//
-//	/* Free data structures. */
-//	if (hw->int_in_urb)
-//		usb_free_urb(hw->int_in_urb);
-//	if (hw->ctrl_urb)
-//		usb_free_urb(hw->ctrl_urb);
-////	if (hw->ctrl_read_urb)
-////		usb_free_urb(hw->ctrl_read_urb);
-////	if (hw->ctrl_read_urb2)
-////		usb_free_urb(hw->ctrl_read_urb2);
-//
-//	kfree(hw->int_in_buffer);
-//	kfree(hw->ctrl_buffer);
-//	kfree(hw->ctrl_dr);
-////	kfree(hw->ctrl_read_buffer);
-////	kfree(hw->ctrl_read_buffer2);
-////	kfree(hw->ctrl_read_dr);
-////	kfree(hw->ctrl_read_dr2);
-//	kfree(hw);
-//}
-
 /*
  * stop rx interrupt and free resources
  */
@@ -853,7 +828,6 @@ static int kl_open(struct inode *inode, struct file *file)
 	DBG_INFO("Open device");
 	subminor = iminor(inode);
 
-	/* lock this device */
 	mutex_lock(&disconnect_mutex);
 
 	interface = usb_find_interface(&kl_driver, subminor);
@@ -871,6 +845,13 @@ static int kl_open(struct inode *inode, struct file *file)
 		goto exit;
 	}
 
+	/* lock this device */
+	if (down_interruptible (&hw->sem)) {
+		DBG_ERR("sem down failed");
+		retval = -ERESTARTSYS;
+		goto exit;
+	}
+
 	/* Increment our usage count for the device. */
 	++hw->open_count;
 
@@ -878,6 +859,8 @@ static int kl_open(struct inode *inode, struct file *file)
 
 	/* Save our object in the file's private structure. */
 	file->private_data = hw;
+
+	up(&hw->sem);
 
 exit:
 	mutex_unlock(&disconnect_mutex);
@@ -903,7 +886,10 @@ static int kl_release(struct inode *inode, struct file *file)
 	}
 
 	/* Lock our device */
-	mutex_lock(&disconnect_mutex);
+	if (down_interruptible(&hw->sem)) {
+		retval = -ERESTARTSYS;
+		goto exit;
+	}
 
 
 	if (hw->open_count <= 0)
@@ -916,6 +902,7 @@ static int kl_release(struct inode *inode, struct file *file)
 	if (!hw->dev)
 	{
 		DBG_DEBUG("device unplugged before the file was released");
+		up (&hw->sem);	/* Unlock here as kl_delete frees dev. */
 		kl_delete(hw);
 		goto unlock_exit;
 	}
@@ -926,7 +913,7 @@ static int kl_release(struct inode *inode, struct file *file)
 
 
 unlock_exit:
-	mutex_unlock(&disconnect_mutex);
+	up(&hw->sem);
 
 exit:
 	return retval;
@@ -958,7 +945,11 @@ static ssize_t kl_write(struct file *file, const char __user *user_buf,
 		goto exit;
 	}
 
-	mutex_lock(&disconnect_mutex);	/* Jetzt nicht disconnecten... */
+	/* Lock this object. */
+	if (down_interruptible(&hw->sem)) {
+		retval = -ERESTARTSYS;
+		goto exit;
+	}
 
 	/* Verify that the device wasn't unplugged. */
 	if (!hw->dev) {
@@ -1006,7 +997,7 @@ static ssize_t kl_write(struct file *file, const char __user *user_buf,
 
 
 unlock_exit:
-	mutex_unlock(&disconnect_mutex);
+	up(&hw->sem);
 
 exit:
 	return retval;
@@ -1160,9 +1151,6 @@ static ssize_t kl_read(struct file *file, char *buffer,
 
 	DBG_INFO("*** read called (count=%u) ***", (unsigned int)count);
 
-
-	//TODO check size of user-space buffer
-
 	getStateBuf = kcalloc(KL_LEN_GET_STATE, 1, GFP_KERNEL);
 	if(!getStateBuf) {
 		DBG_ERR("no memory\n");
@@ -1185,11 +1173,14 @@ static ssize_t kl_read(struct file *file, char *buffer,
 	if (!hw) {
 		DBG_ERR("hw is NULL!");
 		count = -ENODEV;
-		goto read_out;
+		goto exit;
 	}
 
-
-	mutex_lock(&disconnect_mutex);	/* Jetzt nicht disconnecten... */
+	/* Lock this object. */
+	if (down_interruptible(&hw->sem)) {
+		ret = -ERESTARTSYS;
+		goto exit;
+	}
 
 	//firstSleep
 	msleep(75);
@@ -1217,7 +1208,7 @@ getState:
 		if (ret < 0) {
 			DBG_ERR("getState() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 			count = -EIO;
-			goto read_out;
+			goto unlock_exit;
 		}
 
 		// read logger state
@@ -1254,7 +1245,7 @@ getState:
 		if (ret < 0) {
 			DBG_ERR("getFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 			count = -EIO;
-			goto read_out;
+			goto unlock_exit;
 		}
 
 
@@ -1294,7 +1285,7 @@ getState:
 				if (ret < 0) {
 					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
-					goto read_out;
+					goto unlock_exit;
 				}
 
 				/*  setTX in kl.py */
@@ -1303,7 +1294,7 @@ getState:
 				if (ret < 0) {
 					DBG_ERR("setTx() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
-					goto read_out;
+					goto unlock_exit;
 				}
 
 				hw->nextSleepMs = 10;
@@ -1330,7 +1321,7 @@ getState:
 					if (ret < 0) {
 						DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 						count = -EIO;
-						goto read_out;
+						goto unlock_exit;
 					}
 
 					hw->nextSleepMs = 10;
@@ -1344,7 +1335,7 @@ getState:
 					if (ret < 0) {
 						DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 						count = -EIO;
-						goto read_out;
+						goto unlock_exit;
 					}
 
 					hw->nextSleepMs = 10;
@@ -1356,7 +1347,7 @@ getState:
 				if (ret < 0) {
 					DBG_ERR("setTX() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
-					goto read_out;
+					goto unlock_exit;
 				}
 
 				goto getState;
@@ -1402,7 +1393,7 @@ getState:
 				if (ret < 0) {
 					DBG_ERR("setFrame() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
-					goto read_out;
+					goto unlock_exit;
 				}
 
 				/* setTX in kl.py */
@@ -1411,7 +1402,7 @@ getState:
 				if (ret < 0) {
 					DBG_ERR("setTX() failed: %s (%d)", symbolic(urb_errlist, ret), ret);
 					count = -EIO;
-					goto read_out;
+					goto unlock_exit;
 				}
 
 				hw->nextSleepMs = 5;
@@ -1445,7 +1436,7 @@ getState:
 					{
 						DBG_INFO("No new history data available");
 						count = 0;	/* EOF */
-						goto read_out;
+						goto unlock_exit;
 					}
 				}
 
@@ -1466,42 +1457,18 @@ getState:
 	} else
 	{
 		count = -200;	/* Press USB button error code */
-		goto read_out;
 	}
 
 
-read_out:
-	mutex_unlock(&disconnect_mutex);
+unlock_exit:
+	up(&hw->sem);
 
+exit:
 	kfree(rawdata);
 	kfree(getStateBuf);
 	return count;
 }
 
-
-/*
- * setup driver instance
- */
-static int setup_instance(struct kl_usb *hw)
-{
-	int	err = 0;
-
-	DBG_INFO("%s", __func__);
-
-//	sema_init(&hw->sem, 1);
-
-	spin_lock_init(&hw->ctrl_lock);
-
-	err = setup_klusb(hw);
-	if (err)
-		goto out;
-
-	return 0;
-
-out:
-	kfree(hw);
-	return err;
-}
 
 /*
  * probe() function, called when a USB device is connected to the computer
@@ -1526,15 +1493,19 @@ static int kl_probe(struct usb_interface *intf,
 	if (!dev)
 	{
 		DBG_ERR("dev is NULL");
-		return -ENODEV;
+		goto exit;
 	}
 
 	hw = kzalloc(sizeof(struct kl_usb), GFP_KERNEL);
 	if (!hw)
 	{
 		DBG_ERR("cannot allocate memory for struct kl_usb");
-		return -ENOMEM;
+		retval = -ENOMEM;
+		goto exit;
 	}
+
+	sema_init(&hw->sem, 1);
+	spin_lock_init(&hw->ctrl_lock);
 
 	/* Set up interrupt endpoint information. */
 	for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
@@ -1598,10 +1569,10 @@ static int kl_probe(struct usb_interface *intf,
 		goto error;
 	}
 
-	if (setup_instance(hw))
+	if (setup_klusb(hw))
 	{
-		DBG_ERR("setup_instance failed!");
-		return -EIO;
+		DBG_ERR("setup_klusb failed!");
+		goto error;
 	}
 
 	/* Retrieve a serial. */
@@ -1631,10 +1602,11 @@ static int kl_probe(struct usb_interface *intf,
 	DBG_INFO("USB KlimaLogg Pro now attached to /dev/kl%d (minor=%d, ML_MINOR_BASE=%d)" ,
 			intf->minor - ML_MINOR_BASE, intf->minor, ML_MINOR_BASE);
 
-	return 0;
+exit:
+	return retval;
 
 error:
-	kfree(hw);
+	kl_delete(hw);
 	return retval;
 }
 
@@ -1649,22 +1621,31 @@ static void kl_disconnect(struct usb_interface *intf)
 	mutex_lock(&disconnect_mutex); /* Not interruptible */
 
 	hw = usb_get_intfdata(intf);
-	minor = hw->minor;
-
-	kl_delete(hw);
-
 	usb_set_intfdata(intf, NULL);
 
-//	down(&hw->sem); /* Not interruptible */
+	down(&hw->sem); /* Not interruptible */
+
+	minor = hw->minor;
 
 	/* Give back our minor. */
 	usb_deregister_dev(intf, &kl_class);
 
+	/* If the device is not opened, then we clean up right now. */
+	if (!hw->open_count)
+	{
+		up(&hw->sem);
+		kl_delete(hw);
+	}
+	else
+	{
+		hw->dev = NULL;
+		up(&hw->sem);
+	}
 
 	mutex_unlock(&disconnect_mutex);
 
 	DBG_INFO("USB KlimaLogg Pro /dev/kl%d now disconnected",
-			minor - ML_MINOR_BASE);
+		 minor - ML_MINOR_BASE);
 }
 
 /*
