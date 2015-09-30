@@ -7,16 +7,21 @@
 #include <linux/mutex.h>		/* mutexes */
 #include <linux/ioctl.h>
 #include <linux/delay.h>
-
 #include <asm/uaccess.h>		/* copy_*_user */
-
 #include "kl_usb_drv.h"
+
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Daniel Reimann");
+MODULE_DESCRIPTION("KlimaLogg Pro USB Driver");
+MODULE_VERSION("0.1");
+
 
 #define DEBUG_LEVEL_DEBUG		0x1F
 #define DEBUG_LEVEL_INFO		0x0F
 #define DEBUG_LEVEL_WARN		0x07
 #define DEBUG_LEVEL_ERROR		0x03
-#define DEBUG_LEVEL_CRITICAL	0x01
+#define DEBUG_LEVEL_CRITICAL		0x01
 
 #define DBG_DEBUG(fmt, args...) \
 if ((debug_level & DEBUG_LEVEL_DEBUG) == DEBUG_LEVEL_DEBUG) \
@@ -39,41 +44,6 @@ if ((debug_level & DEBUG_LEVEL_CRITICAL) == DEBUG_LEVEL_CRITICAL) \
 	printk( KERN_DEBUG "[crit]  %s(%d): " fmt "\n", \
 			__FUNCTION__, __LINE__, ## args)
 
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Daniel Reimann");
-MODULE_DESCRIPTION("KlimaLogg Pro USB Driver");
-MODULE_VERSION("0.1");
-
-#define KL_VENDOR_ID	0x6666
-#define KL_PRODUCT_ID	0x5555
-
-#define ML_CTRL_BUFFER_SIZE 	8
-#define ML_CTRL_REQUEST_TYPE	0x21
-#define ML_CTRL_REQUEST		0x09
-#define ML_CTRL_VALUE		0x0
-#define ML_CTRL_INDEX		0x0
-
-#define KL_CTRL_READ_BUFFER_SIZE 	16
-#define KL_CTRL_READ_BUFFER2_SIZE 	21
-#define KL_CTRL_READ_REQUEST_TYPE	0x21
-#define KL_CTRL_SET_REPORT_REQUEST	0x09
-
-#define ML_STOP			0x00
-#define ML_UP			0x01
-#define ML_DOWN			0x02
-
-#define ML_LEFT			0x04
-#define ML_RIGHT		0x08
-#define ML_UP_LEFT		(ML_UP | ML_LEFT)
-#define ML_DOWN_LEFT		(ML_DOWN | ML_LEFT)
-#define ML_UP_RIGHT		(ML_UP | ML_RIGHT)
-#define ML_DOWN_RIGHT		(ML_DOWN | ML_RIGHT)
-#define ML_FIRE			0x10
-
-#define ML_MAX_UP		0x80 		/* 80 00 00 00 00 00 00 00 */
-#define ML_MAX_DOWN		0x40		/* 40 00 00 00 00 00 00 00 */
-#define ML_MAX_LEFT		0x04		/* 00 04 00 00 00 00 00 00 */
-#define ML_MAX_RIGHT		0x08 		/* 00 08 00 00 00 00 00 00 */
 
 #ifdef CONFIG_USB_DYNAMIC_MINORS
 #define ML_MINOR_BASE	0
@@ -82,19 +52,14 @@ MODULE_VERSION("0.1");
 #endif
 
 
-static struct usb_device_id kl_table[] = { {
-		USB_DEVICE(KL_VENDOR_ID, KL_PRODUCT_ID) }, { } };
-MODULE_DEVICE_TABLE(usb, kl_table);
 
+
+/* init driver module parameter */
 static int debug_level = DEBUG_LEVEL_DEBUG;
 static int debug_trace = 1;
 //static int debug_level = DEBUG_LEVEL_INFO;
 //static int debug_trace = 0;
 
-module_param(debug_level, int, S_IRUGO | S_IWUSR);
-module_param(debug_trace, int, S_IRUGO | S_IWUSR);
-MODULE_PARM_DESC(debug_level, "debug level (bitmask)");
-MODULE_PARM_DESC(debug_trace, "enable function tracing");
 
 /* Prevent races between open() and disconnect */
 static DEFINE_MUTEX(disconnect_mutex);
@@ -104,7 +69,60 @@ static struct usb_driver kl_driver;
 
 /* function prototypes */
 static int setup_instance(struct kl_usb *hw);
+static int kl_probe(struct usb_interface *intf,
+		    const struct usb_device_id *id);
+static void kl_disconnect(struct usb_interface *intf);
+static ssize_t kl_write(struct file *file,
+		        const char __user *user_buf,
+			size_t count,
+			loff_t *ppos);
+static ssize_t kl_read(struct file *file,
+		       char *buffer,
+		       size_t count,
+		       loff_t * ppos);
+static int kl_open(struct inode *inode,
+		   struct file *file);
+static int kl_release(struct inode *inode,
+		      struct file *file);
+static int __init usb_kl_init(void);
+static void __exit usb_kl_exit(void);
 
+
+/* usb device id table */
+static struct usb_device_id kl_table[] = { {
+		USB_DEVICE(KL_VENDOR_ID, KL_PRODUCT_ID) }, { } };
+MODULE_DEVICE_TABLE(usb, kl_table);
+
+
+/* driver module parameters */
+module_param(debug_level, int, S_IRUGO | S_IWUSR);
+module_param(debug_trace, int, S_IRUGO | S_IWUSR);
+MODULE_PARM_DESC(debug_level, "debug level (bitmask)");
+MODULE_PARM_DESC(debug_trace, "enable function tracing");
+
+/* driver module init/exit */
+module_init(usb_kl_init);
+module_exit(usb_kl_exit);
+
+static struct usb_driver kl_driver = { .name 	   = "klimalogg_driver",
+				       .id_table   = kl_table,
+				       .probe 	   = kl_probe,
+				       .disconnect = kl_disconnect, };
+
+static struct file_operations kl_fops = { .owner   = THIS_MODULE,
+					  .write   = kl_write,
+					  .read    = kl_read,
+					  .open    = kl_open,
+					  .release = kl_release };
+
+static struct usb_class_driver kl_class = { .name = "kl%d",
+		                            .fops = &kl_fops,
+					    .minor_base = ML_MINOR_BASE };
+
+
+/*
+ * write content of given unsigned char buffer to debug output
+ */
 static inline void kl_debug_data(const char *function, int size,
 		const unsigned char *data)
 {
@@ -120,7 +138,9 @@ static inline void kl_debug_data(const char *function, int size,
 }
 
 
-/* start next background transfer for control channel */
+/*
+ * start next background transfer for control channel
+ */
 static void ctrl_start_transfer(struct kl_usb *hw)
 {
 	int ret;
@@ -143,8 +163,10 @@ static void ctrl_start_transfer(struct kl_usb *hw)
 	}
 }
 
-/* queue a control transfer write request */
-/* the param: void* data will be de-allocated when the urb completes */
+/*
+ * queue a control transfer write request
+ * the param: void* data will be de-allocated when the urb completes
+ */
 static int write_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data)
 {
 	struct usb_ctrl_buf *buf;
@@ -177,8 +199,10 @@ static int write_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* dat
 	return 0;
 }
 
-/* queue a control transfer write request */
-/* the param: void* data will be de-allocated when the urb completes */
+/*
+ * queue a control transfer write request
+ * the param: void* data will be de-allocated when the urb completes
+ */
 static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data)
 {
 	struct usb_ctrl_buf *buf;
@@ -213,9 +237,8 @@ static int read_usb_ctrl(struct kl_usb *hw, __u8 reportId, __u16 len, void* data
 
 
 
-
 /*
- * queue a control transfer request to write HFC-S USB
+ * queue a control transfer request to write ax5051
  * chip register using CTRL request queue
  */
 static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
@@ -256,7 +279,6 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 
 //	kl_debug_data(__FUNCTION__, buf->buflen, buf->buf);
 
-
 	if (++hw->ctrl_in_idx >= KL_USB_CTRL_BUFSIZE)
 		hw->ctrl_in_idx = 0;
 	if (++hw->ctrl_cnt == 1)	/* start transfer if it's the first item in the queue */
@@ -267,8 +289,9 @@ static int write_reg(struct kl_usb *hw, struct klusb_ax5015_register_list *reg)
 }
 
 
-
-/* control completion routine handling background control cmds */
+/*
+ * control completion routine handling background control cmds
+ */
 static void ctrl_complete(struct urb *urb)
 {
 	struct kl_usb *hw = (struct kl_usb *) urb->context;
@@ -292,33 +315,9 @@ static void ctrl_complete(struct urb *urb)
 }
 
 
-static inline void kl_delete(struct kl_usb *hw)
-{
-//	kl_abort_transfers(hw);
-//
-//	/* Free data structures. */
-//	if (hw->int_in_urb)
-//		usb_free_urb(hw->int_in_urb);
-//	if (hw->ctrl_urb)
-//		usb_free_urb(hw->ctrl_urb);
-////	if (hw->ctrl_read_urb)
-////		usb_free_urb(hw->ctrl_read_urb);
-////	if (hw->ctrl_read_urb2)
-////		usb_free_urb(hw->ctrl_read_urb2);
-//
-//	kfree(hw->int_in_buffer);
-//	kfree(hw->ctrl_buffer);
-//	kfree(hw->ctrl_dr);
-////	kfree(hw->ctrl_read_buffer);
-////	kfree(hw->ctrl_read_buffer2);
-////	kfree(hw->ctrl_read_dr);
-////	kfree(hw->ctrl_read_dr2);
-//	kfree(hw);
-}
-
-
-
-/* receive completion routine for rx interrupt endpoint */
+/*
+ * receive completion routine for rx interrupt endpoint
+ */
 static void rx_int_complete(struct urb *urb)
 {
 	struct kl_usb *hw = (struct kl_usb *) urb->context;
@@ -342,13 +341,10 @@ static void rx_int_complete(struct urb *urb)
 		}
 	}
 
-
-
-
 	atomic_set(&hw->logger_state, hw->rx_int_buffer[1]);
 
 	/* USB data log for RX INT in */
-//	DBG_INFO("RX INT length(%d)", urb->actual_length);
+//	DBG_DEBUG("RX INT length(%d)", urb->actual_length);
 //	kl_debug_data(__FUNCTION__, urb->actual_length, hw->rx_int_buffer);
 
 resubmit:
@@ -389,7 +385,9 @@ static void abort_rx_int_transfer(struct kl_usb *hw)
 	}
 }
 
-/* start the rx interrupt endpoint transfer */
+/*
+ * start the rx interrupt endpoint transfer
+ */
 static int start_rx_int_transfer(struct kl_usb *hw)
 {
 	int retval = 0;
@@ -420,13 +418,16 @@ static int start_rx_int_transfer(struct kl_usb *hw)
 	if (retval) {
 		DBG_ERR("submitting rx interrupt urb failed: %s (%d)", symbolic(urb_errlist, retval), retval);
 		hw->rx_int_running = 0;
-		kfree(hw->rx_int_urb); // TODO check for release on driver exit
+		kfree(hw->rx_int_urb);
 		return retval;
 	}
 
 	return retval;
 }
 
+/*
+ * read from the USB transceiver configuration flash
+ */
 static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *config) {
 	int ret = 0;
 	unsigned char *writebuf;
@@ -477,6 +478,9 @@ static int readConfigFlash(struct kl_usb *hw, struct usb_read_config_flash *conf
 	return 0;
 }
 
+/*
+ * setup RF-Communication
+ */
 static int doRfSetup(struct kl_usb *hw)
 {
 	int ret = 0;
@@ -541,7 +545,8 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	msleep(1000);
+	/* The pyton driver needed to sleep here for 1s */
+	// msleep(1000);
 
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_first = kcalloc(KL_LEN_SET_RX, 1, GFP_KERNEL);
@@ -602,7 +607,8 @@ static int doRfSetup(struct kl_usb *hw)
 		goto out;
 	}
 
-	msleep(1000);
+	/* The pyton driver needed to sleep here for 1s */
+	//msleep(1000);
 
 	/* setRx() */
 	hw->rf_setup_buffers.buf_setRx_second = kcalloc(KL_LEN_SET_RX, 1, GFP_KERNEL);
@@ -627,6 +633,9 @@ out:
 	return ret;
 }
 
+/*
+ * set value of a ax5051 register
+ */
 static void setRegisterValue(__u8 addr, int value)
 {
 	int i, countReg;
@@ -641,6 +650,9 @@ static void setRegisterValue(__u8 addr, int value)
 	}
 }
 
+/*
+ * initialize the USB transceiver
+ */
 static int initTranseiver(struct kl_usb *hw)
 {
 	struct usb_read_config_flash freqCorrection;
@@ -744,7 +756,9 @@ static int initTranseiver(struct kl_usb *hw)
 	return ret;
 }
 
-/* Hardware Initialization */
+/*
+ * Hardware Initialization
+ */
 static int setup_klusb(struct kl_usb *hw)
 {
 	int retval = 0;
@@ -775,7 +789,34 @@ static int setup_klusb(struct kl_usb *hw)
 	return retval;
 }
 
-static void release_hw(struct kl_usb *hw)
+//static inline void kl_delete(struct kl_usb *hw)
+//{
+//	kl_abort_transfers(hw);
+//
+//	/* Free data structures. */
+//	if (hw->int_in_urb)
+//		usb_free_urb(hw->int_in_urb);
+//	if (hw->ctrl_urb)
+//		usb_free_urb(hw->ctrl_urb);
+////	if (hw->ctrl_read_urb)
+////		usb_free_urb(hw->ctrl_read_urb);
+////	if (hw->ctrl_read_urb2)
+////		usb_free_urb(hw->ctrl_read_urb2);
+//
+//	kfree(hw->int_in_buffer);
+//	kfree(hw->ctrl_buffer);
+//	kfree(hw->ctrl_dr);
+////	kfree(hw->ctrl_read_buffer);
+////	kfree(hw->ctrl_read_buffer2);
+////	kfree(hw->ctrl_read_dr);
+////	kfree(hw->ctrl_read_dr2);
+//	kfree(hw);
+//}
+
+/*
+ * stop rx interrupt and free resources
+ */
+static void kl_delete(struct kl_usb *hw)
 {
 	DBG_INFO("%s", __func__);
 
@@ -789,16 +830,21 @@ static void release_hw(struct kl_usb *hw)
 		hw->ctrl_urb = NULL;
 	}
 
-	if (hw->intf)
-		usb_set_intfdata(hw->intf, NULL);
+//	if (hw->intf)
+//		usb_set_intfdata(hw->intf, NULL);
+
+	if(hw->rx_int_buffer);
+		kfree(hw->rx_int_buffer);
 
 	kfree(hw);
 	hw = NULL;
 }
 
+/*
+ * open() syscall
+ */
 static int kl_open(struct inode *inode, struct file *file)
 {
-	/* open syscall */
 	struct kl_usb *hw = NULL;
 	struct usb_interface *interface;
 	int subminor;
@@ -825,19 +871,10 @@ static int kl_open(struct inode *inode, struct file *file)
 		goto exit;
 	}
 
-//	if (setup_instance(hw))
-//	{
-//		DBG_ERR("setup_instance failed!");
-//		return -EIO;
-//	}
-
-	/* start rx interrupt URB. */
-	// start_rx_int_transfer(hw);
-
 	/* Increment our usage count for the device. */
 	++hw->open_count;
-	if (hw->open_count > 1)
-		DBG_DEBUG("open_count = %d", hw->open_count);
+
+	DBG_DEBUG("open_count = %d", hw->open_count);
 
 	/* Save our object in the file's private structure. */
 	file->private_data = hw;
@@ -847,9 +884,11 @@ exit:
 	return retval;
 }
 
+/*
+ * close() syscall
+ */
 static int kl_release(struct inode *inode, struct file *file)
 {
-	/* close syscall */
 	struct kl_usb *hw = NULL;
 	int retval = 0;
 
@@ -874,9 +913,6 @@ static int kl_release(struct inode *inode, struct file *file)
 		goto unlock_exit;
 	}
 
-//	/* rx endpoint using USB INT IN method */
-//	abort_rx_int_transfer(hw);
-
 	if (!hw->dev)
 	{
 		DBG_DEBUG("device unplugged before the file was released");
@@ -884,10 +920,10 @@ static int kl_release(struct inode *inode, struct file *file)
 		goto unlock_exit;
 	}
 
-	if (hw->open_count > 1)
-		DBG_DEBUG("open_count = %d", hw->open_count);
-
 	--hw->open_count;
+
+	DBG_DEBUG("open_count = %d", hw->open_count);
+
 
 unlock_exit:
 	mutex_unlock(&disconnect_mutex);
@@ -896,6 +932,9 @@ exit:
 	return retval;
 }
 
+/*
+ * write() syscall
+ */
 static ssize_t kl_write(struct file *file, const char __user *user_buf,
 			size_t count, loff_t *ppos)
 {
@@ -967,13 +1006,16 @@ static ssize_t kl_write(struct file *file, const char __user *user_buf,
 
 
 unlock_exit:
-	mutex_unlock(&disconnect_mutex);	//TODO mutex destroy?
+	mutex_unlock(&disconnect_mutex);
 
 exit:
 	return retval;
 }
 
 
+/*
+ * build acknowledge frame
+ */
 static void kl_buildACKFrame(struct kl_usb *hw, int deviceID, int checksum, unsigned char action, unsigned char *framebuf)
 {
 	int history_addr;
@@ -1005,6 +1047,9 @@ static void kl_buildACKFrame(struct kl_usb *hw, int deviceID, int checksum, unsi
 
 }
 
+/*
+ * send setFrame message
+ */
 static int kl_msg_setFrame(struct kl_usb *hw, int deviceID, int checksum, unsigned char action)
 {
 	int i, ret;
@@ -1049,6 +1094,9 @@ static int kl_msg_setFrame(struct kl_usb *hw, int deviceID, int checksum, unsign
 	return ret;
 }
 
+/*
+ * send setTx message
+ */
 static int kl_msg_setTX(struct kl_usb *hw)
 {
 	int ret;
@@ -1075,7 +1123,9 @@ static int kl_msg_setTX(struct kl_usb *hw)
 	return ret;
 }
 
-
+/*
+ * set history record number which will be requested on the next getHistory()
+ */
 static void setNextHistoryRecordNr(struct kl_usb *hw, int receivedIndex)
 {
 	if(hw->history_record_nr < 0)
@@ -1087,10 +1137,12 @@ static void setNextHistoryRecordNr(struct kl_usb *hw, int receivedIndex)
 		hw->history_record_nr = 0;
 }
 
+/*
+ * read() syscall
+ */
 static ssize_t kl_read(struct file *file, char *buffer,
 		       size_t count, loff_t * ppos)
 {
-	/* read syscall */
 	int 		ret;
 	int 		tryGetStateCounter;
 	int 		framelen;
@@ -1407,7 +1459,7 @@ getState:
 			else
 			{
 				DBG_INFO("RESPONSE: 0x%02x", respType);
-				hw->nextSleepMs = 10;
+				hw->nextSleepMs = 5;
 				goto getState;
 			}
 		}
@@ -1419,24 +1471,17 @@ getState:
 
 
 read_out:
-	mutex_unlock(&disconnect_mutex);	//TODO mutex destroy?
+	mutex_unlock(&disconnect_mutex);
 
 	kfree(rawdata);
 	kfree(getStateBuf);
 	return count;
 }
 
-static struct file_operations kl_fops = { .owner   = THIS_MODULE,
-					  .write   = kl_write,
-					  .read    = kl_read,
-					  .open    = kl_open,
-					  .release = kl_release };
 
-static struct usb_class_driver kl_class = { .name = "kl%d",
-		                            .fops = &kl_fops,
-					    .minor_base = ML_MINOR_BASE };
-
-
+/*
+ * setup driver instance
+ */
 static int setup_instance(struct kl_usb *hw)
 {
 	int	err = 0;
@@ -1458,11 +1503,12 @@ out:
 	return err;
 }
 
+/*
+ * probe() function, called when a USB device is connected to the computer
+ */
 static int kl_probe(struct usb_interface *intf,
 		const struct usb_device_id *id)
 {
-	/* called when a USB device is connected to the computer. */
-
 	struct kl_usb 			*hw = NULL;
 	struct usb_device 		*dev = interface_to_usbdev(intf);
 	struct usb_host_interface	*iface_desc = intf->cur_altsetting;
@@ -1500,10 +1546,12 @@ static int kl_probe(struct usb_interface *intf,
 			 ep_desc->bEndpointAddress,
 			 ep_desc->bmAttributes);
 
+		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		// don't use:
 		//   if ( ((ep_desc->bEndpointAddress & USB_ENDPOINT_DIR_MASK)  == USB_DIR_IN)
 		//
 		// USB_ENDPOINT_DIR_MASK is defined as 0x81 on the ARM target which is against the USB standard!!!
+		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		if ( ((ep_desc->bEndpointAddress & 0x80)  == USB_DIR_IN)
 		     &&
@@ -1590,9 +1638,11 @@ error:
 	return retval;
 }
 
+/*
+ * disconnect() function, called when unplugging a USB device
+ */
 static void kl_disconnect(struct usb_interface *intf)
 {
-	/* called when unplugging a USB device. */
 	struct kl_usb *hw;
 	int minor;
 
@@ -1601,11 +1651,9 @@ static void kl_disconnect(struct usb_interface *intf)
 	hw = usb_get_intfdata(intf);
 	minor = hw->minor;
 
-	release_hw(hw);
+	kl_delete(hw);
 
-	/* TODO is this not already done in release_hw() ??? */
-//	usb_set_intfdata(intf, NULL);
-
+	usb_set_intfdata(intf, NULL);
 
 //	down(&hw->sem); /* Not interruptible */
 
@@ -1619,14 +1667,11 @@ static void kl_disconnect(struct usb_interface *intf)
 			minor - ML_MINOR_BASE);
 }
 
-static struct usb_driver kl_driver = { .name 	   = "klimalogg_driver",
-				       .id_table   = kl_table,
-				       .probe 	   = kl_probe,
-				       .disconnect = kl_disconnect, };
-
+/*
+ * init() function, called on module loading
+ */
 static int __init usb_kl_init(void)
 {
-	/* called on module loading */
 	int result;
 
 	DBG_INFO("Register driver");
@@ -1644,12 +1689,13 @@ static int __init usb_kl_init(void)
 	return result;
 }
 
+/*
+ * exit() function, called on module unloading
+ */
 static void __exit usb_kl_exit(void)
 {
-	/* called on module unloading */
 	usb_deregister(&kl_driver);
 	DBG_INFO("module deregistered");
 }
 
-module_init(usb_kl_init);
-module_exit(usb_kl_exit);
+

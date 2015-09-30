@@ -9,6 +9,11 @@
 #ifndef __KL_USB_DRV_H__
 #define __KL_USB_DRV_H__
 
+#define KL_VENDOR_ID	0x6666
+#define KL_PRODUCT_ID	0x5555
+
+
+
 
 /* Logger ID's */
 #define LOGGER_1			0
@@ -54,6 +59,8 @@
 #define KL_COMM_INT			8
 #define KL_USB_CTRL_TIMEOUT		5 	/* 5ms timeout writing/reading regs */
 #define KL_USB_CTRL_BUFSIZE 		64
+#define KL_CTRL_READ_REQUEST_TYPE	0x21
+#define KL_CTRL_SET_REPORT_REQUEST	0x09
 
 /* KlimaLogg pro Message Types */
 #define KL_MSG_SET_RX			0xd0	// SET_RX
@@ -204,74 +211,6 @@ struct klusb_ax5015_register_list {
 	__u8       *buf;
 };
 
-
-//static struct klusb_ax5015_register_list ax5051_reglist[] = {
-//	{ AX5051REGISTER_REVISION	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_SCRATCH	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_POWERMODE	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_XTALOSC	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_FIFOCTRL	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_FIFODATA	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_IRQMASK	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_IFMODE		, 0x00, {0x00} },
-//	{ AX5051REGISTER_PINCFG1	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_PINCFG2	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_MODULATION	, 0x41, {0x00} }, // fsk
-//	{ AX5051REGISTER_ENCODING	, 0x07, {0x00} },
-//	{ AX5051REGISTER_FRAMING	, 0x84, {0x00} }, //# 1000:0100 ##?hdlc? |1000 010 0
-//	{ AX5051REGISTER_CRCINIT3	, 0xff, {0x00} },
-//	{ AX5051REGISTER_CRCINIT2	, 0xff, {0x00} },
-//	{ AX5051REGISTER_CRCINIT1	, 0xff, {0x00} },
-//	{ AX5051REGISTER_CRCINIT0	, 0xff, {0x00} },
-//	{ AX5051REGISTER_FREQ3		, 0x38, {0x00} },
-//	{ AX5051REGISTER_FREQ2		, 0x90, {0x00} },
-//	{ AX5051REGISTER_FREQ1		, 0x00, {0x00} },
-//	{ AX5051REGISTER_FREQ0		, 0x01, {0x00} },
-//	{ AX5051REGISTER_FSKDEV2	, 0x00, {0x00} },
-//	{ AX5051REGISTER_FSKDEV1	, 0x31, {0x00} },
-//	{ AX5051REGISTER_FSKDEV0	, 0x27, {0x00} },
-//	{ AX5051REGISTER_IFFREQHI	, 0x20, {0x00} },
-//	{ AX5051REGISTER_IFFREQLO	, 0x00, {0x00} },
-//	{ AX5051REGISTER_PLLLOOP	, 0x1d, {0x00} },
-//	{ AX5051REGISTER_PLLRANGING	, 0x08, {0x00} },
-//	{ AX5051REGISTER_PLLRNGCLK	, 0x03, {0x00} },
-//	{ AX5051REGISTER_TXPWR		, 0x03, {0x00} },
-//	{ AX5051REGISTER_TXRATEHI	, 0x00, {0x00} },
-//	{ AX5051REGISTER_TXRATEMID	, 0x51, {0x00} },
-//	{ AX5051REGISTER_TXRATELO	, 0xec, {0x00} },
-//	{ AX5051REGISTER_MODMISC	, 0x03, {0x00} },
-//	{ AX5051REGISTER_FIFOCONTROL2	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_ADCMISC	, 0x01, {0x00} },
-//	{ AX5051REGISTER_AGCTARGET	, 0x0e, {0x00} },
-//	{ AX5051REGISTER_AGCATTACK	, 0x11, {0x00} },
-//	{ AX5051REGISTER_AGCDECAY	, 0x0e, {0x00} },
-//	{ AX5051REGISTER_AGCCOUNTER	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_CICDEC		, 0x3f, {0x00} },
-//	{ AX5051REGISTER_DATARATEHI	, 0x19, {0x00} },
-//	{ AX5051REGISTER_DATARATELO	, 0x66, {0x00} },
-//	{ AX5051REGISTER_TMGGAINHI	, 0x01, {0x00} },
-//	{ AX5051REGISTER_TMGGAINLO	, 0x96, {0x00} },
-//	{ AX5051REGISTER_PHASEGAIN	, 0x03, {0x00} },
-//	{ AX5051REGISTER_FREQGAIN	, 0x04, {0x00} },
-//	{ AX5051REGISTER_FREQGAIN2	, 0x0a, {0x00} },
-//	{ AX5051REGISTER_AMPLGAIN	, 0x06, {0x00} },
-//	{ AX5051REGISTER_TRKFREQHI	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_TRKFREQLO	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_XTALCAP	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_SPAREOUT	, 0x00, {0x00} },
-//	{ AX5051REGISTER_TESTOBS	, 0x00, {0x00} },
-//	{ AX5051REGISTER_APEOVER	, 0x00, {0x00} },
-//	{ AX5051REGISTER_TMMUX		, 0x00, {0x00} },
-//	{ AX5051REGISTER_PLLVCOI	, 0x01, {0x00} },
-//	{ AX5051REGISTER_PLLCPEN	, 0x01, {0x00} },
-//	{ AX5051REGISTER_PLLRNGMISC	, -1  , {0x00} }, // not used
-//	{ AX5051REGISTER_AGCMANUAL	, 0x00, {0x00} },
-//	{ AX5051REGISTER_ADCDCLEVEL	, 0x10, {0x00} },
-//	{ AX5051REGISTER_RFMISC		, 0xb0, {0x00} },
-//	{ AX5051REGISTER_TXDRIVER	, 0x88, {0x00} },
-//	{ AX5051REGISTER_REF		, 0x23, {0x00} },
-//	{ AX5051REGISTER_RXMISC		, 0x35, {0x00} }
-//};
 
 static struct klusb_ax5015_register_list ax5051_reglist[] = {
 	{ AX5051REGISTER_ADCDCLEVEL	, 0x10, NULL },
